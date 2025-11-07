@@ -306,3 +306,6 @@ TSWLatexianTemp*
 #*Notes.bib
 
 .vscode
+
+# Build directory
+report/build/

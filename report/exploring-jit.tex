@@ -37,8 +37,8 @@
 \frontmatter  
 \maketitle
 
-\include{01_frontmatter/01_abstract}
-\include{01_frontmatter/02_abbreviations}
+\input{01_frontmatter/01_abstract}
+\input{01_frontmatter/02_abbreviations}
 
 \tableofcontents
 \listoffigures  % if required
@@ -47,15 +47,15 @@
 %% pages in the ``mainmatter'' section have arabic page numbers and chapters are numbered
 \mainmatter
 
-\include{02_mainmatter/03_introduction}
-\include{02_mainmatter/04_background}
-\include{02_mainmatter/05_project}
+\input{02_mainmatter/03_introduction}
+\input{02_mainmatter/04_background}
+\input{02_mainmatter/05_project}
 
 %% chapters in the ``backmatter'' section do not have chapter numbering
 %% text in the ``backmatter'' is single spaced
 \backmatter
-\include{03_backmatter/06_conclusion}
-\include{03_backmatter/07_acknowledgements}
+\input{03_backmatter/06_conclusion}
+\input{03_backmatter/07_acknowledgements}
 \bibliographystyle{alpha}
 \bibliography{04_metadata/pubs}
 
