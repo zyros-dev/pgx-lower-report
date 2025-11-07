@@ -26,7 +26,7 @@
 
 
 %% My own LaTeX macros, definitions, etc
-\include{report/04_metadata/definitions}
+\input{04_metadata/definitions}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{hyperref}
@@ -37,8 +37,8 @@
 \frontmatter  
 \maketitle
 
-\include{report/01_frontmatter/01_abstract}
-\include{report/01_frontmatter/02_abbreviations}
+\include{01_frontmatter/01_abstract}
+\include{01_frontmatter/02_abbreviations}
 
 \tableofcontents
 \listoffigures  % if required
@@ -47,16 +47,16 @@
 %% pages in the ``mainmatter'' section have arabic page numbers and chapters are numbered
 \mainmatter
 
-\include{report/02_mainmatter/03_introduction}
-\include{report/02_mainmatter/04_background}
-\include{report/02_mainmatter/05_literature-review}
-\include{report/02_mainmatter/06_project-plan}
-\include{report/02_mainmatter/07_preliminary-results}
+\include{02_mainmatter/03_introduction}
+\include{02_mainmatter/04_background}
+\include{02_mainmatter/05_project}
 
 %% chapters in the ``backmatter'' section do not have chapter numbering
 %% text in the ``backmatter'' is single spaced
 \backmatter
+\include{03_backmatter/06_conclusion}
+\include{03_backmatter/07_acknowledgements}
 \bibliographystyle{alpha}
-\bibliography{report/04_metadata/pubs}
+\bibliography{04_metadata/pubs}
 
 \end{document}
