@@ -1,0 +1,23 @@
+indentRules:
+  chapter: 0
+  section: 0
+  subsection: 0
+
+removeTrailingWhitespace: 1
+
+modifyLineBreaks:
+  oneSentencePerLine: 1
+  manipulateSentences: 1
+
+sentences:
+  removeSentenceLineBreaks: 0
+  multipleSpacesToSingle: 1
+  sentencesEndWith: 'exclamation|period|question'
+  sentencesBeginWith: 'A-Z'
+  fullStop: '(?:\.|;|:)'
+  abbrevations: 'Dr|Mr|Mrs|Ms|Prof|Sr|Jr|etc|vs|vol|pp|i\.e|e\.g'
+
+protectedStrings:
+  - name: MATH_MODE
+    regex: '(?<!\\)\$(?:(?<!\\)\$|(?!(?<!\\)\$).)*?(?<!\\)\$'
+    lookForThis: 1
