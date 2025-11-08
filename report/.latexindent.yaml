@@ -1,23 +1,17 @@
-indentRules:
-  chapter: 0
-  section: 0
-  subsection: 0
+# latexindent configuration for exploring-jit.tex
+# Smart paragraph wrapping with word boundary awareness
+
+modifyLineBreaks:
+  textWrapOptions:
+    columns: 80
+    multipleSpacesToSingle: 1
+    removeBlockLineBreaks: 0
 
 removeTrailingWhitespace: 1
 
-modifyLineBreaks:
-  oneSentencePerLine: 1
-  manipulateSentences: 1
-
-sentences:
-  removeSentenceLineBreaks: 0
-  multipleSpacesToSingle: 1
-  sentencesEndWith: 'exclamation|period|question'
-  sentencesBeginWith: 'A-Z'
-  fullStop: '(?:\.|;|:)'
-  abbrevations: 'Dr|Mr|Mrs|Ms|Prof|Sr|Jr|etc|vs|vol|pp|i\.e|e\.g'
-
-protectedStrings:
-  - name: MATH_MODE
-    regex: '(?<!\\)\$(?:(?<!\\)\$|(?!(?<!\\)\$).)*?(?<!\\)\$'
-    lookForThis: 1
+# Protect environments that shouldn't be wrapped
+verbatimEnvironments:
+  verbatim: 1
+  lstlisting: 1
+  minted: 1
+  code: 1

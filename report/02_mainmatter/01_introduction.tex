@@ -1,0 +1,17 @@
+\chapter{Introduction}\label{sec:intro}
+Databases are a heavily used type of system that rely on correctness and speed.
+Nowadays, they are often the primary bottleneck in many systems - especially
+on webservers and other large data applications \cite{ddia}.
+
+With modern hardware advances, the optimal way to structure these databases has
+drastically changed, but most databases are using architectures defined by older
+hardware. Older databases assume the disk operations are the vast majority of
+runtime, but that has shifted to the CPU for heavy queries.
+
+In this thesis, PostgreSQL's execution engine was replaced with a compiler
+to support more optimal usage of the CPU. This paper is split into a
+background in Chapter~\ref{ch:background} which includes fundamental concepts
+and the definition/goal of the project, then a light literature survey will
+be conducted in Chapter~\ref{ch:lit-survey}. The project's solution will
+be introduced in Chapter~\ref{ch:project}, and finally conclusions will be
+drawn in Chapter~\ref{ch:conclusion}.

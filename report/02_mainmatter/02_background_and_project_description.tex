@@ -1,0 +1,98 @@
+\chapter{Background and Project Description}\label{ch:background}
+\section{Background}\label{sec:fundamentals}
+Majority of databases are structured like Figure~\ref{fig:database_structure}.
+Strucutre Query Language (SQL) is parsed, turned to RA (relational-algebra),
+optimized, executed, then materialized into a table.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/database_structure.png}
+	\caption{Database Structure}
+	\label{fig:database_structure}
+	\cite{database-concepts}
+\end{figure}
+
+For non-compiler databases they use a volcano operator model tree, such as
+Figure~\ref{fig:execution_tree}. The root node has a \texttt{produce()} function
+which calls its children's \texttt{produce()}, until it calls a leave node,
+which calls \texttt{consume()} on itself, then that calls its parent's
+\texttt{consume()} function. In other words, a post-order traversal through
+this tree where tuples are dragged upwards.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/execution-tree.png}
+	\caption{Volcano operator model tree.}
+	\label{fig:execution_tree}
+	\cite{long-masters-thesis}
+\end{figure}
+
+The fundamental issue with this classical model is that it is heavily
+underutilising the hardware. If we are only pulling up a single tuple, our CPU
+caches are barely used. This has lead to the vectorized execution model and
+the compiled model. With the vectorized model, we pull up groups of tuples
+instead. However, this leads to problems where it's common to have too many
+copy operations instead of having a pointer going upwards. For instance, if a
+sort or a join allocates new space that is too much for the cache, the
+handling can become poor. With the compiled approach, it introduces a lot of
+implementation complexity.
+
+Relational databases prioritise ACID requiremens - Atomicity, Consistency,
+Isolation and Durability \cite{database-concepts}. This is a critical
+requirement in this type of system, and usually one of the main reasons people
+pick a relational database. Atomicity refers to transactions are a single unit
+of work, consistency means it must be in a valid state before and after the
+query, isolation means concurrent transactions do not interact with each other,
+and durability means once something is committed it will stay committed.
+\cite{database-concepts}
+
+It is common for on-disk databases to consider the cost of CPU operations to
+be $O(1)$ \cite{database-concepts}. This is partially due to when these
+systems were made, the disks were much slower and the caches were much slower.
+In part A of this project, this was disproved for PostgreSQL as it was found
+that the time spent in the CPU was substantial: between $34.87\%$ and $76.56\%$
+with an average of $49.32\%$ across the tested queries.
+% TODO: Do I need a citation to myself?
+
+Just-in-time (JIT) compilers work by having multiple layers of compilation and
+are mostly used by interpreted languages to eliminate the ill-effects on
+performance \cite{long-masters-thesis}. Advanced compilers can run the primary
+program, then dedicate some background threads to improving the optimisation
+of the code, and swap it over to the optimized version when it is ready
+\cite{hyper-compiler-2}.
+
+Due to branch-prediction optimization, JIT compilers can become faster than
+ahead of time compilers. In 1999, a benchmarking paper measured four
+commercial databases and found $10\%-20\%$ of their execution time was spent
+fixing poor predictions \cite{branch-misprediction}. similarly, research
+specifically into branch prediction has said, "although branch prediction
+attained 99\% accuracy in predicting static branches, ... branches are still a
+major bottleneck in the system performance" \cite{branch-prediction-values}.
+Modern measurements still find 50\% of their query times are spent resolving
+hardware hazards, such as mispredictions, with improvements in this area
+making their queries 2.6x faster \cite{dbms-branches}. The Azul JIT compiler
+measured that their JIT solution's speculative optimizations can lead up to $50\%$
+performance gains \cite{azul_jit_aot}.
+
+In the context of databases, most compilers can be split into only compiling
+expressions (typically called EXP for expression), and others that compile the
+entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
+itself, they have EXP support using $llvm-jit$, but in this paper, QEP will be
+explored as well.
+
+The LLVM Project is a compiler infrastructure that supports making compilers
+so that common, but complex, compiler optimisations do not have to be re-
+implemented. Multi-Level Intermediate Representation is another, newer toolkit
+that is tightly coupled with the LLVM project. It adds a framework to define
+dialects, and lower through these dialects. One of the primary benefits of
+this is if you make a compiler, you can define a high level dialect, then
+another person can target your custom high-level dialect.
+
+\section{Project Description}\label{sec:lit-rev}
+
+The core goal of this project is to move the execution engine of PostgreSQL
+to a QEP compiler model instead of its existing EXP model and evaluate
+whether this has the potential to out-perform PostgreSQL itself. This will be
+done with the MLIR infrastructure from LingoDB to support it (which will be
+introduced in the literature survey). It was created to support TPC-H queries
+and re-route any unsupported queries back to the regular PostgreSQL engine.
