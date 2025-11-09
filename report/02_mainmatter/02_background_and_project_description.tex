@@ -13,7 +13,7 @@ optimized, executed, then materialized into a table.
 \end{figure}
 
 For non-compiler databases they use a volcano operator model tree, such as
-Figure~\ref{fig:execution_tree}. The root node has a \texttt{produce()} function
+Figure~\ref{fig:execution_tree}The root node has a \texttt{produce()} function
 which calls its children's \texttt{produce()}, until it calls a leave node,
 which calls \texttt{consume()} on itself, then that calls its parent's
 \texttt{consume()} function. In other words, a post-order traversal through
@@ -77,8 +77,7 @@ performance gains \cite{azul_jit_aot}.
 In the context of databases, most compilers can be split into only compiling
 expressions (typically called EXP for expression), and others that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
-itself, they have EXP support using $llvm-jit$, but in this paper, QEP will be
-explored as well.
+itself, they have EXP support using $llvm-jit$.
 
 The LLVM Project is a compiler infrastructure that supports making compilers
 so that common, but complex, compiler optimisations do not have to be re-
@@ -89,9 +88,8 @@ this is if you make a compiler, you can define a high level dialect, then
 another person can target your custom high-level dialect.
 
 \section{Project Description}\label{sec:lit-rev}
-
-The core goal of this project is to move the execution engine of PostgreSQL
-to a QEP compiler model instead of its existing EXP model and evaluate
+The core goal of this project is to create a compiled execution engine for PostgreSQL
+that uses the QEP compiler model instead of its existing EXP model and evaluate
 whether this has the potential to out-perform PostgreSQL itself. This will be
 done with the MLIR infrastructure from LingoDB to support it (which will be
 introduced in the literature survey). It was created to support TPC-H queries
