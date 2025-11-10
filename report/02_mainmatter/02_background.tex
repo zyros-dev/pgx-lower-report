@@ -309,6 +309,23 @@ to PostgreSQL's. This will be explored in the design in REFERENCE.
 %-------------------------------------------------------------------------------- 
 \subsection{PostgreSQL}\label{subsec:postgresql-related}
 %-------------------------------------------------------------------------------- 
+PostgreSQL is a battle-tested system and is currently the most
+popular database in the world with $51.9$ of developers in a stackoverflow survey
+saying they use it extensively in 2024. Within the context of compiled queries this means
+the database itself cannot be treated as a research system. Changes directly to
+it requires heavy-testing, but also, these changes will not be peer-reviewed
+research. Instead, it is pull-requests online with more casual interaction.
+
+There has been significant discussion about HyPer and JIT with regards to 
+PostgreSQL in 2017. The general response is doubt that someone will add support 
+for full compiling full query expressions, and rearchitecting such a core 
+component introduces large risk.
+
+However, in September 2017 Andres Freudn started implementing JIT support for 
+expressions. The reasoning was that most of the CPU time is in the expression 
+components, (e.g. y > 8 in SELECT * from table WHERE x > 8;).
+
+
 
 %================================================================================ 
 \section{Aims}\label{sec:lit-rev}

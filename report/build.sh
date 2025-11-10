@@ -1,8 +1,8 @@
 #!/bin/bash
-# Build script for exploring-jit.tex with artifacts in ./build
+# Build script for pgx-lower-thesis.tex with artifacts in ./build
 # Uses latexmk which respects the .latexmkrc configuration
 
-latexmk exploring-jit.tex
-cp build/exploring-jit.pdf exploring-jit.pdf
+latexmk pgx-lower-thesis.tex
+cp build/pgx-lower-thesis.pdf pgx-lower-thesis.pdf
 
-echo "✓ Build complete. PDF: exploring-jit.pdf"
+echo "✓ Build complete. PDF: pgx-lower-thesis.pdf"

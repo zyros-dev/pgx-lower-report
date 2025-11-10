@@ -1,4 +1,4 @@
-# latexindent configuration for exploring-jit.tex
+# latexindent configuration for pgx-lower-thesis.tex
 # Smart paragraph wrapping with word boundary awareness
 
 modifyLineBreaks:

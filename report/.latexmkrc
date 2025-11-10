@@ -1,4 +1,4 @@
-# Latexmk configuration for exploring-jit.tex
+# Latexmk configuration for pgx-lower-thesis.tex
 # Redirect all build artifacts to ./build directory
 
 $out_dir = 'build';
