@@ -117,6 +117,10 @@ null test, case expressions).
 % TODO: Include a graph of the PostgreSQL path and annotate in the previous 
 % paragraph where the nodes are produced
 
+\subsection{Database Benchmarking}\label{subsec:database-benchmarking}
+Need to include information here about common benchmarks, and how the industry
+has gone towards TPC-H.
+
 %================================================================================ 
 \section{Related Works}\label{sec:related-works}
 %================================================================================ 
@@ -134,6 +138,56 @@ in subsection~\ref{subsec:mutable} and LingoDB in subsection~\ref{subsec:lingodb
 are research databases. Lastly, PostgreSQL will be examined in
 subsection~\ref{subsec:postgresql-related} as it uses expression-based
 compilation and there has been an attempt to create a compiled engine before.
+
+%-------------------------------------------------------------------------------- 
+\subsection{PostgreSQL and Extension Systems}\label{subsec:postgresql-related}
+%-------------------------------------------------------------------------------- 
+PostgreSQL is a battle-tested system and is currently the most
+popular database in the world with $51.9$ of developers in a stackoverflow survey
+saying they use it extensively in 2024. Within the context of compiled queries this means
+the database itself cannot be treated as a research system. Changes directly to
+it requires heavy-testing, but also, these changes will not be peer-reviewed
+research. Instead, it is pull-requests online with more casual interaction.
+
+There has been significant discussion about HyPer and JIT with regards to
+PostgreSQL in 2017. The general response is doubt that someone will add support
+for full compiling full query expressions, and rearchitecting such a core
+component introduces large risk.
+
+However, in September 2017 Andres Freudn started implementing JIT support for
+expressions. The reasoning was that most of the CPU time is in the expression
+components, (e.g. y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
+there are significant benefits to tuple deformation as it interacts with the
+cache and has poor branch prediction.
+
+% screenshot of PR
+
+In the pull request Peter Eisentruat asked whether the default JIT
+settings are too low, but in version 11 of PostgreSQL they went ahead with the
+release but with the JIT disabled by default. This didn't get much usage,
+and they decided that enabling it by default it would give it exposure and testing.
+However, when released, the United Kingdom's critical service for a COVID-19
+dashboard automatically updated and spiked to a 70\% failure rate as
+some of their queries ran 2,229x slower. This affected
+the general reception that JIT features should be disabled by default, and
+has lead to people having negative opinions about JIT and compiled queries.
+
+Two cases where QEP query compilation with PostgreSQL was implemented were found.
+The first is Vitesse DB, which made a series of public posts about getting
+people to assist with testing it. They became generally available in 2015,
+but their website is offline now and there is not much mention of them.
+The second was at a PgCon presentation and achieved a 5.5x speedup on TPC-H query
+1, and has more documentation. However, they did not publicize their methods or
+show that it's easy for people to use.
+% TODO, maybe I should include more detail about the pgcon one.
+% vitesse db https://www.postgresql.org/message-id/CAJNt7=Z6w5%2BwyeTKKryWavMcWOenc6ZhPaaaddwuZ6HtcJWxcg@mail.gmail.com
+% ispras https://www.pgcon.org/2017/schedule/attachments/467_PGCon%202017-05-26%2015-00%20ISPRAS%20Dynamic%20Compilation%20of%20SQL%20Queries%20in%20PostgreSQL%20Using%20LLVM%20JIT.pdf
+
+Other database systems also support extensions, and there are many systems that
+rely on PostgreSQL's extension system. MySQL, ClickHouse, DuckDB, Oracle
+Extensible Optimizer all support similar operations. This means more than
+only PostgreSQL can be extended in this same manner rather than creating
+databases from scratch.
 
 %-------------------------------------------------------------------------------- 
 \subsection{System R}\label{subsec:system-r}
@@ -301,38 +355,71 @@ less than DuckDB and five times less than NoisePage.
 
 % FIGURE
 
-% idk why \texttt doesn't work here.
+In later research, LingoDB also explores obscure operations such as GPU
+acceleration, using the Torch-MLIR project's dialect, representing queries
+as sub-operators for acceleration, non-relational systems, and more.
 For our purposes, the appealing part of their architecture is that they use
 $pg_query$ to parse the incoming SQL, which means their parser is the closest
 to PostgreSQL's. This will be explored in the design in REFERENCE.
+% idk why \texttt doesn't work here.
 
 %-------------------------------------------------------------------------------- 
-\subsection{PostgreSQL}\label{subsec:postgresql-related}
+\subsection{Benchmarking}\label{subsec:benchmarking}
 %-------------------------------------------------------------------------------- 
-PostgreSQL is a battle-tested system and is currently the most
-popular database in the world with $51.9$ of developers in a stackoverflow survey
-saying they use it extensively in 2024. Within the context of compiled queries this means
-the database itself cannot be treated as a research system. Changes directly to
-it requires heavy-testing, but also, these changes will not be peer-reviewed
-research. Instead, it is pull-requests online with more casual interaction.
+% TODO: Maybe this section should change places? Meh.
+DuckDB, HyPer, Mutable LingoDB, and PostgreSQL were compared in a benchmark. This is
+visible in figure XYZ. It showed that PostgreSQL was signficantly slower than the others
+due to it being an on-disk database. Furthermore, analysis was done on PostgreSQL
+using \texttt{perf} to measure how much time was spent inside of the CPU.
 
-There has been significant discussion about HyPer and JIT with regards to 
-PostgreSQL in 2017. The general response is doubt that someone will add support 
-for full compiling full query expressions, and rearchitecting such a core 
-component introduces large risk.
+% graph 1
 
-However, in September 2017 Andres Freudn started implementing JIT support for 
-expressions. The reasoning was that most of the CPU time is in the expression 
-components, (e.g. y > 8 in SELECT * from table WHERE x > 8;).
+% graph 2
 
+%-------------------------------------------------------------------------------- 
+\subsection{Gaps in Literature}\label{subsec:lingodb}
+%-------------------------------------------------------------------------------- 
 
+A core gap is the extension system within existing database. HyPer and Umbra
+managed to commercialise their systems, but the other databases are strictly
+research systems and some do not support ACID, multithreading, or other core
+requirements such as index scans. Michael Stonebraker, a Turing Award recipient and the founder of
+PostgreSQL writes that a fundamental issue in research is that they have
+forgotten the usecase of the systems and target the $0.01\%$ of users.
+These commercial databases reaching high performance is a symptom of this.
+Testing the wide variety of ACID requirements is a significant undertaking.
+
+The other issue is writing these compiled query engines is a large undertaking,
+and the core reason why vectorised execution has gained more popularity in
+production systems. Debugging a compiled program within a database is challenging,
+and while solutions have been offered, such as Umbra's debugger, it is still
+challenging and questionable how transferable those tools are.
+
+Relying on an extension system such that it's an optional feature means users
+can install the optimisations, and tests can be done with production systems
+without requesting pull requests into the system itself. Since these are large
+source code changes, it adds political complexity to have the solution
+added to the official system without production proof of it being used.
+The result of this would be an useable compiler accelerator, that can easily
+be installed into existing systems, and once used in many scenarios is
+easier to add to the official system. % TODO badly written lol
 
 %================================================================================ 
 \section{Aims}\label{sec:lit-rev}
 %================================================================================ 
-The core goal of this project is to create a compiled execution engine for PostgreSQL
-that uses the QEP compiler model instead of its existing EXP model and evaluate
-whether this has the potential to out-perform PostgreSQL itself. This will be
-done with the MLIR infrastructure from LingoDB to support it (which will be
-introduced in the literature survey). It was created to support TPC-H queries
-and re-route any unsupported queries back to the regular PostgreSQL engine.
+Tying this together, this piece aims to integrate a research compiler into a
+battle-tested system by using an extension system. This addresses the gap
+of these systems being difficult to use widely, and potential to integrate it
+into the original system once stronger correctness and speed optimisations have
+been shown.
+
+A key output is showing that the system can operate within
+the same order of magnitude as the target system. The purpose of this is to
+ensure other optimisations can be applied to fit the surrounding database later,
+but the expectation is not to be faster than it. 
+
+One concern is these databases are large systems while the research systems 
+are smaller. This increases the testing difficulty because a complete system 
+has more variables, such as genetic algorithms in the query optimiser that makes 
+performance non-deterministic. To counter this, a large number of benchmarks can 
+be executed, and a standard deviation can be calculated.
