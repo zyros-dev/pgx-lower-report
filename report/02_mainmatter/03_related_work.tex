@@ -1,12 +1,14 @@
 \chapter{Related Work}\label{ch:related-work}
 
-This chapter summarises relevant works in the compiled queries space, and their
+This chapter summarises relevant works in the compiled queries space and their
 architectures. Originally, the industry began with compiled query engines, but
 this was overtaken by volcano models as they simplified the implementation
 details with little cost at the time. However, now analytical engines are
 examining compilers again.
 
-In section~\ref{sec:system-r} system R will be explored as the classical
+This begins with PostgreSQL and their extension system in
+section~\ref{sec:postgresql-related}, in section~\ref{sec:system-r} system R
+will be explored as the classical
 example, followed by HyPer and Umbra in section~\ref{sec:hyper} and
 section~\ref{sec:umbra} which re-introduced the concept. Mutable in
 section~\ref{sec:mutable} and LingoDB in section~\ref{sec:lingodb} are research
@@ -35,7 +37,13 @@ components, (e.g. y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
 there are significant benefits to tuple deformation as it interacts with the
 cache and has poor branch prediction.
 
-% screenshot of PR
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/pg-min-params.png}
+	\caption{Peter Eisentruat asking whether the defaults are too low.}
+	\label{fig:pg-params-too-low}
+	\cite{postgres-pr-2}
+\end{figure}
 
 In the pull request Peter Eisentruat asked whether the default JIT
 settings are too low, but in version 11 of PostgreSQL they went ahead with the
@@ -104,14 +112,26 @@ inlining them into the LLVM IR. This LLVM IR is executed by the LLVM's JIT
 executor. By utilising LLVM IR, they can take advantage of overflow flags and
 strong typing which prevent numerous bugs in their original C++ approach.
 
-% include OLAP performance here
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/hyper-compile-times.png}
+	\caption{HyPer OLAP performance compared to other engines.}
+	\label{fig:hyper-compile-times}
+	\cite{hyper-compiler-1}
+\end{figure}
 
 HyPer shows they reduced their compile time by doing this in figure XYZ by many
 multiples, and in figure ABC they show they achieve many times less branches,
 branch mispredicts, and other measurements compared to their baseline of MonetDB.
 The cause of this is HyPer's output had less code in the compiled queries.
 
-% branching and cache locality
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/hyper-profiler.png}
+	\caption{HyPer branching and cache locality benchmarks.}
+	\label{fig:hyper-profiler}
+	\cite{hyper-compiler-1}
+\end{figure}
 
 Hyper continues on in 2018 where they separated the compiler into multiple rounds.
 They introduced an interpreter on the byte code generated from LLVM IR, then they
@@ -151,7 +171,13 @@ concepts from LeanStore for the buffer management and latches, then multi-versio
 concurrency, compilation, and execution strategies from HyPer. This combination
 led to an on-disk database that is scalable, flexible and faster than HyPer.
 
-% perforamnce figure
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{figures/umbra-benchmark.png}
+	\caption{Umbra benchmarks.}
+	\label{fig:umbra-benchmark}
+	\cite{umbra}
+\end{figure}
 
 % I skipped a paragraph about multi-level debugger here
 
@@ -163,7 +189,13 @@ databases introduce this concept by invoking the query optimiser multiple
 times, but since their compiler is invoked multiple times during execution this
 adds additional benefit.
 
-% graph with adaptive query processing
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{figures/umbra-effec-queries.png}
+	\caption{Umbra benchmarks after adaptive query processing (AQP).}
+	\label{fig:umbra-effec-queries}
+	\cite{umbra-effec-compil}
+\end{figure}
 
 Umbra is currently ranked as the most effective database on Clickhouse's
 benchmarking. The main complaint of the compiler being too heavy is still there,
@@ -190,12 +222,26 @@ produces machine code as fast as possible while skipping opimisations, then
 while execution is running. However, HyPer has a direct bytecode interpreter
 which can result in a lower time to execution.
 
-% compilation phase graph
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/mutable-arch.png}
+	\caption{Comparison of mutable to HyPer and Umbra.}
+	\label{fig:mutable-arch}
+	\cite{mutable-2}
+\end{figure}lation phase graph
 
 Mutable's benchmarks show they achieve similar compile and execution times to
-HyPer, and outperform them in many cases. While pushing this system to the
-same performance as HyPer or Umbra would require re-architecting, the achieved
-performance compared to the implementation effort is a significant outcome.
+HyPer, and outperform them in many cases. While pushing Mutable to the
+same performance as HyPer or Umbra would require re-architecting, achieving this
+performance within the implementation effort is a significant outcome.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{figures/mutable-benchmarks.png}
+	\caption{Benchmarks produced by Mutable.}
+	\label{fig:mutable-bench}
+	\cite{mutable-2}
+\end{figure}
 
 %-------------------------------------------------------------------------------- 
 \section{LingoDB}\label{sec:lingodb}
@@ -228,7 +274,13 @@ and Mutable is at 22,944 lines for their code despite skipping query
 optimisation. Within LingoDB's paper they also compare this to being three times
 less than DuckDB and five times less than NoisePage.
 
-% FIGURE
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{figures/lingo-db-bench.png}
+	\caption{LingoDB benchmarking.}
+	\label{fig:lingo-db-bench}
+	\cite{lingo-db-1}
+\end{figure}
 
 In later research, LingoDB also explores obscure operations such as GPU
 acceleration, using the Torch-MLIR project's dialect, representing queries
@@ -242,14 +294,56 @@ to PostgreSQL's. This will be explored in the design in REFERENCE.
 \section{Benchmarking}\label{sec:benchmarking}
 %-------------------------------------------------------------------------------- 
 % TODO: Maybe this section should change places? Meh.
-DuckDB, HyPer, Mutable LingoDB, and PostgreSQL were compared in a benchmark. This is
-visible in figure XYZ. It showed that PostgreSQL was signficantly slower than the others
-due to it being an on-disk database. Furthermore, analysis was done on PostgreSQL
-using \texttt{perf} to measure how much time was spent inside of the CPU.
+These systems produced their own benchmarks and could selectively pick which
+systems to invole, so a recreation of the benchmarks was done. DuckDB, HyPer,
+Mutable, LingoDB and PostgreSQL were all compared to one another, and is
+visible in Figure~\ref{fig:created-benchmark-results}. TPC-H was used as most
+of the involved pieces used it themselves \cite{tpch}, and docker containers were
+chosen to make deploying it easier. These benchmarks were
+created by relying on the Mutable codebase as they had significant infrastructure
+to support this, and is visible at
+\url{https://github.com/zyros-dev/benchmarking-dockers}.
 
-% graph 1
+The benchmarks show that PostgreSQL is significantly slower than the rest, likely
+because it is an on-disk database and most of the others are in-memory. With
+PostgreSQL removed from the graph, HyPer and DuckDB are the fastest,
+and with a single core DuckDB is the slowest.
 
-% graph 2
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.3]{figures/benchmarks.png}
+	\caption{Benchmarking results.}
+	\label{fig:created-benchmark-results}
+\end{figure}
+
+To identify how much potential gain there is in a majory on-disk database,
+\texttt{perf} was used on PostgreSQL during TPC-H queries 1, 3, 6, 12 and 14 in
+figure~\ref{fig:pprof-psql}. This shows that the CPU time varied from between
+34.87\% and 76.56\%, with an average of 49.32\%. These metrics were identified
+using the \texttt{prof} graph. With this much time in the CPU, it is
+clear that the queries can become several times faster if optimised.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.4]{figures/pperf_psql.png}
+	\caption{PostgreSQL time spent in the CPU, measured with prof.}
+	\label{fig:pprof-psql}
+\end{figure}
+
+As stated in subsection~\ref{subsec:jit_background}, one core acceleration of JIT
+is improving the branch predictions. To measure this, \texttt{prof} was used
+on the same set of queries in figure~\ref{fig:prof-psql-2}. This shows that
+at worst, 43.02\% of LLC loads are missed. A 0.69\%branch miss rate has room for 
+improvement, as systems with even a 99\% branch prediction accuracy can
+have a significant bottleneck from it. 
+% TODO what is an llc load
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{figures/perf-stats.png}
+	\caption{PostgreSQL query profiling statistics collected with prof.}
+	\label{fig:prof-psql-2}
+\end{figure}
 
 %-------------------------------------------------------------------------------- 
 \section{Gaps in Literature}\label{sec:gaps}

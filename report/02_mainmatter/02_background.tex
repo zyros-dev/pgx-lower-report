@@ -83,6 +83,8 @@ making their queries 2.6x faster \cite{dbms-branches}. The Azul JIT compiler
 measured that their JIT solution's speculative optimizations can lead up to $50\%$
 performance gains \cite{azul_jit_aot}.
 
+% TODO: I should mention what is a good branch prediction rate here
+
 In the context of databases, most compilers can be split into only compiling
 expressions (typically called EXP for expression), and others that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
