@@ -1,3 +1,119 @@
-\chapter{Project}\label{ch:project}
+\chapter{Method}\label{ch:project}
+In section~\ref{sec:design} the overarching design is described,
+then section~\ref{sec:implementation} goes over the implementation.
 
-Lorem Ipsum
+\section{Design}\label{sec:design}
+The first decision is which database and which compiler this project should use.
+Something with strong extension support, wide-spread usage, high performance,
+and a volcano execution model is needed as a base. For the compiler,
+it would be ideal if they already use a similar interface to the target database
+when they parse SQL, and have promising results in their performance. This
+removes HyPer, Umbra, and System R, and leaves Mutable and LingoDB. LingoDB
+parses its inputs with \texttt{pg\_query}, so it matches with PostgreSQL.
+
+As a result, PostgreSQL and LingoDB were chosen. PostgreSQL offers strong support
+for extensions, and it is possible to override its execution engine using runtime
+hooks. An example of this Tiger data, which was explored in
+section~\cite{todo}. The primary challenge with this is that LingoDB is a columnar,
+in-memory database, so adjustments will be needed. Furthermore, LingoDB does
+not support indexes, which can make the benchmarks against PostgreSQL unfair.
+% TODO: Write about tiger data, or use a different example.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{figures/system_design.drawio.pdf}
+	\caption{System design with labels of component sources.}
+	\label{fig:overall-system-design}
+\end{figure}
+
+LingoDB was integrated into PostgreSQL as seen in figure~\ref{fig:overall-system-design}.
+The blue represents PostgreSQL components, with the pipeline on the left being
+the whole of PostgreSQL. A query reaches the runtime hooks, which gets analyzed
+by a hand-written analyzer for whether the query can be execution, and then parsed.
+These hand writte components are annotated in light-peach.
+This goes through the code LingoDB created, but with custom runtime hooks and
+other small edits, annotated with green. Finally this is compiled into
+LLVM IR, which has the runtime hooks for reading from PostgreSQL embedded inside.
+
+In the case that a query fails, the system should still support returning the
+results and gracefully roll over to PostgreSQL. This was done by ensuring the
+AST parser entrance has a try-catch pattern that routes back to PostgreSQL
+even in failures. However, this does not protect from system panics such as
+segmentation faults.
+
+The most time-consuming part of this is expected to be the AST Parser section,
+because it will be receiving the plan tree with the optimisations from PostgreSQL.
+LingoDB was designed to parse the query tree, which would come from the
+"Parser" stage in figure~\ref{fig:overall-system-design}. 18 plan nodes and 14
+expression nodes were implemented.
+
+The final goal here is to support the TPC-H query set.
+To drive this implementation, a test-driven approach was used where PostgreSQL's
+\texttt{pg\_regress} module added support for creating SQL queries and defining
+expected outputs. With this, a test set of basic queries was created which built
+up to TPC-H queries. This allowed progressive node implementation during
+development, and a quick way to validate changes are safe.
+
+Node implementation ordering followed the dependency analysis. Foundational
+nodes such as the sequential scan and projection are in virtually every query,
+while other nodes build on top. By implementing in the dependency order, each new
+node could be tested using the previously implemented nodes, and bugs can be
+isolated.
+
+\section{Implementation}\label{sec:implementation}
+%===============================================================================
+\subsection{Integrating LingoDB to PostgreSQL}
+
+%===============================================================================
+\subsection{Logging infrastructure}
+asdf
+%===============================================================================
+\subsection{Debugging Support}
+asdf
+
+%===============================================================================
+\subsection{Data Types}
+asdf
+
+%===============================================================================
+\subsection{Runtime patterns}
+asdf
+%===============================================================================
+\subsection{AST patterns}
+asdf
+%-------------------------------------------------------------------------------
+\subsubsection{Plan translation - Scans}
+asdf
+%-------------------------------------------------------------------------------
+\subsubsection{Plan translation - Aggregations}
+asdf
+%-------------------------------------------------------------------------------
+\subsubsection{Plan translation - Joins}
+asdf
+%-------------------------------------------------------------------------------
+\subsubsection{Plan translation - Subqueries}
+asdf
+%-------------------------------------------------------------------------------
+\subsubsection{Expression Translation - Variables, Constants, Parameters}
+asdf
+%-------------------------------------------------------------------------------
+\subsubsection{Expression Translation - Nullability}
+asdf
+%-------------------------------------------------------------------------------
+\subsubsection{Expression Translation - Operators}
+asdf
+
+%===============================================================================
+\subsection{Configuring JIT compilation settings}
+asdf
+%===============================================================================
+\subsection{Profiling Support}
+asdf
+
+%===============================================================================
+\subsection{Website}
+asdf
+
+%===============================================================================
+\subsection{Benchmarking}
+asdf
