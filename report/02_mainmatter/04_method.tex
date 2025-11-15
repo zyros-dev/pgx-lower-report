@@ -300,20 +300,147 @@ and type conversions between PostgreSQL's \texttt{Datum} representation and
 native types. These runtime functions interface with PostgreSQL's C API layer,
 which handles heap access for reading tuples, memory management through
 PostgreSQL's context system, and tuple streaming for returning results to the
-executor. An important part is that when tuples are read from Postgres, 
-only the pointers are stored within the C++ storage layer to maintain 
-zero-copy semantics. 
+executor. An important part is that when tuples are read from Postgres,
+only the pointers are stored within the C++ storage layer to maintain
+zero-copy semantics.
 
-
-Once stored, the JIT code can read from the batch and 
-stream tuples back through the output pipeline as well. Streaming the tuples 
-back means that the entire table does not build up in RAM,
-and instead tuples are returned one by one. This was tested by doing larger table 
+Once stored, the JIT code can read from the batch and
+stream tuples back through the output pipeline as well. Streaming the tuples
+out from JIT means that the entire table does not build up in RAM,
+and instead tuples are returned one by one. This was tested by doing larger table
 scans as avoiding this buildup is essential.
+
+LingoDB's sort and hashtable runtimes were relying on \texttt{std::sort} and
+\texttt{std::unordered\_map} respectively. This is problematic because as an
+on-disk database we need to handle disk spillage in these scenarios. Rather than
+reinventing these, leaning on psql's implementation of these solves these issues
+and creates a blueprint for further implementations.
+
+Most of the LingoDB lowerings bake metadata (such as table names) into the compiled
+binary by JSON-encoding it as a string. Instead of that, for the sort and
+hash table runtimes a specification pointer was used. Inside the plan translation
+stage, a struct was built and allocated with the transaction memory context, then
+the pointer to this was baked into the compiled binary instead. This enabled
+these runtimes to trigger without doing JSON deserialisation, and creating the
+operations them could skip this stage. This is something that a regular
+compiler would be incapable of doing, because the binary needs to be a standalone
+program, but in this context it can be relied upon.
 
 %===============================================================================
 \subsection{Plan Tree Translation}\label{subsec:ast-patterns}
-asdf
+The plan tree translation converts PostgreSQL's execution plan nodes into
+RelAlg MLIR operations. Figure~\ref{fig:ast-impl} shows where this fits
+into the broader design. Within the AST Parser component, we have an
+entry that reads the PostgreSQL tag on the node that reads which type of plan
+it is, then a recursive descent parser starts translating. Within
+each translation function, the pattern is typically that the children
+of the plan is translated (i.e. post-order traversal), then the definition
+of the node is established in our context, the translation into the MLIR
+relational algebra dialect is done, and a "translation result" is returned.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{figures/ast-impl.drawio.pdf}
+	\caption{AST translation design and high-level steps}
+	\label{fig:ast-impl}
+\end{figure}
+
+The translation functions follow a consistent pattern, as shown in
+Listing~\ref{lst:plan-translate-methods}. Each function takes the query
+context and a PostgreSQL plan node pointer, performs the translation, and
+returns a \texttt{TranslationResult}. The concept here is that the \texttt{QueryCtxT}
+object is pushed down, and when it is mutated a new one is allocated and pushed
+to the child, while the \texttt{TranslationResult}s flow upwards and represent
+the output of each node. This, in theory, grants strong type-correctness. However,
+it is not strictly followed.
+
+\begin{lstlisting}[
+	caption=Plan node translation method signatures. The expression nodes follow the same pattern.,
+	label=lst:plan-translate-methods,
+	breaklines=true
+]
+auto translate_plan_node(QueryCtxT& ctx, Plan* plan) -> TranslationResult;
+auto translate_seq_scan(QueryCtxT& ctx, SeqScan* seqScan) -> TranslationResult;
+auto translate_index_scan(QueryCtxT& ctx, IndexScan* indexScan) -> TranslationResult;
+auto translate_index_only_scan(QueryCtxT& ctx, IndexOnlyScan* indexOnlyScan) -> TranslationResult;
+auto translate_bitmap_heap_scan(QueryCtxT& ctx, BitmapHeapScan* bitmapScan) -> TranslationResult;
+auto translate_agg(QueryCtxT& ctx, const Agg* agg) -> TranslationResult;
+auto translate_sort(QueryCtxT& ctx, const Sort* sort) -> TranslationResult;
+auto translate_limit(QueryCtxT& ctx, const Limit* limit) -> TranslationResult;
+auto translate_gather(QueryCtxT& ctx, const Gather* gather) -> TranslationResult;
+auto translate_gather_merge(QueryCtxT& ctx, const GatherMerge* gatherMerge) -> TranslationResult;
+auto translate_merge_join(QueryCtxT& ctx, MergeJoin* mergeJoin) -> TranslationResult;
+auto translate_hash_join(QueryCtxT& ctx, HashJoin* hashJoin) -> TranslationResult;
+auto translate_hash(QueryCtxT& ctx, const Hash* hash) -> TranslationResult;
+auto translate_nest_loop(QueryCtxT& ctx, NestLoop* nestLoop) -> TranslationResult;
+auto translate_material(QueryCtxT& ctx, const Material* material) -> TranslationResult;
+auto translate_memoize(QueryCtxT& ctx, const Memoize* memoize) -> TranslationResult;
+auto translate_subquery_scan(QueryCtxT& ctx, SubqueryScan* subqueryScan) -> TranslationResult;
+auto translate_cte_scan(QueryCtxT& ctx, const CteScan* cteScan) -> TranslationResult;
+\end{lstlisting}
+
+The 14 expression node types are documented in
+Table~\ref{tab:expr-nodes}, and the 18 plan node types in Table~\ref{tab:plan-nodes}.
+These will be explained more specifically in the subsections.
+
+\begin{table}[H]
+	\centering
+	\small
+	\begin{tabular}{lllp{6cm}}
+		\toprule
+		\textbf{File} & \textbf{Node Tag}             & \textbf{Implementation Note}                       \\
+		\midrule
+		basic         & \texttt{T\_BoolExpr}          & Boolean AND/OR/NOT - with short-circuit evaluation \\
+		basic         & \texttt{T\_Const}             & Constant value - converts Datum to MLIR constant   \\
+		basic         & \texttt{T\_CoalesceExpr}      & COALESCE(...) - first non-null using if-else       \\
+		basic         & \texttt{T\_CoerceViaIO}       & Type coercion - calls PostgreSQL cast functions    \\
+		basic         & \texttt{T\_NullTest}          & IS NULL checks - generates nullable type tests     \\
+		basic         & \texttt{T\_Param}             & Query parameter - looks up from context            \\
+		basic         & \texttt{T\_RelabelType}       & Type relabeling - transparent wrapper              \\
+		basic         & \texttt{T\_Var}               & Column reference - resolves varattno to column     \\
+		complex       & \texttt{T\_Aggref}            & Aggregate functions - creates AggregationOp        \\
+		complex       & \texttt{T\_CaseExpr}          & CASE WHEN ... END - nested if-else operations      \\
+		complex       & \texttt{T\_ScalarArrayOpExpr} & IN/ANY/ALL with arrays - loops over elements       \\
+		complex       & \texttt{T\_SubPlan}           & Subquery expression - materializes and uses result \\
+		functions     & \texttt{T\_FuncExpr}          & Function calls - maps PostgreSQL functions to MLIR \\
+		operators     & \texttt{T\_OpExpr}            & Binary/unary operators                             \\
+		\bottomrule
+	\end{tabular}
+	\caption{Expression node translations}
+	\label{tab:expr-nodes}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\small
+	\begin{tabular}{lllp{6cm}}
+		\toprule
+		\textbf{File} & \textbf{Node Tag}           & \textbf{Implementation Note}                          \\
+		\midrule
+		agg           & \texttt{T\_Agg}             & Aggregation - AggregationOp with grouping keys        \\
+		joins         & \texttt{T\_HashJoin}        & Hash join - InnerJoinOp with hash implementation      \\
+		joins         & \texttt{T\_MergeJoin}       & Merge join - InnerJoinOp with merge semantics         \\
+		joins         & \texttt{T\_NestLoop}        & Nested loop join - CrossProductOp or InnerJoinOp      \\
+		scans         & \texttt{T\_BitmapHeapScan}  & Bitmap heap scan - SeqScan with quals                 \\
+		scans         & \texttt{T\_CteScan}         & CTE scan - looks up CTE and creates BaseTableOp       \\
+		scans         & \texttt{T\_IndexOnlyScan}   & Index-only scan - treated as SeqScan                  \\
+		scans         & \texttt{T\_IndexScan}       & Index scan - treated as SeqScan                       \\
+		scans         & \texttt{T\_SeqScan}         & Sequential scan - BaseTableOp with optional Selection \\
+		scans         & \texttt{T\_SubqueryScan}    & Subquery scan - recursively translates subquery       \\
+		utils         & \texttt{T\_Gather}          & Gather workers - pass-through (no parallelism)        \\
+		utils         & \texttt{T\_GatherMerge}     & Gather merge - pass-through (no parallelism)          \\
+		utils         & \texttt{T\_Hash}            & Hash node - pass-through to child                     \\
+		utils         & \texttt{T\_IncrementalSort} & Incremental sort - delegates to Sort                  \\
+		utils         & \texttt{T\_Limit}           & Limit/offset - LimitOp with count and offset          \\
+		utils         & \texttt{T\_Material}        & Materialize - pass-through (no explicit op)           \\
+		utils         & \texttt{T\_Memoize}         & Memoize - pass-through to child                       \\
+		utils         & \texttt{T\_Sort}            & Sort operation - SortOp with sort keys                \\
+		\bottomrule
+	\end{tabular}
+	\caption{Plan node translations}
+	\label{tab:plan-nodes}
+\end{table}
+
 %-------------------------------------------------------------------------------
 \subsubsection{Plan translation - Scans}\label{subsubsec:plan-scans}
 asdf
@@ -336,6 +463,10 @@ asdf
 \subsubsection{Expression Translation - Operators}\label{subsubsec:expr-operators}
 asdf
 
+%-------------------------------------------------------------------------------
+\subsubsection{Translation - Others}\label{subsubsec:expr-operators}
+asdf
+
 %===============================================================================
 \subsection{Configuring JIT compilation settings}\label{subsec:jit-config}
 asdf
@@ -350,3 +481,5 @@ asdf
 %===============================================================================
 \subsection{Benchmarking}\label{subsec:benchmarking}
 asdf
+
+\subsection{Future implementation works}\label{subsec:future-work}

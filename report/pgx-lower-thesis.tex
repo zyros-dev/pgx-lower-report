@@ -30,7 +30,37 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
 \usepackage{hyperref}
+
+%% Code styling - light theme with IDE-style highlighting
+\definecolor{idekeyword}{rgb}{0.2, 0.3, 0.8}
+\definecolor{idecomment}{rgb}{0.9, 0.2, 0.6}
+\definecolor{idetype}{rgb}{0.8, 0.6, 0.0}
+\definecolor{ideparam}{rgb}{0.9, 0.3, 0.0}
+
+\lstset{
+	language=C++,
+	basicstyle=\ttfamily\tiny,
+	keywordstyle=\color{idekeyword}\bfseries,
+	commentstyle=\color{idecomment}\itshape,
+	stringstyle=\color{idetype},
+	identifierstyle=,
+	morekeywords={auto, const, TranslationResult, QueryCtxT},
+	breaklines=false,
+	showstringspaces=false,
+	numbers=left,
+	numberstyle=\tiny\color{gray},
+	numbersep=6pt,
+	columns=fixed,
+	basewidth={0.48em,0.38em},
+	xleftmargin=30pt,
+	xrightmargin=5pt,
+	aboveskip=3pt,
+	belowskip=3pt,
+	framexleftmargin=25pt
+}
 
 \begin{document}
 
