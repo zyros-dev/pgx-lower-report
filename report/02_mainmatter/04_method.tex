@@ -463,8 +463,8 @@ and "special" values such as index joins). As a result, a generic function was
 built into the QueryCtxT object to handle this lookup logic, \texttt{resolve\_var}.
 These will be used constantly.
 
-Parameters are mostly defined within the InitPlan, and one key novel type is 
-the cached scalar type. 
+Parameters are mostly defined within the InitPlan, and one key novel type is
+the cached scalar type.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Plan translation - Scans}\label{subsubsec:plan-scans}
@@ -533,21 +533,93 @@ but the vector still needs to implement disk spillage. In practice, this did not
 cause enough memory issues to warrant implementation.
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Nullability}\label{subsubsec:expr-nullability}
-asdf
+Postgres has nullability defined in the plan tree that is passed to pgx-lower,
+but LingoDB appeared to have operations inside the lowerings where previously
+non-null objects could become nullable (outer joins, aggregations, unions,
+predicate evaluation can all cause this). Since nullability affects every
+object and functions in the same way as not-a-number (anything it touches becomes
+NaN/nullable), this introduce implementation pains.
+
+One note to be aware of is that LingoDB and PostgreSQL have inverted null flags.
+That is, in LingoDB 1 means valid, and in PostgreSQL 1 means null. This
+causes confusion with the runtime functions needing to invert flags back and
+forth.
+
 %-------------------------------------------------------------------------------
-\subsubsection{Expression Translation - Operators}\label{subsubsec:expr-operators}
-asdf
+\subsubsection{Expression Translation - Operators and OID strings}\label{subsubsec:expr-operators}
+Within operators, the primary challenge is the type conversions and quirks.
+Comparing two BPCHARs requires adding padding for the space around them,
+and to implicitly upcast operations a class was extracted from LingoDB's
+DB dialect (\texttt{SQLTypeInference}). Furthermore, rather than relying on
+PostgreSQL's OID system for finding which operation to use, they were
+converted to strings (">", "<", and so on) then these were used. This prevents
+issues with precision specifications in the OID leading to unidentified
+operations, and a similar approach was used in function nodes, aggregation functions,
+sort operations, and scalar maths.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Translation - Others}\label{subsubsec:expr-operators}
-asdf
+A large number of these nodes are pass through nodes or delegated to another,
+sibling node, such as \texttt{T\_Hash}, \texttt{T\_Material},
+\texttt{T\_Memoize}, and \texttt{T\_RelabelType}. Furthermore, nodes
+also come with executor hints and cost metrics which were skipped over rather
+than dragged through LingoDB, as the optimisations were already done by
+Postgres. IN/ANY operations are also converted into EXISTS operations,
+a number of operations such as scalar subqueries are always marked as nullable,
+and CastOps are also made frequently to defer casting to later layers.
 
 %===============================================================================
 \subsection{Configuring JIT compilation settings}\label{subsec:jit-config}
-asdf
+Not much tinkering was done with the JIT optimisation flags, the minimum
+optimisation passes were used so that it can compile end-to-end, and
+\texttt{llvm::CodeGenOptLevel::Default} was used as the optimisation level.
+These optimisation passes consist of SROA, InstCombinePass, PromotePass,
+LICM pass, reassociation pass, GVN pass, and simplify GVN pass.
+The general consensus appeared to be that \texttt{-O2} should be used on it
+and moved on. This means it is possible to do more tuning work on this.
+% TODO: Define these passes.
+
 %===============================================================================
 \subsection{Profiling Support}\label{subsec:profiling}
-asdf
+Code infrastructure was written to support magic-trace for profiling and
+isolating issues, and a physical computer with an Intel CPU was set up
+with an i5-6500T, 16GB of RAM and a Samsung MZVLB256HAHQ-000L7 NVMe disk.
+This was particularly useful for isolating obvious bottlenecks
+within the system and understanding the latency when compared to PostgreSQL. 
+Figure~\ref{fig:psql-magic} represents the flame chart for query 3, and has a 
+runtime of approximately 260 milliseconds. The functions that it calls are clear,
+and you can see how the query runs over time.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.2]{figures/psql-q03-magictrace.png}
+	\caption{PostgreSQL's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 (approximately 5 megabytes of data)}
+	\label{fig:psql-magic}
+\end{figure}
+
+The flame chart before any optimisations were applied is visible in 
+figure~\ref{fig:pgx-magic-before}. In that chart it is visible that too much 
+time is spent inside the LLVM execution (those spikes in the last 2/3rds are 
+table reads). After adjusting how tuples are read, ensuring joins go to the 
+correct algorithm, introducing Postgres's tuple-slot reading API, and disabling 
+logs, the chart looks like figure~\ref{fig:pgx-magic-after}. These adjustments 
+improved the latency from 4.5 seconds to approximately 400 milliseconds. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.2]{figures/pgx-lower-before-q03.png}
+	\caption{pgx-lower's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 before optimisation}
+	\label{fig:pgx-magic-before}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.2]{figures/pgx-lower-after-q03.png}
+	\caption{pgx-lower's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 after optimisation}
+	\label{fig:pgx-magic-after}
+\end{figure}
+
+The specifics of running these in a stable way will be explained in 
+subsection~\ref{subsec:benchmarking}.
 
 %===============================================================================
 \subsection{Website}\label{subsec:website}
