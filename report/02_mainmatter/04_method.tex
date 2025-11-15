@@ -441,21 +441,96 @@ These will be explained more specifically in the subsections.
 	\label{tab:plan-nodes}
 \end{table}
 
-%-------------------------------------------------------------------------------
-\subsubsection{Plan translation - Scans}\label{subsubsec:plan-scans}
-asdf
-%-------------------------------------------------------------------------------
-\subsubsection{Plan translation - Aggregations}\label{subsubsec:plan-aggregations}
-asdf
-%-------------------------------------------------------------------------------
-\subsubsection{Plan translation - Joins}\label{subsubsec:plan-joins}
-asdf
-%-------------------------------------------------------------------------------
-\subsubsection{Plan translation - Subqueries}\label{subsubsec:plan-subqueries}
-asdf
+Some common definitions of nodes will also serve to be useful. Nodes commonly
+have a \texttt{InitPlan} parameter, which is a function that should be called
+before the node is used and contains initiailising variables such as the parameters,
+catalogue lookups, or other things. \texttt{targetlist} contains the output
+of the node, \texttt{qual} is the qualification of the node, which means
+what should be filtered as outputs. Join nodes will have a left and right tree,
+with a more intuitive name of inner/outer children. These signify the inner and
+outer loops of the nested for-loop that is created.
+
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Variables, Constants, Parameters}\label{subsubsec:expr-vars-consts}
 asdf
+The two relevant ways PostgreSQL identifies values is with variable nodes and
+parameter nodes. These are stored inside a schema/column manager class as
+well as the \texttt{QueryCtxT} within the code. Variables are typically
+defined within scans, while the parameters are intermediate products.
+A number of difficulties were encountered with these as there are a number
+of interacting variables used to identify them (\texttt{varno}, \texttt{varattno},
+and "special" values such as index joins). As a result, a generic function was
+built into the QueryCtxT object to handle this lookup logic, \texttt{resolve\_var}.
+These will be used constantly.
+
+Parameters are mostly defined within the InitPlan, and one key novel type is 
+the cached scalar type. 
+
+%-------------------------------------------------------------------------------
+\subsubsection{Plan translation - Scans}\label{subsubsec:plan-scans}
+PostgreSQL has a variety of scans that read from tables, and
+handlers for sequential scan, subquery scans, index scans, index-only scans,
+bitmap heap scans, and CTE (common table expression) scans were implemented.
+However, aside from the subquery scan and CTE scan, they all map to sequential
+scan. This is a tradeoff to reduce complexity, and the most impacted
+by this is the index scan.
+
+Within the index scan it has specific annotations for variables with its |INDEX\_VAR|
+which requires special resolution mapping to for us to handle. Furthermore,
+we need to handle the qualifiers (scan filters) \texttt{indexqual}, \texttt{recheckqual}
+like a \texttt{qual}. In psql, these filter at different stages, but since we are
+skipping the index implementation they become generic filters instead.
+
+CTE scan plans are defined within the InitPlan of nodes, but still route through
+the primary plan switch statement logic. Neither CTE plans or subqueries
+currently offer de-duplication to simplify implementation. That is, if a query
+uses the same CTE reference or writes the same subquery twice, they will
+currently be lowered into two different LLVM chunks of code rather than
+congregated and referenced.
+
+%-------------------------------------------------------------------------------
+\subsubsection{Plan translation - Aggregations}\label{subsubsec:plan-aggregations}
+Aggregation is a complicated node type. It consists of an aggregation strategy,
+which is ignored as we have a simple algorithm instead, splitting specification,
+which is also unutilised, group columns, number of groups, it can produce
+parameters, and it has its own operators such as COUNT, SUM, and so on.
+Furthermore, it uses special varnos to do lookups for variables (-2),
+so it requires a new context object, and supports DISTINCT statements.
+
+Most of the pain was with specific edge cases that arise in the
+simplification. For instance, \texttt{COUNT(*)} behaves differently in combining
+mode where parallel workers provide partial counts rather than raw rows,
+requiring translation to SUM instead of CountRowsOp. Similarly,
+\texttt{HAVING} clauses can reference aggregates not present in the SELECT list,
+necessitating a discovery pass with \texttt{find\_all\_aggrefs()} to ensure
+all required aggregates are computed before filtering. The use of magic
+number varno=-2 to identify aggregate references, while necessary
+to distinguish them from regular column references, breaks the normal
+variable resolution flow and requires special handling throughout
+the expression translator.
+
+%-------------------------------------------------------------------------------
+\subsubsection{Plan translation - Joins}\label{subsubsec:plan-joins}
+For joins, there are two layers to translating them: the type of join, and
+the algorithm used by the join. The type of join refers to inner, semi, anti,
+right-anti, left/right joins, and full joins. The semi and anti join types are
+not specifically translated, and instead rely on an \texttt{EXISTS}/
+\texttt{NOT EXISTS} translations instead because they are semantically the same
+operation.
+
+The algorithm used by the join refers to merge, nestloop, or hash joins. Following
+LingoDB's pattern, the merge joins are turned into hash joins so that
+there does not have to be additional lowering code. A challenge was that
+nest loops can carry parameters, so a new query context has to be created,
+the parameter has to be registered and inserted into the lookups.
+
+One issue that is still inside the joins implementations is how preventing
+double computations works. For this, LingoDB takes the inner join and does
+it on its own and builds a vector of results, then afterwards it iterates over
+the outer operation and uses the inner section in a pre-computed way. This prevents
+duplicated computation at the cost of using more memory. In theory this is fine,
+but the vector still needs to implement disk spillage. In practice, this did not
+cause enough memory issues to warrant implementation.
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Nullability}\label{subsubsec:expr-nullability}
 asdf
