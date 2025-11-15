@@ -138,21 +138,181 @@ connection was required within the IDE. Furthermore, unit tests allow the |stder
 to be visible, which assists greatly with MLIR/LLVM errors that go to |stderr|
 and nowhere else.
 
-For the stack-dumping, a script was written, |debug-query.sh| which proved to 
-be the most useful approach for complex issues. It has the ability to create a 
+For the stack-dumping, a script was written, |debug-query.sh| which proved to
+be the most useful approach for complex issues. It has the ability to create a
 psql connection, git the process ID of the client connection, then connect GDB,
-run a desired query, and dump the stack trace. In this way, the majority of 
+run a desired query, and dump the stack trace. In this way, the majority of
 errors were tackled.
 
 %===============================================================================
 \subsection{Data Types}\label{subsec:data-types}
-asdf
+PostgreSQL has a large set of data types
+(\url{https://www.postgresql.org/docs/current/datatype.html}),
+and LingoDB has significantly less. However, for TPC-H we only require a subset
+of these. Table ~\ref{tab:lingodb-type-capabilities}
+shows which of the LingoDB types are used,
+and table~\ref{tab:type-mapping} shows the type mappings. The two primary
+workarounds that were implemented was for decimals and the various types of strings.
+For decimals, i128 is enough precision for most of the TPC-H tests, and is what
+LingoDB was using. However, adjustments had to be made to ensure impossible
+to allocate values do not appear, so the precision was capped at |<32, 6>|
+That is, 32 digits in the integer part, 6 digits in the decimal places.
+
+For the date types, a comprimise was made that when it receives an interval
+type with a months column, it will turn this into days and introduce errors.
+However, since the TPC-H queries never use month intervals, this is acceptable.
+
+\begin{table}[H]
+	\centering
+	\small
+	\begin{tabular}{llp{4.5cm}}
+		\toprule
+		\textbf{DB Dialect Type}            & \textbf{LLVM Type}    & \textbf{Used by pgx-lower?} \\
+		\midrule
+		\texttt{!db.date<day>}              & \texttt{i64}          & Yes                         \\
+		\texttt{!db.date<millisecond>}      & \texttt{i64}          & No                          \\
+		\texttt{!db.timestamp<second>}      & \texttt{i64}          & Only if typmod specifies    \\
+		\texttt{!db.timestamp<millisecond>} & \texttt{i64}          & Only if typmod specifies    \\
+		\texttt{!db.timestamp<microsecond>} & \texttt{i64}          & Yes (default)               \\
+		\texttt{!db.timestamp<nanosecond>}  & \texttt{i64}          & Only if typmod specifies    \\
+		\texttt{!db.interval<months>}       & \texttt{i64}          & No                          \\
+		\texttt{!db.interval<daytime>}      & \texttt{i64}          & Yes                         \\
+		\texttt{!db.char<N>}                & \texttt{\{ptr, i32\}} & No (uses !db.string)        \\
+		\texttt{!db.string}                 & \texttt{\{ptr, i32\}} & Yes                         \\
+		\texttt{!db.decimal<p,s>}           & \texttt{i128}         & Yes                         \\
+		\texttt{!db.nullable<T>}            & \texttt{\{T, i1\}}    & Yes                         \\
+		\bottomrule
+	\end{tabular}
+	\caption{LingoDB type system full capabilities}
+	\label{tab:lingodb-type-capabilities}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\small
+	\begin{tabular}{lll}
+		\toprule
+		\textbf{PostgreSQL Type} & \textbf{DB Dialect Type}               & \textbf{LLVM Type}    \\
+		\midrule
+		\multicolumn{3}{l}{\textit{Integers}}                                                     \\
+		\cmidrule{2-3}
+		INT2 (SMALLINT)          & \texttt{i16}                           & \texttt{i16}          \\
+		INT4 (INTEGER)           & \texttt{i32}                           & \texttt{i32}          \\
+		INT8 (BIGINT)            & \texttt{i64}                           & \texttt{i64}          \\
+		\addlinespace
+		\multicolumn{3}{l}{\textit{Floating Point}}                                               \\
+		\cmidrule{2-3}
+		FLOAT4 (REAL)            & \texttt{f32}                           & \texttt{f32}          \\
+		FLOAT8 (DOUBLE)          & \texttt{f64}                           & \texttt{f64}          \\
+		\addlinespace
+		\multicolumn{3}{l}{\textit{Boolean}}                                                      \\
+		\cmidrule{2-3}
+		BOOL                     & \texttt{i1}                            & \texttt{i1}           \\
+		\addlinespace
+		\multicolumn{3}{l}{\textit{String Types}}                                                 \\
+		\cmidrule{2-3}
+		TEXT / VARCHAR / BPCHAR  & \texttt{!db.string}                    & \texttt{\{ptr, i32\}} \\
+		BYTEA                    & \texttt{!db.string}                    & \texttt{\{ptr, i32\}} \\
+		\addlinespace
+		\multicolumn{3}{l}{\textit{Numeric}}                                                      \\
+		\cmidrule{2-3}
+		NUMERIC(p,s)             & \texttt{!db.decimal<p,s>}              & \texttt{i128}         \\
+		\addlinespace
+		\multicolumn{3}{l}{\textit{Date/Time}}                                                    \\
+		\cmidrule{2-3}
+		DATE                     & \texttt{!db.date<day>}                 & \texttt{i64}          \\
+		TIMESTAMP                & \texttt{!db.timestamp<s|ms|$\mu$s|ns>} & \texttt{i64}          \\
+		INTERVAL                 & \texttt{!db.interval<daytime>}         & \texttt{i64}          \\
+		\addlinespace
+		\multicolumn{3}{l}{\textit{Nullable}}                                                     \\
+		\cmidrule{2-3}
+		Any nullable column      & \texttt{!db.nullable<T>}               & \texttt{\{T, i1\}}    \\
+		\bottomrule
+	\end{tabular}
+	\caption{PostgreSQL type translation through DB dialect to LLVM}
+	\label{tab:type-mapping}
+\end{table}
+
+This defines most of the supporting details, and the main two components of
+the implementation can be described: the runtime patterns and the plan tree
+translation.
 
 %===============================================================================
 \subsection{Runtime patterns}\label{subsec:runtime-patterns}
-asdf
+Runtime functions are used in LingoDB for difficult to implement methods in
+LLVM, such as a sort algorithm. |pgx-lower| implemented reading tuples from
+PostgreSQL, storing them as a result so that they can be streamed one by one,
+adjusted several runtime implementations from LingoDB, and changed the sort and
+hashtable implementations to rely on the PostgreSQL API rather than standard
+collections.
+
+Figure~\ref{fig:runtime-functions} shows the high-level components in a
+runtime function. During SQL translation to MLIR, the frontend creates
+\texttt{db.runtimecall} operations with a function name and arguments.
+These operations are registered in the runtime function registry, which maps
+each function name to either a \texttt{FunctionSpec} containing the mangled
+C++ symbol name, or a custom lowering lambda. During the DBToStd
+lowering pass, the \texttt{RuntimeCallLowering} pattern looks up each runtime
+call in the registry and replaces it with a \texttt{func.call} operation
+targeting the mangled C++ function. The JIT engine then links these function
+calls to the actual compiled C++ runtime implementations, which handle
+PostgreSQL-specific operations like tuple access, sorting via
+\texttt{tuplesort}, and hash table management using PostgreSQL's memory
+contexts. This pattern allows complex operations to be implemented once in C++
+and reused across all queries, while maintaining type safety and null handling
+semantics through the MLIR type system.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/runtime-functions.drawio.pdf}
+	\caption{System design with labels of component sources.}
+	\label{fig:runtime-functions}
+\end{figure}
+
+The PostgreSQL runtime implements zero-copy tuple access for reading and
+result accumulation for output. When scanning a table,
+\texttt{openpostgrestable()} creates a heap scan
+using \texttt{heapbeginscan()}, and \texttt{readnexttuplefromtable()} stores a
+pointer (not a copy) to each tuple in the global
+\texttt{gcurrenttuplepassthrough} structure. JIT code
+extracts fields via \texttt{extractfield()}, which uses \texttt{heapgetattr()}
+and converts PostgreSQL \texttt{Datum} values to native types. For results,
+\texttt{tablebuilderadd()} accumulates computed values as \texttt{Datum}
+arrays in \texttt{ComputedResultStorage}. When a result tuple
+completes, \texttt{addtupletoresult()} streams it back through
+PostgreSQL's \texttt{TupleStreamer} by populating a \texttt{TupleTableSlot} and
+calling the destination receiver, enabling direct integration with
+PostgreSQL's tuple pipeline.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/pgsql-runtime.drawio.pdf}
+	\caption{PostgreSQLRuntime.h component design}
+	\label{fig:pgsql-runtime}
+\end{figure}
+
+The PostgreSQL runtime allows the JIT runtime to read from the psql tables, and
+the design of it is visible in Figure~\ref{fig:pgsql-runtime}.
+Generated JIT code invokes runtime functions implemented in the C++ layer,
+including table operations (\texttt{open\_psql\_table}), field extraction
+(\texttt{extract\_field<T>}), result building (\texttt{table\_builder\_add}),
+and type conversions between PostgreSQL's \texttt{Datum} representation and
+native types. These runtime functions interface with PostgreSQL's C API layer,
+which handles heap access for reading tuples, memory management through
+PostgreSQL's context system, and tuple streaming for returning results to the
+executor. An important part is that when tuples are read from Postgres, 
+only the pointers are stored within the C++ storage layer to maintain 
+zero-copy semantics. 
+
+
+Once stored, the JIT code can read from the batch and 
+stream tuples back through the output pipeline as well. Streaming the tuples 
+back means that the entire table does not build up in RAM,
+and instead tuples are returned one by one. This was tested by doing larger table 
+scans as avoiding this buildup is essential.
+
 %===============================================================================
-\subsection{AST patterns}\label{subsec:ast-patterns}
+\subsection{Plan Tree Translation}\label{subsec:ast-patterns}
 asdf
 %-------------------------------------------------------------------------------
 \subsubsection{Plan translation - Scans}\label{subsubsec:plan-scans}
