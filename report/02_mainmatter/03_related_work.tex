@@ -339,12 +339,13 @@ on the same set of queries as shown in Table~\ref{tbl:prof-psql}. This shows tha
 at worst, 43.02\% of LLC loads are missed. A 0.69\% branch miss rate has room for
 improvement, as systems with even a 99\% branch prediction accuracy can
 have a significant bottleneck from it.
-% TODO what is an llc load
+% TODO what is an llc load, also TODO I need to go read about the context
+% of this table; why did I only test q1, 3, 6, and 12?
 
 \begin{table}[H]
 	\centering
 	\footnotesize
-	\caption{PostgreSQL query profiling statistics collected with \texttt{perf}.}
+	\caption{Preliminary PostgreSQL query profiling statistics collected with \texttt{perf}.}
 	\label{tbl:prof-psql}
 	\begin{tabular}{l@{\hspace{0.5em}}rrrrr@{\hspace{0.5em}}l}
 		\toprule
