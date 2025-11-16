@@ -1,3 +1,11 @@
+% TODO
+% 1. explain query optimisations more and what some common optimisations are
+% 2. What's OLTP vs OLAP? 
+% 3. buffer tables, paging and typical techniques for improving db latency
+% 4. vectorisation deep dive; how does SIMD operate and help
+% 5. hardware evolution over time for disk-read speeds
+
+
 \chapter{Background}\label{ch:background}
 
 %================================================================================ 
@@ -103,6 +111,9 @@ another person can target your custom high-level dialect.
 % TODO: I need a lot more detail about how LLVM functions. What even is a dialect,
 % what is a lowering, what does any of this stuff mean! This can be like... 4-8 
 % paragraphs honestly. 
+
+\subsection{WebAssembly and others}\label{subsec:llvm-mlir}
+% Also, a paragraph on what is WASM, why is wasm special
 
 \subsection{PostgreSQL Background}\label{subsec:postgresql-background}
 % TODO: Provide sources

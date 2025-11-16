@@ -1,3 +1,6 @@
+% TODO
+% Need an overview of common OLAP databases
+
 \chapter{Related Work}\label{ch:related-work}
 
 This chapter summarises relevant works in the compiled queries space and their
@@ -331,19 +334,46 @@ clear that the queries can become several times faster if optimised.
 \end{figure}
 
 As stated in subsection~\ref{subsec:jit_background}, one core acceleration of JIT
-is improving the branch predictions. To measure this, \texttt{prof} was used
-on the same set of queries in figure~\ref{fig:prof-psql-2}. This shows that
-at worst, 43.02\% of LLC loads are missed. A 0.69\%branch miss rate has room for 
+is improving the branch predictions. To measure this, \texttt{perf} was used
+on the same set of queries as shown in Table~\ref{tbl:prof-psql}. This shows that
+at worst, 43.02\% of LLC loads are missed. A 0.69\% branch miss rate has room for
 improvement, as systems with even a 99\% branch prediction accuracy can
-have a significant bottleneck from it. 
+have a significant bottleneck from it.
 % TODO what is an llc load
 
-\begin{figure}[H]
+\begin{table}[H]
 	\centering
-	\includegraphics[scale=0.6]{figures/perf-stats.png}
-	\caption{PostgreSQL query profiling statistics collected with prof.}
-	\label{fig:prof-psql-2}
-\end{figure}
+	\footnotesize
+	\caption{PostgreSQL query profiling statistics collected with \texttt{perf}.}
+	\label{tbl:prof-psql}
+	\begin{tabular}{l@{\hspace{0.5em}}rrrrr@{\hspace{0.5em}}l}
+		\toprule
+		\textbf{Metric} & \textbf{Q1}      & \textbf{Q3}      & \textbf{Q6}      & \textbf{Q12}     & \textbf{Q14}     & \textbf{Unit} \\
+		\midrule
+		\multicolumn{7}{c}{\textit{Absolute Values}}                                                                                   \\
+		\midrule
+		Task-clock      & 992.88           & 566.44           & 349.64           & 514.66           & 368.84           & msec          \\
+		Page faults     & 4230             & 3236             & 109              & 497              & 1928             & occurrences   \\
+		Cycles          & 2.72e9           & 1.57e9           & 9.76e8           & 1.42e9           & 1.03e9           & occurrences   \\
+		Instructions    & 6.49e9           & 2.63e9           & 1.61e9           & 2.44e9           & 1.69e9           & occurrences   \\
+		Branches        & 1.03e9           & 4.45e8           & 2.79e9           & 4.34e8           & 2.89e8           & occurrences   \\
+		Branch misses   & \textbf{1.21e6}  & \textbf{2.67e6}  & \textbf{1.36e6}  & \textbf{3.01e6}  & \textbf{1.21e6}  & occurrences   \\
+		LLC loads       & 5.17e6           & 7.00e6           & 4.48e6           & 6.11e6           & 4.88e6           & occurrences   \\
+		LLC load misses & \textbf{1.76e6}  & \textbf{2.84e6}  & \textbf{1.93e6}  & \textbf{2.37e6}  & \textbf{2.07e6}  & occurrences   \\
+		\midrule
+		\multicolumn{7}{c}{\textit{Normalized Values}}                                                                                 \\
+		\midrule
+		Task-clock      & 0.104            & 0.048            & 0.032            & 0.041            & 0.034            & CPUs          \\
+		Page faults     & 4260             & 5713             & 311              & 966              & 5227             & /sec          \\
+		Cycles          & 2.743            & 2.777            & 2.79             & 2.768            & 2.789            & GHz           \\
+		Instructions    & 2.38             & 1.67             & 1.65             & 1.71             & 1.64             & insn/cycle    \\
+		Branches        & 1040             & 786              & 797              & 843              & 785              & M/sec         \\
+		Branch misses   & \textbf{0.12\%}  & \textbf{0.60\%}  & \textbf{0.49\%}  & \textbf{0.69\%}  & \textbf{0.42\%}  & of branches   \\
+		LLC loads       & 5.203            & 12.354           & 12.807           & 11.868           & 13.22            & M/sec         \\
+		LLC load misses & \textbf{34.12\%} & \textbf{40.65\%} & \textbf{43.02\%} & \textbf{38.87\%} & \textbf{42.37\%} & of LL-cache   \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
 %-------------------------------------------------------------------------------- 
 \section{Gaps in Literature}\label{sec:gaps}
@@ -376,6 +406,7 @@ easier to add to the official system. % TODO badly written lol
 %================================================================================ 
 \section{Aims}\label{sec:lit-rev}
 %================================================================================ 
+% need to state what advantages we have for keeping postgres, ACID, etc
 Tying this together, this piece aims to integrate a research compiler into a
 battle-tested system by using an extension system. This addresses the gap
 of these systems being difficult to use widely, and potential to integrate it
