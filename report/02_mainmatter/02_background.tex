@@ -153,8 +153,8 @@ compilers so that common, but complex, compiler optimisations do not have
 to be re- implemented~\cite{llvm-paper}. Multi-Level
 Intermediate Representation (MLIR) is another, newer toolkit that is
 tightly coupled with the LLVM project~\cite{mlir-paper}. It adds a
-framework to define dialects, and lower through these dialects into machine code. One of the primary benefits of this is if you make 
-a compiler, you can define a high level dialect, then another person 
+framework to define dialects, and lower through these dialects into machine code. One of the primary benefits of this is if you make
+a compiler, you can define a high level dialect, then another person
 can target your custom high-level dialect.
 
 LLVM defines a language-independent intermediate representation
@@ -173,40 +173,67 @@ heterogeneous hardware by allowing target-specific optimisations
 at appropriate abstraction levels.
 
 LLVM's On-Request-Compilation (ORC) JIT is a system for
-building just-in-time compilers with support for lazy compilation,
+building JIT compilers with support for lazy compilation,
 concurrent compilation, and runtime optimization~\cite{llvm-jit-orc}.
 ORC can compile code on-demand as it is needed, reducing startup
 time by deferring compilation of functions until they are first
 called. The JIT supports concurrent compilation across
 multiple threads and provides built-in dependency tracking
 to ensure code safety during parallel execution. This makes ORC particularly
-suitable for dynamic language implementations, REPLs 
-(Read-Eval-Print Loops), and high-performance JIT compilers. 
+suitable for dynamic language implementations, REPLs
+(Read-Eval-Print Loops), and high-performance JIT compilers.
 
 \section{WebAssembly and others}\label{sec:webassembly}
 % Also, a paragraph on what is WASM, why is wasm special
+The V8 compiler used for WebAssembly has a unique architecture because
+it targets short-lived programs. Majority of JIT applications
+are used for long-running services, but this is used for web pages which are
+opened and closed frequently. To mitigate this, they have a two-phase
+architecture where code is first compiled with Liftoff for a quick startup,
+then hot functions are recompiled with TurboFan \cite{wasm}. Liftoff aims
+to create machine code as fast as possible and skip optimisations.
+
+Other common JIT compilers are the Java Virtual Machine (JVM), SpiderMonkey
+(Mozilla Firefox's JIT), JavaScriptCore/Nitro (Safari/Webkit), PyPy, various
+python JIT compilers, LuaJIT for Lua, HHVM for PHP, Rubinius for Ruby,
+RyuJIT for $C\#$, and more \cite{jit_attacks_survey}. These all target
+different work profiles.
 
 \section{PostgreSQL Background}\label{sec:postgresql-background}
-% TODO: Provide sources
-An arena allocator is a data structure that supports allocating memory and freeing
+PostgreSQL relies on memory contexts, which are an extension of arena
+allocators. An arena allocator is a data structure that supports allocating
+memory and freeing
 the entire data structure. This improves memory safety by consolidating
-allocations into a single location. Within PostgreSQL, memory contexts are used
-which is an advancement of this concept. There is a set of statically defined
-memory contexts (TopMemoryContext, TopTransactionContext, CurTransactionContext,
-TransactionContext, they are defined in the mmgr README), and with these you
-can create child contexts. When a context is freed, all the child contexts are
-also freed.
+allocations into a single location. A memory context can create child contexts,
+and when a context is freed it also frees all the children of this context,
+turning it into a tree of arena allocators. There is a set of statically defined
+memory contexts: TopMemoryContext, TopTransactionContext, CurTransactionContext,
+TransactionContext, which are managed through PostgreSQL's Server Programming
+Interface (SPI) \cite{postgresql_spi_memory}.
 
 PostgreSQL defines query trees, plan trees, plan nodes, and expression nodes.
 A query tree is the initial version of the parsed SQL, which is passed through
 the optimiser which is then called a plan tree. The nodes in these plan trees
 can broadly be identified as plan nodes or expression nodes.
 Plan nodes include an implementation detail (aggregation, scanning a table,
-nest loop joins) and expression nodes consist of individual operations (binaryop,
-null test, case expressions).
-% TODO: Include a graph of the PostgreSQL path and annotate in the previous 
-% paragraph where the nodes are produced
+nest loop joins) and expression nodes consist of individual operations (binaryop, null test, case expressions) \cite{postgresql_querytree}.
+
+PostgreSQL provides the \texttt{EXPLAIN} command to inspect query execution
+plans, which is essential for understanding and optimizing query performance
+\cite{postgresql_explain}. This command displays the execution plan that the
+planner generates, including cost estimates and optional execution statistics,
+making it a critical tool for database optimization and analysis.
 
 \section{Database Benchmarking}\label{sec:database-benchmarking}
-Need to include information here about common benchmarks, and how the industry
-has gone towards TPC-H.
+% cite pg_bench
+Benchmarking a database is a difficult task because there is a variety of
+workloads. Many systems create their own benchmarking libraries,
+such as $pg_bench$ by PostgreSQL \cite{postgresql_pgbench} or
+LinkBench \cite{linkbench} by Facebook, but in academics the 
+more common benchmarks are from
+the Transaction Processing Council, which is a group that defines benchmarks
+\cite{tpch_analyzed}.  Over the years they have made TPC-C for an order-entry
+environment, TPC-E, for a broker firm's operations, TPC-DS for a decision
+support benchmark. The most common one in research appears to be TPC-H,
+where the H informally means "hybrid". It has a mix of analytical and
+transactional elements inside it \cite{tpch_analyzed}.
