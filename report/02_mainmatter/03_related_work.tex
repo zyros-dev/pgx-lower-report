@@ -1,6 +1,3 @@
-% TODO
-% Need an overview of common OLAP databases
-
 \chapter{Related Work}\label{ch:related-work}
 
 This chapter summarises relevant works in the compiled queries space and their
@@ -321,8 +318,10 @@ and with a single core DuckDB is the slowest.
 
 To identify how much potential gain there is in a majory on-disk database,
 \texttt{perf} was used on PostgreSQL during TPC-H queries 1, 3, 6, 12 and 14 in
-figure~\ref{fig:pprof-psql}. This shows that the CPU time varied from between
-34.87\% and 76.56\%, with an average of 49.32\%. These metrics were identified
+figure~\ref{fig:pprof-psql}. These queries were chosen because the Mutable
+code infrastructure directly supported them. This shows that the CPU time 
+varied from between 34.87\% and 76.56\%, with an average of 49.32\%. These 
+metrics were identified
 using the \texttt{prof} graph. With this much time in the CPU, it is
 clear that the queries can become several times faster if optimised.
 
@@ -333,11 +332,13 @@ clear that the queries can become several times faster if optimised.
 	\label{fig:pprof-psql}
 \end{figure}
 
-As stated in subsection~\ref{subsec:jit_background}, one core acceleration of JIT
-is improving the branch predictions. To measure this, \texttt{perf} was used
-on the same set of queries as shown in Table~\ref{tbl:prof-psql}. This shows that
-at worst, 43.02\% of LLC loads are missed. A 0.69\% branch miss rate has room for
-improvement, as systems with even a 99\% branch prediction accuracy can
+As stated in section~\ref{sec:jit_background}, one core acceleration of 
+JIT
+is improving the branch predictions. To measure this, \texttt{perf} was 
+used on the same set of queries as shown in Table~\ref{tbl:prof-psql}. This
+shows that
+at worst, 43.02\% of LLC loads are missed. A 0.69\% branch miss rate has room 
+for improvement, as systems with even a 99\% branch prediction accuracy can
 have a significant bottleneck from it.
 % TODO what is an llc load, also TODO I need to go read about the context
 % of this table; why did I only test q1, 3, 6, and 12?

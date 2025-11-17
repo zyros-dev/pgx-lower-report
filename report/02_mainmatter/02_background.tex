@@ -36,7 +36,7 @@ caches are barely used. An i5-570, a popular CPU in 2010 had a 8MB L3 cache,
 but in 2024 an i5-14600K has a 24MB L3 cache \cite{passmark_i5760},
 \cite{techpowerup_i5_14600k}. For disks, in 2010 the Segate Barracuda 7200.12
 was popular, which had a sustained read of 138MB/s, but in 2022 the Samsung
-V-NAND SSD 990 PRO released with a sustained read of 7450MB/s 
+V-NAND SSD 990 PRO released with a sustained read of 7450MB/s
 \cite{seagate_barracuda_7200_12} \cite{samsung_990_pro}. Increases this
 large could mean the algorithms can fundamentally change.
 
@@ -86,7 +86,10 @@ inside the context of the L1/L2/L3 and ram caches depending on the access
 patterns \cite{database-concepts}. This buffer pool can change caching
 strategies depending on the
 context, such as last-recently-used, most-recently-used, and more, which
-can be decided in the optimiser \cite{effelsberg1984buffer}.
+can be decided in the optimiser \cite{effelsberg1984buffer}. The effectiveness
+of this can be measured with last level cache hit rate measurements (LLC)
+which represents how many of the instructions were resolved inside the CPU
+cache \cite{llc_intel}.
 
 Databases are commonly split into Online Transaction Processing (OLTP) and
 Online Analytical Processing (OLAP). OLTP has a focus on
@@ -207,7 +210,7 @@ Interface (SPI) \cite{postgresql_spi_memory}.
 
 PostgreSQL defines query trees, plan trees, plan nodes, and expression nodes.
 A query tree is the initial version of the parsed SQL, which is passed through
-the optimiser which is then called a plan tree. These stages are visible in 
+the optimiser which is then called a plan tree. These stages are visible in
 figure~\ref{fig:database_structure}. The nodes in these plan trees
 can broadly be identified as plan nodes or expression nodes.
 Plan nodes include an implementation detail (aggregation, scanning a table,
