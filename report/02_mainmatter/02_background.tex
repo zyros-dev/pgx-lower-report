@@ -1,10 +1,3 @@
-% TODO
-% 1. explain query optimisations more and what some common optimisations are
-% 2. What's OLTP vs OLAP? 
-% 3. buffer tables, paging and typical techniques for improving db latency
-% 4. vectorisation deep dive; how does SIMD operate and help
-% 5. hardware evolution over time for disk-read speeds
-
 \chapter{Background}\label{ch:background}
 
 %===============================================================================
@@ -213,7 +206,8 @@ Interface (SPI) \cite{postgresql_spi_memory}.
 
 PostgreSQL defines query trees, plan trees, plan nodes, and expression nodes.
 A query tree is the initial version of the parsed SQL, which is passed through
-the optimiser which is then called a plan tree. The nodes in these plan trees
+the optimiser which is then called a plan tree. These stages are visible in 
+figure~\ref{fig:database_structure}. The nodes in these plan trees
 can broadly be identified as plan nodes or expression nodes.
 Plan nodes include an implementation detail (aggregation, scanning a table,
 nest loop joins) and expression nodes consist of individual operations (binaryop, null test, case expressions) \cite{postgresql_querytree}.
@@ -229,7 +223,7 @@ making it a critical tool for database optimization and analysis.
 Benchmarking a database is a difficult task because there is a variety of
 workloads. Many systems create their own benchmarking libraries,
 such as $pg_bench$ by PostgreSQL \cite{postgresql_pgbench} or
-LinkBench \cite{linkbench} by Facebook, but in academics the 
+LinkBench \cite{linkbench} by Facebook, but in academics the
 more common benchmarks are from
 the Transaction Processing Council, which is a group that defines benchmarks
 \cite{tpch_analyzed}.  Over the years they have made TPC-C for an order-entry
