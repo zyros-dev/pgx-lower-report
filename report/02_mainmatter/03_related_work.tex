@@ -298,7 +298,7 @@ to PostgreSQL's. This will be explored in the design in REFERENCE.
 %-------------------------------------------------------------------------------- 
 % TODO: Maybe this section should change places? Meh.
 These systems produced their own benchmarks and could selectively pick which
-systems to invole, so a recreation of the benchmarks was done. DuckDB, HyPer,
+systems to involve, so a recreation of the benchmarks was done. DuckDB, HyPer,
 Mutable, LingoDB and PostgreSQL were all compared to one another, and is
 visible in Figure~\ref{fig:created-benchmark-results}. TPC-H was used as most
 of the involved pieces used it themselves \cite{tpch}, and docker containers were
@@ -342,6 +342,8 @@ have a significant bottleneck from it.
 % TODO what is an llc load, also TODO I need to go read about the context
 % of this table; why did I only test q1, 3, 6, and 12?
 
+% TODO: I think this stuff should just be represented with a graph
+% in the results section
 \begin{table}[H]
 	\centering
 	\footnotesize
@@ -412,7 +414,8 @@ Tying this together, this piece aims to integrate a research compiler into a
 battle-tested system by using an extension system. This addresses the gap
 of these systems being difficult to use widely, and potential to integrate it
 into the original system once stronger correctness and speed optimisations have
-been shown.
+been shown. Accomplishing this shows there is a way to rely on previous
+ACID-compliance and supporting code infrastructure.
 
 A key output is showing that the system can operate within
 the same order of magnitude as the target system. The purpose of this is to

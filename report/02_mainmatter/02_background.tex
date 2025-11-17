@@ -5,15 +5,11 @@
 % 4. vectorisation deep dive; how does SIMD operate and help
 % 5. hardware evolution over time for disk-read speeds
 
-
 \chapter{Background}\label{ch:background}
 
-%================================================================================ 
-\section{Fundamentals}\label{sec:fundamentals}
-%================================================================================ 
-%-------------------------------------------------------------------------------- 
-\subsection{Database Background}\label{subsec:database_background}
-%-------------------------------------------------------------------------------- 
+%===============================================================================
+\section{Database Background}\label{sec:database_background}
+%-------------------------------------------------------------------------------
 The majority of databases are structured like Figure~\ref{fig:database_structure}.
 Structure Query Language (SQL) is parsed, turned to RA (relational-algebra),
 optimized, executed, then materialized into a table.
@@ -42,14 +38,24 @@ this tree where tuples are dragged upwards.
 \end{figure}
 
 The fundamental issue with this classical model is that it is heavily
-under utilising the hardware. If we are only pulling up a single tuple, our CPU
-caches are barely used. This has lead to the vectorized execution model and
-the compiled model. With the vectorized model, we pull up groups of tuples
-instead. However, this leads to problems where it's common to have too many
-copy operations instead of having a pointer going upwards. For instance, if a
-sort or a join allocates new space that is too much for the cache, the
-handling can become poor. With the compiled approach, it introduces a lot of
-implementation complexity.
+under-utilising the hardware. If only a single tuple is pulled, our CPU
+caches are barely used. An i5-570, a popular CPU in 2010 had a 8MB L3 cache,
+but in 2024 an i5-14600K has a 24MB L3 cache \cite{passmark_i5760},
+\cite{techpowerup_i5_14600k}. For disks, in 2010 the Segate Barracuda 7200.12
+was popular, which had a sustained read of 138MB/s, but in 2022 the Samsung
+V-NAND SSD 990 PRO released with a sustained read of 7450MB/s. Increases this
+large mean the algorithms can fundamentally change.
+
+This has lead to the vectorized execution model and
+the compiled model. With the vectorized model, multiple tuples are pulled
+up in a group rather than one at a time. A core advantage
+is that instructions per CPU cycle (IPC) can increase through single
+instruction, multiple data (SIMD) operations \cite{everything-vector}. However,
+this can cause deep copy operations to be required, or more disk spillage
+than necessary. For instance, if a sort or a join allocates new space
+that is too much for the cache, the handling can become poor.
+The alternative approach, compilation, will be explored in
+section~\ref{sec:jit_background}.
 
 Relational databases prioritise ACID requirements - Atomicity, Consistency,
 Isolation and Durability \cite{database-concepts}. This is a critical
@@ -61,44 +67,76 @@ and durability means once something is committed it will stay committed.
 \cite{database-concepts}
 
 It is common for on-disk databases to consider the cost of CPU operations to
-be $O(1)$ \cite{database-concepts}. This is partially due to when these
-systems were made, the disks were much slower and the caches were much slower.
-In part A of this project, this was disproved for PostgreSQL as it was found
-that the time spent in the CPU was substantial: between $34.87\%$ and $76.56\%$
-with an average of $49.32\%$ across the tested queries.
+be constant or cost-free \cite{database-concepts}. This is partially
+due to when these systems were made, the disks were much slower and
+the caches were much smaller. In part A of this project, this was disproved
+for PostgreSQL as it was found that the time spent in the CPU was
+substantial: between $34.87\%$ and $76.56\%$ with an average of
+$49.32\%$ across the tested queries.
 % TODO: Do I need a citation to myself?
 
-%-------------------------------------------------------------------------------- 
-\subsection{JIT Background}\label{subsec:jit_background}
-%-------------------------------------------------------------------------------- 
-Just-in-time (JIT) compilers function by having multiple layers of compilation and
-are mostly used by interpreted languages to eliminate the ill-effects on
-performance \cite{long-masters-thesis}. Advanced compilers can run the primary
-program, then dedicate some background threads to improving the optimisation
-of the code, and swap it over to the optimized version when it is ready
-\cite{hyper-compiler-2}.
+Arguably most of the recent databasing research has been inside the optimiser
+which is visible in figure~\ref{fig:database_structure}. This includes
+reordering join statements where the left and right sides are flipped,
+predicate pushdown where a conditional/filter on a node is moved
+onto a lower node, extracting common subexpressions to prevent recomputation,
+constant folding where constant operations are evaluated inside
+the optimiser rather than in runtime, and more \cite{inersjo2021}. A list of
+optimisations would be long enough for a thesis to be written to summarise them.
 
-Due to branch-prediction optimization, JIT compilers can become faster than
+Databases are commonly split into Online Transaction Processing (OLTP) and
+Online Analytical Processing (OLAP). OLTP has a focus on
+supporting atomicity, running multiple queries at once, and typically
+supports the work profile of an online service that does key-value lookups
+frequently. On the other hand, OLAP databases focus on analytical work profiles
+where an aggregation is requested, or some operation that spans a large
+chunk of the database \cite{ddia}. OLAP systems can be highly distributed,
+such as Apache Hive such that a large amount of compute can be used across
+the system \cite{apache_hive}. In the context of PostgreSQL, it is a
+hybrid architecture that has support for both these operations
+\cite{herrera2021hybrid}. There is currently debate about whether
+this hybrid architecture is useful anymore because putting pressure
+on your database serving users commonly causes reliability issues
+\cite{mooncake_htap}.
+
+%-------------------------------------------------------------------------------
+\section{JIT Background}\label{sec:jit_background}
+%-------------------------------------------------------------------------------
+Just-in-time (JIT) compilers work with multiple layers of compilation such
+as raw interpretation of bytecode, unoptimized machine code, and optimized
+machine code. They are mostly used by interpreted languages to eliminate
+the ill-effects on performance \cite{long-masters-thesis}. Advanced compilers
+can run the primary program, then dedicate some background threads to
+improving the optimisation of the code, and swap it over to the optimized
+version when it is ready \cite{hyper-compiler-2}. This means the intial
+compilation can be faster, and the development cycle can go faster, as well as
+other benefits.
+
+Due to branch-prediction optimization, JIT compilers can be faster than
 ahead of time compilers. In 1999, a benchmarking paper measured four
 commercial databases and found $10\%-20\%$ of their execution time was spent
-fixing poor predictions \cite{branch-misprediction}. similarly, research
-specifically into branch prediction has said, "although branch prediction
-attained 99\% accuracy in predicting static branches, ... branches are still a
-major bottleneck in the system performance" \cite{branch-prediction-values}.
+fixing poor predictions \cite{branch-misprediction}.
 Modern measurements still find 50\% of their query times are spent resolving
 hardware hazards, such as mispredictions, with improvements in this area
 making their queries 2.6x faster \cite{dbms-branches}. The Azul JIT compiler
-measured that their JIT solution's speculative optimizations can lead up to $50\%$
-performance gains \cite{azul_jit_aot}.
+measured that their JIT solution's speculative optimizations can lead up to $50\%$ performance gains \cite{azul_jit_aot}.
 
-% TODO: I should mention what is a good branch prediction rate here
+It is difficult to evaluate what a good branch prediction value is,
+but a reasonable baseline is $1\%$ is too high and should be optimised in
+a low latency environment \cite{farrier2025branch}. This is not a formal 
+definition, and is more based on tribal knowledge.  Depending on the 
+CPU, a branch mispredict can cost between 10 and 35 CPU cycles, with a 
+safe interval being 14-25. Meaning, if there is
+1 branch every 10 instruction, with a $5\%$ misprediction rate
+and a 20 cycle penalty per misprediction, $10\%$ of the runtime
+will be spent fixing mispredictions \cite{eyerman2006branch}.
 
 In the context of databases, most compilers can be split into only compiling
 expressions (typically called EXP for expression), and others that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
 itself, they have EXP support using $llvm-jit$.
 
-\subsection{LLVM and MLIR}\label{subsec:llvm-mlir}
+\section{LLVM and MLIR}\label{sec:llvm-mlir}
 
 The LLVM Project is a compiler infrastructure that supports making compilers
 so that common, but complex, compiler optimisations do not have to be re-
@@ -112,10 +150,10 @@ another person can target your custom high-level dialect.
 % what is a lowering, what does any of this stuff mean! This can be like... 4-8 
 % paragraphs honestly. 
 
-\subsection{WebAssembly and others}\label{subsec:llvm-mlir}
+\section{WebAssembly and others}\label{sec:webassembly}
 % Also, a paragraph on what is WASM, why is wasm special
 
-\subsection{PostgreSQL Background}\label{subsec:postgresql-background}
+\section{PostgreSQL Background}\label{sec:postgresql-background}
 % TODO: Provide sources
 An arena allocator is a data structure that supports allocating memory and freeing
 the entire data structure. This improves memory safety by consolidating
@@ -136,6 +174,6 @@ null test, case expressions).
 % TODO: Include a graph of the PostgreSQL path and annotate in the previous 
 % paragraph where the nodes are produced
 
-\subsection{Database Benchmarking}\label{subsec:database-benchmarking}
+\section{Database Benchmarking}\label{sec:database-benchmarking}
 Need to include information here about common benchmarks, and how the industry
 has gone towards TPC-H.
