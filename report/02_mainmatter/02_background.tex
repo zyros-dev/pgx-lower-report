@@ -73,7 +73,6 @@ the caches were much smaller. In part A of this project, this was disproved
 for PostgreSQL as it was found that the time spent in the CPU was
 substantial: between $34.87\%$ and $76.56\%$ with an average of
 $49.32\%$ across the tested queries.
-% TODO: Do I need a citation to myself?
 
 Arguably most of the recent databasing research has been inside the optimiser
 which is visible in figure~\ref{fig:database_structure}. This includes
@@ -83,6 +82,17 @@ onto a lower node, extracting common subexpressions to prevent recomputation,
 constant folding where constant operations are evaluated inside
 the optimiser rather than in runtime, and more \cite{inersjo2021}. A list of
 optimisations would be long enough for a thesis to be written to summarise them.
+
+Within traditional and volcano databases, the cache is managed through a set
+of buffer techniques while reading tuples. This works by the database
+reading a page, which usually has a fixed size and can be configured,
+such as 8KB. This is loaded into a buffer pool object which holds it inside
+of RAM. The operating system or environment manages where this memory goes
+inside the context of the L1/L2/L3 and ram caches depending on the access
+patterns \cite{database-concepts}. This buffer pool can change caching
+strategies depending on the
+context, such as last-recently-used, most-recently-used, and more, which
+can be decided in the optimiser \cite{effelsberg1984buffer}.
 
 Databases are commonly split into Online Transaction Processing (OLTP) and
 Online Analytical Processing (OLAP). OLTP has a focus on
@@ -123,9 +133,9 @@ measured that their JIT solution's speculative optimizations can lead up to $50\
 
 It is difficult to evaluate what a good branch prediction value is,
 but a reasonable baseline is $1\%$ is too high and should be optimised in
-a low latency environment \cite{farrier2025branch}. This is not a formal 
-definition, and is more based on tribal knowledge.  Depending on the 
-CPU, a branch mispredict can cost between 10 and 35 CPU cycles, with a 
+a low latency environment \cite{farrier2025branch}. This is not a formal
+definition, and is more based on tribal knowledge.  Depending on the
+CPU, a branch mispredict can cost between 10 and 35 CPU cycles, with a
 safe interval being 14-25. Meaning, if there is
 1 branch every 10 instruction, with a $5\%$ misprediction rate
 and a 20 cycle penalty per misprediction, $10\%$ of the runtime
@@ -134,22 +144,44 @@ will be spent fixing mispredictions \cite{eyerman2006branch}.
 In the context of databases, most compilers can be split into only compiling
 expressions (typically called EXP for expression), and others that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
-itself, they have EXP support using $llvm-jit$. A variety of research databases 
+itself, they have EXP support using $llvm-jit$. A variety of research databases
 will be examined in chapter~\ref{ch:related-work}.
 
 \section{LLVM and MLIR}\label{sec:llvm-mlir}
+The LLVM Project is a compiler infrastructure that supports creating
+compilers so that common, but complex, compiler optimisations do not have
+to be re- implemented~\cite{llvm-paper}. Multi-Level
+Intermediate Representation (MLIR) is another, newer toolkit that is
+tightly coupled with the LLVM project~\cite{mlir-paper}. It adds a
+framework to define dialects, and lower through these dialects into machine code. One of the primary benefits of this is if you make 
+a compiler, you can define a high level dialect, then another person 
+can target your custom high-level dialect.
 
-The LLVM Project is a compiler infrastructure that supports creating compilers
-so that common, but complex, compiler optimisations do not have to be re-
-implemented. Multi-Level Intermediate Representation is another, newer toolkit
-that is tightly coupled with the LLVM project. It adds a framework to define
-dialects, and lower through these dialects. One of the primary benefits of
-this is if you make a compiler, you can define a high level dialect, then
-another person can target your custom high-level dialect.
+LLVM defines a language-independent intermediate representation
+(IR) based on Static Single Assignment (SSA) form and MLIR is an extension of
+this \cite{llvm-paper}. The architecture follows a three-phase design: a
+front-end parses source code
+and generates LLVM IR, an optimizer applies a series of transformation
+passes to improve code quality, and a back-end generates machine code for
+the target architecture. MLIR extends this concept by introducing a
+flexible dialect system that
+enables progressive lowering through multiple levels of
+abstraction~\cite{mlir-paper}. This addresses software fragmentation
+in the compiler ecosystem, where projects were creating incompatible high
+-level IRs in front of LLVM, and improves compilation for
+heterogeneous hardware by allowing target-specific optimisations
+at appropriate abstraction levels.
 
-% TODO: I need a lot more detail about how LLVM functions. What even is a dialect,
-% what is a lowering, what does any of this stuff mean! This can be like... 4-8 
-% paragraphs honestly. 
+LLVM's On-Request-Compilation (ORC) JIT is a system for
+building just-in-time compilers with support for lazy compilation,
+concurrent compilation, and runtime optimization~\cite{llvm-jit-orc}.
+ORC can compile code on-demand as it is needed, reducing startup
+time by deferring compilation of functions until they are first
+called. The JIT supports concurrent compilation across
+multiple threads and provides built-in dependency tracking
+to ensure code safety during parallel execution. This makes ORC particularly
+suitable for dynamic language implementations, REPLs 
+(Read-Eval-Print Loops), and high-performance JIT compilers. 
 
 \section{WebAssembly and others}\label{sec:webassembly}
 % Also, a paragraph on what is WASM, why is wasm special
