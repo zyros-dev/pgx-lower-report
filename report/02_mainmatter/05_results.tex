@@ -12,27 +12,51 @@ These are produced with the method detailed in subsection~\ref{subsec:benchmarki
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.32]{figures/box_plots.pdf}
+	\includegraphics[scale=0.32]{figures/mine_box_plots.pdf}
 	\caption{Overall benchmarking represented with box plots}
 	\label{fig:bench-box-plots}
 \end{figure}
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.32]{figures/diff_plots.pdf}
+	\includegraphics[scale=0.32]{figures/mine_diff_plots.pdf}
 	\caption{Difference in latency benchmarks between PostgreSQL and pgx-lower}
 	\label{fig:bench-diff-plots}
 \end{figure}
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.32]{figures/memory_plots.pdf}
+	\includegraphics[scale=0.32]{figures/mine_memory_plots.pdf}
 	\caption{Peak memory usage of queries}
 	\label{fig:bench-mem-plots}
 \end{figure}
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.32]{figures/memory_diffs.pdf}
+	\includegraphics[scale=0.32]{figures/mine_memory_diffs.pdf}
 	\caption{Difference in peak memory usage of queries}
 	\label{fig:bench-mem-diff-plots}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.32]{figures/mine_branch_miss_plots.pdf}
+	\caption{Branch miss rate}
+	\label{fig:branch-miss-plot}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.32]{figures/mine_branches_plots.pdf}
+	\caption{Number of branches}
+	\label{fig:num-branch-plot}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.32]{figures/mine_llc_miss_plots.pdf}
+	\caption{Last-level-cache miss plots}
+	\label{fig:llc-miss-plot}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.32]{figures/mine_ipc_plots.pdf}
+	\caption{Instructions Per (cpu) Cycle plot}
+	\label{fig:ipc-plot}
 \end{figure}
 \section{Discussion}\label{sec:Discussion}
 

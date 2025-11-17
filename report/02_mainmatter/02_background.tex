@@ -55,7 +55,7 @@ this can cause deep copy operations to be required, or more disk spillage
 than necessary. For instance, if a sort or a join allocates new space
 that is too much for the cache, the handling can become poor.
 The alternative approach, compilation, will be explored in
-section~\ref{sec:jit_background}.
+section~\ref{sec:jit_background} and chapter~\ref{ch:related-work}.
 
 Relational databases prioritise ACID requirements - Atomicity, Consistency,
 Isolation and Durability \cite{database-concepts}. This is a critical
@@ -134,11 +134,12 @@ will be spent fixing mispredictions \cite{eyerman2006branch}.
 In the context of databases, most compilers can be split into only compiling
 expressions (typically called EXP for expression), and others that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
-itself, they have EXP support using $llvm-jit$.
+itself, they have EXP support using $llvm-jit$. A variety of research databases 
+will be examined in chapter~\ref{ch:related-work}.
 
 \section{LLVM and MLIR}\label{sec:llvm-mlir}
 
-The LLVM Project is a compiler infrastructure that supports making compilers
+The LLVM Project is a compiler infrastructure that supports creating compilers
 so that common, but complex, compiler optimisations do not have to be re-
 implemented. Multi-Level Intermediate Representation is another, newer toolkit
 that is tightly coupled with the LLVM project. It adds a framework to define
