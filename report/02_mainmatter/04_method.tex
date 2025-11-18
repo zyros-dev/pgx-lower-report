@@ -23,7 +23,7 @@ parses its inputs with \texttt{pg\_query}, so it matches with PostgreSQL.
 As a result, PostgreSQL and LingoDB were chosen. PostgreSQL offers strong support
 for extensions, and it is possible to override its execution engine using runtime
 hooks. An example of this Tiger data, which was explored in
-section~\cite{todo}. The primary challenge with this is that LingoDB is a columnar,
+section~\ref{todo}. The primary challenge with this is that LingoDB is a columnar,
 in-memory database, so adjustments will be needed. Furthermore, LingoDB does
 not support indexes, which can make the benchmarks against PostgreSQL unfair.
 Another detail is that LingoDB's newer versions contain a large number of
@@ -461,7 +461,6 @@ outer loops of the nested for-loop that is created.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Variables, Constants, Parameters}\label{subsubsec:expr-vars-consts}
-asdf
 The two relevant ways PostgreSQL identifies values is with variable nodes and
 parameter nodes. These are stored inside a schema/column manager class as
 well as the \texttt{QueryCtxT} within the code. Variables are typically

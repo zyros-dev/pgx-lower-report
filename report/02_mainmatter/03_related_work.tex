@@ -26,6 +26,17 @@ the database itself cannot be treated as a research system. Changes directly to
 it requires heavy-testing, but also, these changes will not be peer-reviewed
 research. Instead, it is pull-requests online with more casual interaction.
 
+Building extensions for PostgreSQL and making entire companies around these 
+extensions is not a new endeavour. Three such examples are Citus~\cite{citus}, 
+TimescaleDB~\cite{timescaledb}, and Apache AGE~\cite{apache_age}. Citus 
+aims to add more horizontal scaling through sharding, TimescaleDB, now 
+rebranded as TigerData, transforms the engine into a time series database, 
+and Apache AGE turns it into a graph database. These all have thousands
+of Github stars, but TimescaleDB especially had over 500 paying customers in 
+2022, and claimed their revenue climbed 20x by 2024 \cite{timescale_2024_update}
+\cite{timescaledb_series_c}. This shows that the model of relying on the 
+extension system is a robust, travelled road.
+
 There has been significant discussion about HyPer and JIT with regards to
 PostgreSQL in 2017 \cite{postgres-pr-2}. The general response is doubt that someone will add support
 for full compiling full query expressions, and rearchitecting such a core
@@ -33,7 +44,7 @@ component introduces large risk.
 
 However, in September 2017 Andres Freund started implementing JIT support for
 expressions \cite{psql-jit-release-plan}. The reasoning was that most of the CPU time is in the expression
-components, (e.g. y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
+components, (such as y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
 there are significant benefits to tuple deformation as it interacts with the
 cache and has poor branch prediction.
 
