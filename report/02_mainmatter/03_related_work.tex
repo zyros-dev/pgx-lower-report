@@ -1,4 +1,3 @@
-% Still 9 TODOs scattered throughout the text
 \chapter{Related Work}\label{ch:related-work}
 
 This chapter summarises relevant works in the compiled queries space and their
@@ -63,7 +62,7 @@ but their website is offline now and there is not much mention of them.
 The second was at a PgCon presentation and achieved a 5.5x speedup on TPC-H query
 1, and has more documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it's easy for people to use.
 
-This implementation of full JIT in PostgreSQL was preceeded with
+This implementation of full JIT in PostgreSQL was preceded with
 profiling work which showed that different TPC-H benchmarks have pressure on
 different nodes, as shown in figure~\ref{fig:pgcon-profiling}. This is important
 because they can make informed decisions of where to focus their efforts to.
@@ -77,7 +76,7 @@ code \cite{pgcon_jit_2017}, similar to approaches taken by HyPer \cite{hyper-com
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{figures/pgcon_profiling.png}
-	\caption{PGCon Dynamic Compilation of SQL Queries Profiling \ref{}}
+	\caption{PGCon Dynamic Compilation of SQL Queries Profiling~\cite{pgcon_jit_2017}.}
 	\label{fig:pgcon-profiling}
 	\cite{postgres-pr-2}
 \end{figure}
@@ -109,12 +108,11 @@ as databases, and over time the priorities of the systems changed.
 %-------------------------------------------------------------------------------- 
 \section{HyPer}\label{sec:hyper}
 %-------------------------------------------------------------------------------- 
-% TODO: lol, poorly written paragraph
-% TODO: Maybe need to comment why we're going into so much detail on HyPer.
-HyPer was a flagship system, and Umbra supersedes it. Both were made
-by Thomas Neumann, and the core sign is of its viability is that HyPer
+HyPer was a flagship system, and Umbra supersedes it. These are important
+systems in the JIT-database space as they developed many of the core features.
+Both were made by Thomas Neumann, and the core sign is of its viability is that HyPer
 was purchased by Tableau in 2016 to be used in production \cite{tableau-hyper}. This shows
-that it is is possible to use an in-memory JIT database at scale. The project
+that it is possible to use an in-memory JIT database at scale. The project
 began in 2010, with their flagship paper releasing in 2011 for the compiler
 component \cite{hyper-compiler-1}, and in 2018 they released another flagship paper about
 adaptive compilation \cite{hyper-compiler-2}. However, the database being commercialised poses issues
@@ -136,8 +134,9 @@ strong typing which prevent numerous bugs in their original C++ approach.
 	\cite{hyper-compiler-1}
 \end{figure}
 
-HyPer shows they reduced their compile time by doing this in figure XYZ by many
-multiples, and in figure ABC they show they achieve many times less branches,
+HyPer shows they reduced their compile time by doing this in 
+figure~\ref{fig:hyper-compile-times} by many
+multiples, and in figure~\ref{fig:hyper-profiler} they show they achieve many times less branches,
 branch mispredicts, and other measurements compared to their baseline of MonetDB.
 The cause of this is HyPer's output had less code in the compiled queries.
 
@@ -152,8 +151,17 @@ The cause of this is HyPer's output had less code in the compiled queries.
 Hyper continues on in 2018 where they separated the compiler into multiple rounds.
 They introduced an interpreter on the byte code generated from LLVM IR, then they
 can run unoptimised machine code, and on the final stage they can run optimised
-machine code. Figure XYZ visualises this with the compile times of each stage.
+machine code. Figure~\ref{fig:hyper-adaptive} visualises this with 
+the compile times of each stage.
 However, they had to create the byte code interpreter themselves to enable this.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1]{figures/hyper-adaptive.png}
+	\caption{HyPer execution modes and compile times.}
+	\label{fig:hyper-adaptive}
+	\cite{hyper-compiler-2}
+\end{figure}
 
 The 2018 paper also improved their query optimisation by adding a dynamic
 measurement for how long live queries are taking. This is because the
@@ -273,7 +281,8 @@ plan itself, and the LLVM compiler can be used directly to turn this into
 LLVM, streamlining the process.
 
 % todo lol
-The LingoDB architecture can be seen in figure XYZ, which begins by parsing the
+The LingoDB architecture can be seen in figure~\ref{fig:lingo-db-arch}, which begins
+by parsing the
 SQL into a relational algebra dialect. These dialects are defined using
 MLIR's dialect system, and supported through code generation. Their compiler
 is defined by a relational algebra dialect, a database dialect that represents
@@ -281,6 +290,14 @@ SOMETHING, a DSA dialect that represents, a utility dialect that represents
 SOMETHING, and the final LLVM output. This splits the state of the intermediate
 representation into three stages: relational algebra, a mixed dialect, and
 finally the LLVM.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/lingo-db-arch.png}
+	\caption{LingoDB architecture.}
+	\label{fig:lingo-db-arch}
+	\cite{lingo-db-1}
+\end{figure}
 
 Their result is that they are less performant than HyPer, but do better than
 DuckDB \cite{lingo-db-1}. This performance is not their key output, rather, it is that they can
@@ -303,13 +320,13 @@ acceleration, using the Torch-MLIR project's dialect, representing queries
 as sub-operators for acceleration, non-relational systems, and more \cite{lingo-db-2}.
 For our purposes, the appealing part of their architecture is that they use
 $pg_query$ to parse the incoming SQL, which means their parser is the closest
-to PostgreSQL's. This will be explored in the design in REFERENCE.
+to PostgreSQL's. This will be explored in the design in Section~\ref{sec:design}.
 % idk why \texttt doesn't work here.
 
 %-------------------------------------------------------------------------------- 
 \section{Benchmarking}\label{sec:benchmarking}
 %-------------------------------------------------------------------------------- 
-% TODO: Maybe this section should change places? Meh.
+% Maybe this section should change places? Meh.
 These systems produced their own benchmarks and could selectively pick which
 systems to involve, so a recreation of the benchmarks was done. DuckDB, HyPer,
 Mutable, LingoDB and PostgreSQL were all compared to one another, and is
@@ -348,51 +365,6 @@ clear that the queries can become several times faster if optimised.
 	\label{fig:pprof-psql}
 \end{figure}
 
-As stated in section~\ref{sec:jit_background}, one core acceleration of
-JIT
-is improving the branch predictions \cite{branch-misprediction}. To measure this, \texttt{perf} was
-used on the same set of queries as shown in Table~\ref{tbl:prof-psql}. This
-shows that
-at worst, 43.02\% of LLC loads are missed \cite{llc_intel}. A 0.69\% branch miss rate has room
-for improvement, as systems with even a 99\% branch prediction accuracy can
-have a significant bottleneck from it.
-
-% TODO: I think this stuff should just be represented with a graph
-% in the results section
-\begin{table}[H]
-	\centering
-	\footnotesize
-	\caption{Preliminary PostgreSQL query profiling statistics collected with \texttt{perf}.}
-	\label{tbl:prof-psql}
-	\begin{tabular}{l@{\hspace{0.5em}}rrrrr@{\hspace{0.5em}}l}
-		\toprule
-		\textbf{Metric} & \textbf{Q1}      & \textbf{Q3}      & \textbf{Q6}      & \textbf{Q12}     & \textbf{Q14}     & \textbf{Unit} \\
-		\midrule
-		\multicolumn{7}{c}{\textit{Absolute Values}}                                                                                   \\
-		\midrule
-		Task-clock      & 992.88           & 566.44           & 349.64           & 514.66           & 368.84           & msec          \\
-		Page faults     & 4230             & 3236             & 109              & 497              & 1928             & occurrences   \\
-		Cycles          & 2.72e9           & 1.57e9           & 9.76e8           & 1.42e9           & 1.03e9           & occurrences   \\
-		Instructions    & 6.49e9           & 2.63e9           & 1.61e9           & 2.44e9           & 1.69e9           & occurrences   \\
-		Branches        & 1.03e9           & 4.45e8           & 2.79e9           & 4.34e8           & 2.89e8           & occurrences   \\
-		Branch misses   & \textbf{1.21e6}  & \textbf{2.67e6}  & \textbf{1.36e6}  & \textbf{3.01e6}  & \textbf{1.21e6}  & occurrences   \\
-		LLC loads       & 5.17e6           & 7.00e6           & 4.48e6           & 6.11e6           & 4.88e6           & occurrences   \\
-		LLC load misses & \textbf{1.76e6}  & \textbf{2.84e6}  & \textbf{1.93e6}  & \textbf{2.37e6}  & \textbf{2.07e6}  & occurrences   \\
-		\midrule
-		\multicolumn{7}{c}{\textit{Normalized Values}}                                                                                 \\
-		\midrule
-		Task-clock      & 0.104            & 0.048            & 0.032            & 0.041            & 0.034            & CPUs          \\
-		Page faults     & 4260             & 5713             & 311              & 966              & 5227             & /sec          \\
-		Cycles          & 2.743            & 2.777            & 2.79             & 2.768            & 2.789            & GHz           \\
-		Instructions    & 2.38             & 1.67             & 1.65             & 1.71             & 1.64             & insn/cycle    \\
-		Branches        & 1040             & 786              & 797              & 843              & 785              & M/sec         \\
-		Branch misses   & \textbf{0.12\%}  & \textbf{0.60\%}  & \textbf{0.49\%}  & \textbf{0.69\%}  & \textbf{0.42\%}  & of branches   \\
-		LLC loads       & 5.203            & 12.354           & 12.807           & 11.868           & 13.22            & M/sec         \\
-		LLC load misses & \textbf{34.12\%} & \textbf{40.65\%} & \textbf{43.02\%} & \textbf{38.87\%} & \textbf{42.37\%} & of LL-cache   \\
-		\bottomrule
-	\end{tabular}
-\end{table}
-
 %-------------------------------------------------------------------------------- 
 \section{Gaps in Literature}\label{sec:gaps}
 %-------------------------------------------------------------------------------- 
@@ -424,13 +396,14 @@ easier to add to the official system. % TODO badly written lol
 %================================================================================ 
 \section{Aims}\label{sec:lit-rev}
 %================================================================================ 
-% need to state what advantages we have for keeping postgres, ACID, etc
 Tying this together, this piece aims to integrate a research compiler into a
 battle-tested system by using an extension system. This addresses the gap
 of these systems being difficult to use widely, and potential to integrate it
 into the original system once stronger correctness and speed optimisations have
 been shown. Accomplishing this shows there is a way to rely on previous
-ACID-compliance and supporting code infrastructure.
+ACID-compliance and supporting code infrastructure. Users can install the
+extension, have faster query runs with rollbacks, and the implementation effort
+is lowered since core systems and algorithms can be skipped.
 
 A key output is showing that the system can operate within
 the same order of magnitude as the target system. The purpose of this is to
