@@ -61,11 +61,26 @@ The first is Vitesse DB, which made a series of public posts about getting
 people to assist with testing it. They became generally available in 2015,
 but their website is offline now and there is not much mention of them.
 The second was at a PgCon presentation and achieved a 5.5x speedup on TPC-H query
-1, and has more documentation. However, they did not publicize their methods or
-show that it's easy for people to use.
-% TODO, maybe I should include more detail about the pgcon one.
-% vitesse db https://www.postgresql.org/message-id/CAJNt7=Z6w5%2BwyeTKKryWavMcWOenc6ZhPaaaddwuZ6HtcJWxcg@mail.gmail.com
-% ispras https://www.pgcon.org/2017/schedule/attachments/467_PGCon%202017-05-26%2015-00%20ISPRAS%20Dynamic%20Compilation%20of%20SQL%20Queries%20in%20PostgreSQL%20Using%20LLVM%20JIT.pdf
+1, and has more documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it's easy for people to use.
+
+This implementation of full JIT in PostgreSQL was preceeded with
+profiling work which showed that different TPC-H benchmarks have pressure on
+different nodes, as shown in figure~\ref{fig:pgcon-profiling}. This is important
+because they can make informed decisions of where to focus their efforts to.
+Their core method is generating a function that represents a node in the
+plan tree, then inlining the function into the final LLVM IR \cite{pgcon_jit_2017}
+in a push-based model. Another
+interesting method that is used is pre-compiling the C code into LLVM,
+then inlining that into the LLVM IR. This avoids runtime linking back to the C
+code \cite{pgcon_jit_2017}, similar to approaches taken by HyPer \cite{hyper-compiler-1}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figures/pgcon_profiling.png}
+	\caption{PGCon Dynamic Compilation of SQL Queries Profiling \ref{}}
+	\label{fig:pgcon-profiling}
+	\cite{postgres-pr-2}
+\end{figure}
 
 Other database systems also support extensions, and there are many systems that
 rely on PostgreSQL's extension system. MySQL, ClickHouse, DuckDB, Oracle
