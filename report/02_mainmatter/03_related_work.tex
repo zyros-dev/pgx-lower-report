@@ -1,10 +1,10 @@
 \chapter{Related Work}\label{ch:related-work}
 
 This chapter summarises relevant works in the compiled queries space and their
-architectures. Originally, the industry began with compiled query engines, but
+architectures. Originally, the industry began with compiled query engines \cite{system-r}, but
 this was overtaken by volcano models as they simplified the implementation
 details with little cost at the time. However, now analytical engines are
-examining compilers again.
+examining compilers again \cite{everything-vector}.
 
 This begins with PostgreSQL and their extension system in
 section~\ref{sec:postgresql-related}, in section~\ref{sec:system-r} system R
@@ -32,7 +32,7 @@ TimescaleDB~\cite{timescaledb}, and Apache AGE~\cite{apache_age}. Citus
 aims to add more horizontal scaling through sharding, TimescaleDB, now
 rebranded as TigerData, transforms the engine into a time series database,
 and Apache AGE turns it into a graph database. These all have thousands
-of Github stars, but TimescaleDB especially had over 500 paying customers in
+of GitHub stars, but TimescaleDB especially had over 500 paying customers in
 2022, and claimed their revenue climbed 20x by 2024 \cite{timescale_2024_update}
 \cite{timescaledb_series_c}. This shows that the model of relying on the
 extension system is a robust, travelled road.
@@ -298,15 +298,16 @@ by parsing the
 SQL into a relational algebra dialect. These dialects are defined using
 MLIR's dialect system, and supported through code generation. Their compiler
 is defined by a relational algebra dialect, a database dialect that represents
-SOMETHING, a DSA dialect that represents, a utility dialect that represents
-SOMETHING, and the final LLVM output. This splits the state of the intermediate
+database-specific types and operations, a DSA dialect that represents data
+structures and algorithms, a utility dialect that represents
+utilities, and the final LLVM output. This splits the state of the intermediate
 representation into three stages: relational algebra, a mixed dialect, and
-finally the LLVM.
+finally the LLVM \cite{lingo-db-1}.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{figures/lingo-db-arch.png}
-	\caption{LingoDB architecture.}
+	\caption{LingoDB architecture~\cite{lingo-db-1}}
 	\label{fig:lingo-db-arch}
 	\cite{lingo-db-1}
 \end{figure}

@@ -5,7 +5,7 @@
 %-------------------------------------------------------------------------------
 The majority of databases are structured like Figure~\ref{fig:database_structure}.
 Structure Query Language (SQL) is parsed, turned to RA (relational-algebra),
-optimized, executed, then materialized into a table.
+optimized, executed, then materialized into a table \cite{database-concepts}.
 
 \begin{figure}[H]
 	\centering
@@ -16,7 +16,7 @@ optimized, executed, then materialized into a table.
 \end{figure}
 
 For non-compiler databases they use a volcano operator model tree, such as
-Figure~\ref{fig:execution_tree}The root node has a \texttt{produce()} function
+Figure~\ref{fig:execution_tree} \cite{long-masters-thesis}. The root node has a \texttt{produce()} function
 which calls its children's \texttt{produce()}, until it calls a leave node,
 which calls \texttt{consume()} on itself, then that calls its parent's
 \texttt{consume()} function. In other words, a post-order traversal through
@@ -31,7 +31,7 @@ this tree where tuples are dragged upwards.
 \end{figure}
 
 The fundamental issue with this classical model is that it is heavily
-under-utilising the hardware. If only a single tuple is pulled, our CPU
+under-utilising the hardware \cite{branch-misprediction}. If only a single tuple is pulled, our CPU
 caches are barely used. An i5-570, a popular CPU in 2010 had a 8MB L3 cache,
 but in 2024 an i5-14600K has a 24MB L3 cache \cite{passmark_i5760},
 \cite{techpowerup_i5_14600k}. For disks, in 2010 the Segate Barracuda 7200.12

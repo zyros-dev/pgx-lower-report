@@ -1,0 +1,11 @@
+{
+  "language": "en-GB",
+  "dictionaries": [
+    "companies",
+    "softwareTerms",
+    "misc",
+    "en_GB"
+  ],
+  "ignoreWords": [],
+  "import": []
+}

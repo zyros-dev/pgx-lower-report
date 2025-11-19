@@ -29,7 +29,6 @@ not support indexes, which can make the benchmarks against PostgreSQL unfair.
 Another detail is that LingoDB's newer versions contain a large number of
 features and optimisations that is not relevant to us, so to simplify implementation
 effort the 2022 version was used from their initial paper.
-% TODO: Write about tiger data, or use a different example.
 
 \begin{figure}[H]
 	\centering
@@ -97,28 +96,28 @@ as raw pointers, causing the \texttt{C++} to break conventions.
 LingoDB was installed as a git submodule and set to a read-only permission.
 This was maintained for reference purposes only, and the compilation phases
 would be extracted. LingoDB used LLVM 14, and was upgraded to LLVM 20 to
-modernise it and slightly better support with |C++20| (some workarounds were
+modernise it and slightly better support with \texttt{C++20} (some workarounds were
 required with LLVM 14 that could be skipped with LLVM 20). However,
 since this is the C++ API for LLVM, a large amount of the LingoDB code
 had to be adjusted to compile.
 
 %===============================================================================
 \subsection{Logging infrastructure}\label{subsec:logging}
-PostgreSQL has its own logging infrastructure that routes through its |elog|
+PostgreSQL has its own logging infrastructure that routes through its \texttt{elog}
 command, but it was decided that a two-layer logging infrastructure was required.
-The first layer is the level, (|DEBUG|, |IR|, |TRACE|, |WARNING\_LEVEL|,
-|ERROR\_LEVEL|, and more), and the second represents which layer of the design
-the log is inside of (|AST\_TRANSLATE|, |RELALG\_LOWER|, |DB\_LOWER|, and more).
+The first layer is the level, (\texttt{DEBUG}, \texttt{IR}, \texttt{TRACE}, \texttt{WARNING\_LEVEL},
+\texttt{ERROR\_LEVEL}, and more), and the second represents which layer of the design
+the log is inside of (\texttt{AST\_TRANSLATE}, \texttt{RELALG\_LOWER}, \texttt{DB\_LOWER}, and more).
 This meant if the AST translation was being worked on, all the logs in only that
 section of the codebase could be enabled. The core benefit of this is that
 the logs are lengthy so it becomes easier to navigate.
 
 An issue that was encountered was that the LLVM/MLIR logs would route through
 stderr, and this caused difficult to debug issues until the hook was found
-to redirect this into |elog| as well. Subsection\~ref{subsec:debugging} will
+to redirect this into \texttt{elog} as well. Subsection\~ref{subsec:debugging} will
 explore one of the workarounds that was needed at this stage.
 
-Lastly, for error handling mostly |std::runtime\_error| was utilised. This served
+Lastly, for error handling mostly \texttt{std::runtime\_error} was utilised. This served
 as a global way to log the stack trace and roll back to PostgreSQL's execution.
 There initially was an implementation of error handling with severity levels
 and messages, but the simplicity of a single command that rolled back to
@@ -136,18 +135,18 @@ errors without any logging.
 
 % messy paragraph
 This was solved with a combination of the regression tests, unit testing, and
-a script to connect |gdb| to dump the stack. The regression tests were already
+a script to connect \texttt{gdb} to dump the stack. The regression tests were already
 explored, but the unit tests consist of testing anything unconnected to PostgreSQL.
-The issue is that this extension creates a |pgx\_lower.so| which is installed
+The issue is that this extension creates a \texttt{pgx\_lower.so} which is installed
 within PostgreSQL, then the PostgreSQL libraries are used from inside there.
 This means if we run without being inside of PostgreSQL, no psql libaries can
 be used. As a result, unit tests can only test MLIR functions. Most of the
 unit tests were highly situational, and are used when a proper interactive GDB
-connection was required within the IDE. Furthermore, unit tests allow the |stderr|
-to be visible, which assists greatly with MLIR/LLVM errors that go to |stderr|
+connection was required within the IDE. Furthermore, unit tests allow the \texttt{stderr}
+to be visible, which assists greatly with MLIR/LLVM errors that go to \texttt{stderr}
 and nowhere else.
 
-For the stack-dumping, a script was written, |debug-query.sh| which proved to
+For the stack-dumping, a script was written, \texttt{debug-query.sh} which proved to
 be the most useful approach for complex issues. It has the ability to create a
 psql connection, git the process ID of the client connection, then connect GDB,
 run a desired query, and dump the stack trace. In this way, the majority of
@@ -164,7 +163,7 @@ and table~\ref{tab:type-mapping} shows the type mappings. The two primary
 workarounds that were implemented was for decimals and the various types of strings.
 For decimals, i128 is enough precision for most of the TPC-H tests, and is what
 LingoDB was using. However, adjustments had to be made to ensure impossible
-to allocate values do not appear, so the precision was capped at |<32, 6>|
+to allocate values do not appear, so the precision was capped at \texttt{<32, 6>}
 That is, 32 digits in the integer part, 6 digits in the decimal places.
 
 For the date types, a comprimise was made that when it receives an interval
@@ -249,7 +248,7 @@ translation.
 %===============================================================================
 \subsection{Runtime patterns}\label{subsec:runtime-patterns}
 Runtime functions are used in LingoDB for difficult to implement methods in
-LLVM, such as a sort algorithm. |pgx-lower| implemented reading tuples from
+LLVM, such as a sort algorithm. \texttt{pgx-lower} implemented reading tuples from
 PostgreSQL, storing them as a result so that they can be streamed one by one,
 adjusted several runtime implementations from LingoDB, and changed the sort and
 hashtable implementations to rely on the PostgreSQL API rather than standard
@@ -483,7 +482,7 @@ However, aside from the subquery scan and CTE scan, they all map to sequential
 scan. This is a tradeoff to reduce complexity, and the most impacted
 by this is the index scan.
 
-Within the index scan it has specific annotations for variables with its |INDEX\_VAR|
+Within the index scan it has specific annotations for variables with its \texttt{INDEX\_VAR}
 which requires special resolution mapping to for us to handle. Furthermore,
 we need to handle the qualifiers (scan filters) \texttt{indexqual}, \texttt{recheckqual}
 like a \texttt{qual}. In psql, these filter at different stages, but since we are
