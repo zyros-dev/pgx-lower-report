@@ -38,7 +38,7 @@ of GitHub stars, but TimescaleDB especially had over 500 paying customers in
 extension system is a robust, travelled road.
 
 There has been significant discussion about HyPer and JIT with regards to
-PostgreSQL in 2017 \cite{postgres-pr-2}. The general response is doubt that
+PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. The general response is doubt that
 someone will add support
 for full compiling full query expressions, and rearchitecting such a core
 component introduces large risk.
@@ -47,7 +47,8 @@ However, in September 2017 Andres Freund started implementing JIT support for
 expressions \cite{psql-jit-release-plan}. The reasoning was that most of the CPU time is in the expression
 components, (such as y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
 there are significant benefits to tuple deformation as it interacts with the
-cache and has poor branch prediction.
+cache and has poor branch prediction. PostgreSQL's JIT implementation is
+documented in the official PostgreSQL documentation \cite{psql-jit-doc}.
 
 \begin{figure}[H]
 	\centering
@@ -60,7 +61,7 @@ cache and has poor branch prediction.
 In the pull request Peter Eisentruat asked whether the default JIT
 settings are too low, but in version 11 of PostgreSQL they went ahead with the
 release but with the JIT disabled by default. This didn't get much usage,
-and they decided that enabling it by default it would give it exposure and testing.
+and they decided that enabling it by default would give it exposure and testing \cite{psql-jit-discussion}.
 However, when released, the United Kingdom's critical service for a COVID-19
 dashboard automatically updated and spiked to a 70\% failure rate as
 some of their queries ran 2,229x slower \cite{psql-jit-failure}. This affected
@@ -149,7 +150,7 @@ strong typing which prevent numerous bugs in their original C++ approach.
 HyPer shows they reduced their compile time by doing this in
 figure~\ref{fig:hyper-compile-times} by many
 multiples, and in figure~\ref{fig:hyper-profiler} they show they achieve many times less branches,
-branch mispredicts, and other measurements compared to their baseline of MonetDB.
+branch mispredicts, and other measurements compared to their baseline of MonetDB \cite{monetdb_x100}.
 The cause of this is HyPer's output had less code in the compiled queries.
 
 \begin{figure}[H]
@@ -236,7 +237,8 @@ adds additional benefit.
 Umbra is currently ranked as the most effective database on ClickHouse's
 benchmarking \cite{clickbench}. The main complaint of the compiler being too heavy is still there,
 but it shows the advantage of having direct access to the JIT compiler with
-its adaptive compilation to change optimisation choices.
+its adaptive compilation to change optimisation choices. Additionally, Umbra supports
+user-defined operators, enabling efficient integration of custom algorithms into the database \cite{umbra-user-operators}.
 % I wonder if I can say more was included in the original literature review?
 % I guess the thesis is a standalone work though haha
 

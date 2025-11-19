@@ -46,7 +46,7 @@ up in a group rather than one at a time. A core advantage
 is that instructions per CPU cycle (IPC) can increase through single
 instruction, multiple data (SIMD) operations \cite{everything-vector}. However,
 this can cause deep copy operations to be required, or more disk spillage
-than necessary. For instance, if a sort or a join allocates new space
+than necessary \cite{sequntial-execution}. For instance, if a sort or a join allocates new space
 that is too much for the cache, the handling can become poor.
 The alternative approach, compilation, will be explored in
 section~\ref{sec:jit_background} and chapter~\ref{ch:related-work}.
@@ -74,8 +74,9 @@ reordering join statements where the left and right sides are flipped,
 predicate pushdown where a conditional/filter on a node is moved
 onto a lower node, extracting common subexpressions to prevent recomputation,
 constant folding where constant operations are evaluated inside
-the optimiser rather than in runtime, and more \cite{inersjo2021}. A list of
-optimisations would be long enough for a thesis to be written to summarise them.
+the optimiser rather than in runtime, and more \cite{inersjo2021}. However, despite
+these advances, query optimizers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}.
+A list of optimisations would be long enough for a thesis to be written to summarise them.
 
 Within traditional and volcano databases, the cache is managed through a set
 of buffer techniques while reading tuples. This works by the database
@@ -131,7 +132,7 @@ measured that their JIT solution's speculative optimizations can lead up to $50\
 It is difficult to evaluate what a good branch prediction value is,
 but a reasonable baseline is $1\%$ is too high and should be optimised in
 a low latency environment \cite{farrier2025branch}. This is not a formal
-definition, and is more based on tribal knowledge.  Depending on the
+definition, and is more based on tribal knowledge \cite{branch-prediction-values}. Depending on the
 CPU, a branch mispredict can cost between 10 and 35 CPU cycles, with a
 safe interval being 14-25. Meaning, if there is
 1 branch every 10 instruction, with a $5\%$ misprediction rate
@@ -193,8 +194,8 @@ to create machine code as fast as possible and skip optimisations.
 Other common JIT compilers are the Java Virtual Machine (JVM), SpiderMonkey
 (Mozilla Firefox's JIT), JavaScriptCore/Nitro (Safari/Webkit), PyPy, various
 python JIT compilers, LuaJIT for Lua, HHVM for PHP, Rubinius for Ruby,
-RyuJIT for $C\#$, and more \cite{jit_attacks_survey}. These all target
-different work profiles.
+RyuJIT for $C\#$, and more \cite{jit_attacks_survey}. The JVM has also been used for compiled
+query execution engines \cite{jamdb}. These all target different work profiles.
 
 \section{PostgreSQL Background}\label{sec:postgresql-background}
 PostgreSQL relies on memory contexts, which are an extension of arena
