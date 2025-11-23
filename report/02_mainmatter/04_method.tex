@@ -192,12 +192,11 @@ the result is half-complete.
 %===============================================================================
 \subsection{Debugging Support}\label{subsec:debugging}
 An important property of PostgreSQL is that each client connection creates a new
-process. This means there are several layers to claw through to debug issues.
-First, is the PostgreSQL postmaster, then the client connection, then within
-that is the runtime hook entrance, which leads to C++, and inside C++
-we will be compiling into a JIT runtime, and the bugs can happen inside there.
-This poses a challenge for how to debug problems such as segmentation faults and
-errors without any logging.
+process. This means there are several debugging layers to navigate: the PostgreSQL
+postmaster, the client connection, the runtime hook entrance, C++ code, and the JIT runtime.
+Bugs can occur at any of these levels, making debugging challenging.
+This poses a particular difficulty when dealing with segmentation faults and other errors
+that lack logging information.
 
 This was solved with a combination of the regression tests, unit testing, and
 a script to connect \texttt{gdb} to dump the stack. The regression tests were already
@@ -308,10 +307,9 @@ However, since the TPC-H queries never use month intervals, this is acceptable.
 \subsection{LingoDB Dialect Changes}\label{subsec:dialect-changes}
 The MLIR dialects from LingoDB required modifications to support LLVM 20 and
 pgx-lower's specific needs. Table~\ref{tab:dialect-summary} summarizes the key
-changes across the DB, DSA, RelAlg, and Util dialects. The changes were primarily
-API compatibility updates with minimal semantic modifications: 94 operations total
-across all dialects (93 in LingoDB, 94 in PGX), 21 types (identical count), and
-mostly LLVM 20 API compatibility updates.
+changes across the DB, DSA, RelAlg, and Util dialects. The changes were primarily API compatibility updates with minimal semantic modifications.
+The scope included 94 operations total across all dialects (93 in LingoDB, 94 in PGX)
+and 21 types (identical count), with most changes addressing LLVM 20 API compatibility.
 
 \begin{table}[H]
 	\centering
@@ -351,11 +349,10 @@ running based on its cost metrics.
 %===============================================================================
 \subsection{Runtime patterns}\label{subsec:runtime-patterns}
 Runtime functions are used in LingoDB for methods that are difficult to implement in
-LLVM, such as sorting algorithms. \texttt{pgx-lower} implemented reading tuples from
-PostgreSQL, storing them as a result so that they can be streamed one by one,
-adjusted several runtime implementations from LingoDB, and changed the sort and
-hash table implementations to rely on the PostgreSQL API rather than standard
-collections.
+LLVM, such as sorting algorithms. \texttt{pgx-lower} adds several custom runtime implementations:
+reading tuples from PostgreSQL and storing them for streaming, modifying LingoDB's
+runtime implementations, and replacing the sort and hash table implementations to use
+PostgreSQL's API instead of standard library functions.
 
 Figure~\ref{fig:runtime-functions} shows the high-level components in a
 runtime function. During SQL translation to MLIR, the frontend creates
@@ -449,10 +446,9 @@ The plan tree translation converts PostgreSQL's execution plan nodes into
 RelAlg MLIR operations. Figure~\ref{fig:ast-impl} shows where this fits
 into the broader design. Within the AST Parser component, we examine the
 PostgreSQL tag on the node to determine the plan node type,
-then a recursive descent parser starts translating. Within
-each translation function, the pattern is typically: the children
-of the plan are translated (post-order traversal), then the node
-is translated into the MLIR relational algebra dialect, and a "translation result" is returned.
+then a recursive descent parser starts translating. Each translation function follows a consistent pattern.
+First, children of the plan are translated using post-order traversal.
+Then, the node is translated into the MLIR relational algebra dialect, and a "translation result" is returned.
 
 \begin{figure}[H]
 	\centering
@@ -464,11 +460,10 @@ is translated into the MLIR relational algebra dialect, and a "translation resul
 The translation functions follow a consistent pattern, as shown in
 Listing~\ref{lst:plan-translate-methods}. Each function takes the query
 context and a PostgreSQL plan node pointer, performs the translation, and
-returns a \texttt{TranslationResult}. The concept here is that the \texttt{QueryCtxT}
-object is pushed down, and when it is mutated a new one is allocated and pushed
-to the child, while the \texttt{TranslationResult}s flow upwards and represent
-the output of each node. This, in theory, grants strong type-correctness. However,
-it is not strictly followed.
+returns a \texttt{TranslationResult}. The \texttt{QueryCtxT} object is passed down the tree,
+and when mutated, a new instance is created for child nodes. Meanwhile,
+\texttt{TranslationResult}s flow upward to represent each node's output, providing strong
+type-correctness in theory. However, this pattern is not strictly enforced in practice.
 
 \begin{lstlisting}[
 	caption=Plan node translation method signatures. The expression nodes follow the same pattern.,
@@ -601,12 +596,11 @@ congregated and referenced.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Plan translation - Aggregations}\label{subsubsec:plan-aggregations}
-Aggregation is a complicated node type. It consists of an aggregation strategy,
-which is ignored as we have a simple algorithm instead, splitting specification,
-which is also not utilised, group columns, number of groups, it can produce
-parameters, and it has its own operators such as COUNT, SUM, and so on.
-Furthermore, it uses special varnos to do lookups for variables (-2),
-so it requires a new context object, and supports DISTINCT statements.
+Aggregation is a complicated node type with many properties. It includes an aggregation
+strategy (ignored in favour of a simpler algorithm), splitting specification (not utilised),
+and group columns. The node tracks the number of groups it produces and manages its own
+operators such as COUNT, SUM, and more. Additionally, it uses special varnos for variable
+lookups (represented as -2), requiring a new context object, and supports DISTINCT statements.
 
 Most of the pain was with specific edge cases that arise in the
 simplification. For instance, \texttt{COUNT(*)} behaves differently in combining
@@ -635,21 +629,19 @@ there does not have to be additional lowering code. A challenge was that
 nest loops can carry parameters, so a new query context has to be created,
 the parameter has to be registered and inserted into the lookups.
 
-One issue that is still inside the joins implementations is how preventing
-double computations works. For this, LingoDB takes the inner join and does
-it on its own and builds a vector of results, then afterwards it iterates over
-the outer operation and uses the inner section in a pre-computed way. This prevents
-duplicated computation at the cost of using more memory. In theory this is fine,
-but the vector still needs to implement disk spillage. In practice, this did not
-cause enough memory issues to warrant implementation.
+One issue in the joins implementation is preventing double computations. LingoDB handles
+this by computing the inner join separately, building a vector of results, and then
+iterating over the outer operation while reusing the pre-computed inner section.
+This approach prevents duplicated computation at the cost of increased memory usage.
+While theoretically acceptable, the vector would need to implement disk spillage.
+In practice, memory usage did not become problematic enough to require this feature.
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Nullability}\label{subsubsec:expr-nullability}
-Postgres has nullability defined in the plan tree that is passed to pgx-lower,
-but LingoDB appeared to have operations inside the lowerings where previously
-non-null objects could become nullable (outer joins, aggregations, unions,
-predicate evaluation can all cause this). Since nullability affects every
-object and functions in the same way as not-a-number (anything it touches becomes
-NaN/nullable), this introduces implementation pains.
+PostgreSQL tracks nullability information in the plan tree passed to pgx-lower.
+However, LingoDB's lowering operations can create situations where previously non-null
+objects become nullable through outer joins, aggregations, unions, and predicate evaluation.
+Since nullability propagates like not-a-number (affecting everything it touches),
+this introduces significant implementation complexity.
 
 One note to be aware of is that LingoDB and PostgreSQL have inverted null flags.
 That is, in LingoDB 1 means valid, and in PostgreSQL 1 means null. This
@@ -659,17 +651,14 @@ forth.
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Operators and OID strings}\label{subsubsec:expr-operators}
 Within operators, the primary challenge is the type conversions and quirks.
-Comparing two BPCHARs requires adding padding for the surrounding space,
-and to implicitly upcast operations a class was extracted from LingoDB's
-DB dialect (\texttt{SQLTypeInference}). Furthermore, rather than relying on
-PostgreSQL's OID system for finding which operation to use, they were
-converted to strings (">", "<", and so on) then these were used. This prevents
-issues with precision specifications in the OID leading to unidentified
-operations, and a similar approach was used in function nodes, aggregation functions,
-sort operations, and scalar maths. With these casts, the SQLTypeInference object
-supports upcasting such that if two types have an operation, they are both
-first cast into the larger datatype, such as \texttt{i16} + \texttt{i32}, then the smaller one will
-both be cast into \texttt{i32} first.
+Comparing two BPCHARs requires adding padding for the surrounding space.
+To implement implicit upcasting, a class was extracted from LingoDB's
+DB dialect: \texttt{SQLTypeInference}. Rather than relying on PostgreSQL's OID system
+for finding operations, operators are converted to strings (">", "<", etc.) for lookup.
+This prevents issues with OID precision specifications that lead to unidentified operations.
+The same approach is used in function nodes, aggregation functions, sort operations, and scalar maths.
+When performing operations on different types, \texttt{SQLTypeInference} automatically upcasts both operands
+to the larger datatype. For example, with \texttt{i16} + \texttt{i32}, both values are cast to \texttt{i32}.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Translation - Others}\label{subsubsec:translation-others}
@@ -694,21 +683,20 @@ These passes perform fundamental optimisations~\cite{llvm-passes}. SROA (Scalar
 Replacement of Aggregates) promotes stack-allocated structures into SSA registers.
 That is, an allocation on the stack is hoisted up into global space so that
 the space is reused rather than reallocated every time.
-InstCombine simplifies instructions through algebraic transformations; PromotePass
-elevates memory operations to register operations; LICM (Loop Invariant Code Motion)
-moves loop-independent code outside of loops by hoisting to preheaders or sinking
-to exit blocks; the reassociation pass reorders expressions to enable further
-optimisations; and GVN (Global Value Numbering) eliminates redundant computations
-by identifying values that must be equal.
+InstCombine simplifies instructions through algebraic transformations, while PromotePass
+elevates memory operations to register operations. LICM (Loop Invariant Code Motion)
+moves loop-independent code outside of loops by hoisting to preheaders or sinking to exit blocks.
+The reassociation pass reorders expressions to enable further optimisations.
+GVN (Global Value Numbering) eliminates redundant computations by identifying values that must be equal.
 
 The consensus appeared to be that \texttt{-O2} should be used on it
 and moved on. This means it is possible to do more tuning work on this.
 
 %===============================================================================
 \subsection{Profiling Support}\label{subsec:profiling}
-Code infrastructure was written to support magic-trace for profiling and
-isolating issues, and a physical computer with an Intel CPU was set up
-with an i5-6500T, 16 GB of RAM and a Samsung MZVLB256HAHQ-000L7 NVMe disk.
+Code infrastructure was written to support magic-trace for profiling and isolating issues.
+A dedicated machine was configured for this purpose: an Intel i5-6500T with 16 GB of RAM
+and a Samsung MZVLB256HAHQ-000L7 NVMe disk.
 This was particularly useful for isolating obvious bottlenecks
 within the system and understanding the latency when compared to PostgreSQL.
 Figure~\ref{fig:psql-magic} represents the flame chart for query 3, and has a
@@ -754,9 +742,9 @@ Keep in mind that it relies on caching the results, it has a scale factor of 0.0
 (10 megabytes of data), and the pgx-lower system there is (as of writing),
 running a debug build which has significantly longer runtimes. The
 implementation for this is at \url{https://github.com/zyros-dev/pgx-lower-addons}.
-It is implemented with Python for the backend server, SQLite for the query caching,
-React for the frontend, and Docker containers to support the reverse proxy
-with Nginx, and a private Grafana health dashboard.
+The implementation uses several technologies: Python for the backend server, SQLite for query caching,
+and React for the frontend. Docker containers support the reverse proxy with Nginx, while a
+private Grafana dashboard provides health monitoring.
 
 %===============================================================================
 \subsection{Benchmarking and Validation}\label{subsec:benchmarking}

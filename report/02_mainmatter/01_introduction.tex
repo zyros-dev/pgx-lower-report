@@ -8,10 +8,9 @@ drastically changed, but most databases are using architectures defined by older
 hardware. Older databases assume the disk operations are the vast majority of
 runtime, but that has shifted to the CPU for heavy queries.
 
-These projects typically create standalone databases, but that means that
-distribution becomes harder, and the projects need to implement their own database
-as well, which might require many additional steps for serious
-projects. To productionise the system, this might include implementing ACID,
+Research projects typically create standalone databases. However, this approach makes distribution
+harder, requiring projects to implement all supporting infrastructure themselves.
+For serious projects, this involves many additional implementation steps. To productionise the system, this might include implementing ACID,
 MVCC, query plan optimisation, and more. By using an established database, we can
 address this issue.
 

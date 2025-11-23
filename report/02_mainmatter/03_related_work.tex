@@ -89,10 +89,10 @@ documented in the official PostgreSQL documentation \cite{psql-jit-doc}.
 	\cite{postgres-pr-2}
 \end{figure}
 
-In the pull request Peter Eisentraut asked whether the default JIT
-settings are too low, but in version 11 of PostgreSQL they went ahead with the
-release but with the JIT disabled by default. This didn't get much usage,
-and they decided that enabling it by default would give it exposure and testing \cite{psql-jit-discussion}.
+In a pull request, Peter Eisentraut questioned whether the default JIT settings
+were too low. Despite this concern, PostgreSQL version 11 was released with JIT disabled by default.
+This conservative approach resulted in limited adoption initially, so they later decided to enable
+JIT by default to increase exposure and testing opportunities \cite{psql-jit-discussion}.
 However, when released, the United Kingdom's critical service for a COVID-19
 dashboard automatically updated and spiked to a 70\% failure rate as
 some of their queries ran 2,229x slower \cite{psql-jit-failure}. This incident reinforced
@@ -178,11 +178,10 @@ strong typing which prevent numerous bugs in their original C++ approach.
 	\cite{hyper-compiler-1}
 \end{figure}
 
-HyPer shows they reduced their compile time by doing this in
-figure~\ref{fig:hyper-compile-times} by many
-multiples, and in figure~\ref{fig:hyper-profiler} they show they achieve many times fewer branches,
-branch mispredictions, and other measurements compared to their baseline of MonetDB \cite{monetdb_x100}.
-The cause of this is HyPer's output had less code in the compiled queries.
+Figure~\ref{fig:hyper-compile-times} demonstrates that HyPer reduced compile time by many multiples.
+Figure~\ref{fig:hyper-profiler} shows they achieved many times fewer branches and branch mispredictions
+compared to their MonetDB baseline \cite{monetdb_x100}. This improvement resulted from HyPer's
+output containing less code in the compiled queries.
 
 \begin{figure}[H]
 	\centering
@@ -215,11 +214,10 @@ in a "work-stealing" stage they log how long the job took. With a combination
 of the measurements and the query plan, they calculate estimates for jobs
 and optimal levels to compile them to.
 
-This was benchmarked with TPC-H Query 11 using 4 threads, and they found
-the adaptive execution was faster than only using bytecode by $40\%$, unoptimised
-compilation by $10\%$ and optimised compilation by $80\%$. The cause of this is that
-the compilation stage is single threaded, while with multiple threads they can
-compile in the background while execution is running.
+This approach was evaluated using TPC-H Query 11 with 4 threads. The adaptive
+execution strategy outperformed bytecode-only execution by $40\%$, unoptimised
+compilation by $10\%$, and optimised compilation by $80\%$. This improvement occurs because
+the single-threaded compilation can run in parallel with query execution on other threads.
 
 Utilising additional stages of the LLVM compiler, improving the cost model, and
 supporting multi threading the compilation and execution combined into a viable
@@ -231,13 +229,12 @@ JIT compiler, and are mostly ways to target the compiler's latency.
 %-------------------------------------------------------------------------------- 
 \section{Umbra}\label{sec:umbra}
 %-------------------------------------------------------------------------------- 
-Umbra was created in 2020 by Thomas Neumann, the creator of HyPer, and the
-main change is that they show it is possible to use the in-memory database
-concepts from HyPer inside an on-disk database \cite{umbra}. The core reason for this is
-the recent improvements of SSDs and buffer management advances. They take
-concepts from LeanStore for the buffer management and latches, then multi-version
-concurrency, compilation, and execution strategies from HyPer. This combination
-led to an on-disk database that is scalable, flexible and faster than HyPer.
+Umbra, created in 2020 by Thomas Neumann (creator of HyPer), demonstrates that HyPer's in-memory
+database concepts can be applied to on-disk systems \cite{umbra}. This became possible due to
+recent improvements in SSDs and buffer management. Umbra integrates concepts from LeanStore for
+buffer management and latching, combined with multi-version concurrency, compilation, and execution
+strategies from HyPer. This hybrid approach produced an on-disk database that is scalable, flexible,
+and faster than HyPer itself.
 
 \begin{figure}[H]
 	\centering
@@ -314,25 +311,21 @@ performance within the implementation effort is a significant outcome.
 \section{LingoDB}\label{sec:lingodb}
 %-------------------------------------------------------------------------------- 
 % I skipped the overview,
-LingoDB piloted in 2022 and proposed using the MLIR framework to create the
-optimisation layers \cite{lingo-db-1}. In most databases, the system parses the SQL into a
-query tree, then relational algebra, then this is optimised using manual
-implementations, and parse this into a plan tree for execution, or compile
-this into a binary. With MLIR, this pipeline changes into parsing the plan
-tree into a high-level dialect in MLIR, then doing optimisation passes on the
-plan itself, and the LLVM compiler can be used directly to turn this into
-LLVM, streamlining the process.
+LingoDB, introduced in 2022, proposed using the MLIR framework for optimisation
+layers \cite{lingo-db-1}. Traditional databases follow a standard pipeline: parsing SQL into a query
+tree, converting to relational algebra, optimizing using manual implementations, creating a plan
+tree, and either executing or compiling to a binary. MLIR streamlines this by parsing directly
+to a high-level MLIR dialect, applying optimisation passes to the plan, and using LLVM
+compilation directly without intermediate conversions.
 
 The LingoDB architecture can be seen in figure~\ref{fig:lingo-db-arch}, which begins
-by parsing the
-SQL into a relational algebra dialect. These dialects are defined using
-MLIR's dialect system, and supported through code generation. Their compiler
-is defined by a relational algebra dialect, a database dialect that represents
-database-specific types and operations, a DSA dialect that represents data
-structures and algorithms, a utility dialect that represents
-utilities, and the final LLVM output. This splits the state of the intermediate
-representation into three stages: relational algebra, a mixed dialect, and
-finally the LLVM \cite{lingo-db-1}.
+by parsing SQL into a relational algebra dialect. These dialects are defined using
+MLIR's dialect system and code generation. The compiler consists of multiple dialect layers:
+a relational algebra dialect for high-level queries, a database dialect for database-specific
+types and operations, a DSA dialect for data structures and algorithms, and a utility
+dialect for support functions. This multi-stage design splits the intermediate representation
+into three levels: relational algebra, a mixed dialect layer, and finally LLVM code
+\cite{lingo-db-1}.
 
 \begin{figure}[H]
 	\centering

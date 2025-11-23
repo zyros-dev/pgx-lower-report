@@ -163,10 +163,9 @@ deduplication, and further optimisations.
 In databasing and research broadly, it is vital to keep in mind whether the
 research is useful and impactful, as per Michael Stonebraker's concern that
 the field is merely polishing a round ball~\cite{top-ten-fears}. For
-successful projects, the dollar-cost of a live system database is typically
-much smaller than the profitability of the project itself, so paying for
-higher throughput is commonly not a concern, and better gains for latency
-can be made by adding a custom caching mechanism to the service such as Redis.
+successful projects, database costs are typically minor compared to overall profitability,
+making higher throughput a lower priority. In practice, better latency gains often
+come from application-level caching solutions like Redis rather than database optimization.
 These complex queries are primarily in OLAP systems, and large-scale OLAP
 systems will usually move away from PostgreSQL and into a more scalable
 database such as ClickHouse, or Apache HIVE. For this reason, there may be

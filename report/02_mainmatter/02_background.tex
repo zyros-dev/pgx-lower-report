@@ -55,8 +55,8 @@ Relational databases prioritise ACID requirements - Atomicity, Consistency,
 Isolation and Durability \cite{database-concepts}. This is a critical
 requirement in this type of system, and usually one of the main reasons people
 pick a relational database. Atomicity means transactions are a single unit
-of work, consistency means it must be in a valid state before and after the
-query, isolation means concurrent transactions do not interact with each other,
+of work, while consistency means it must be in a valid state before and after the
+query. Isolation means concurrent transactions do not interact with each other,
 and durability means once something is committed it will stay committed.
 \cite{database-concepts}
 
@@ -69,13 +69,13 @@ substantial: between $34.87\%$ and $76.56\%$ with an average of
 $49.32\%$ across the tested queries.
 
 Most of the recent databasing research has focused on the optimiser,
-which is visible in figure~\ref{fig:database_structure}. This includes
-reordering join statements where the left and right sides are flipped,
-predicate push down where a conditional/filter on a node is moved
-onto a lower node, extracting common subexpressions to prevent recomputation,
-constant folding where constant operations are evaluated inside
-the optimiser rather than in runtime, and more \cite{inersjo2021}. However, despite
-these advances, query optimisers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}. Another essential pattern involves genetic algorithms
+which is visible in figure~\ref{fig:database_structure}. Common optimization techniques include
+reordering join statements where the left and right sides are flipped, and
+predicate push down, where a conditional/filter on a node is moved
+onto a lower node \cite{inersjo2021}. Additionally, extracting common subexpressions
+prevents recomputation, while constant folding evaluates constant operations inside
+the optimiser rather than at runtime. Despite these advances, query optimisers frequently
+produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}. Another essential pattern involves genetic algorithms
 being used in optimisers for determining things like join orders, which can
 cause the outputted plan to be non-deterministic \cite{utesch1997geqo}.
 A thesis could be written just to summarise the list of optimisations.
@@ -128,15 +128,13 @@ hardware hazards, such as mispredictions, with improvements in this area
 making their queries 2.6x faster \cite{dbms-branches}. The Azul JIT compiler
 measured that their JIT solution's speculative optimisations can lead up to $50\%$ performance gains \cite{azul_jit_aot}.
 
-Evaluating a good branch prediction value is difficult,
-but a reasonable baseline is that $1\%$ misprediction rate is too high and should be optimised in
-a low latency environment \cite{farrier2025branch}. This is not a formal
-standard, but rather based on empirical knowledge \cite{branch-prediction-values}. Depending on the
-CPU, a branch mispredict can cost between 10 and 35 CPU cycles, with a
-safe range being 14-25 cycles. That is, with
-1 branch every 10 instructions, a $5\%$ misprediction rate,
-and a 20 cycle penalty per misprediction, approximately $10\%$ of the runtime
-will be spent resolving mispredictions \cite{eyerman2006branch}.
+Evaluating a good branch prediction value is difficult. A reasonable baseline is that a
+$1\%$ misprediction rate is too high and should be optimised in a low latency environment
+\cite{farrier2025branch}. This baseline is not formal; it is based on empirical knowledge
+\cite{branch-prediction-values}. Depending on the CPU, a branch mispredict can cost between 10 and
+35 CPU cycles, with a safe range being 14-25 cycles. With 1 branch every 10 instructions
+and a $5\%$ misprediction rate, a 20 cycle penalty per misprediction translates to approximately
+$10\%$ of runtime spent resolving mispredictions \cite{eyerman2006branch}.
 
 In the context of databases, compilers fall into two categories: those that compile only
 expressions (typically called EXP), and those that compile the
@@ -231,12 +229,10 @@ support benchmark. The most common one in research appears to be TPC-H,
 where the H informally means "hybrid". It has a mix of analytical and
 transactional elements inside it \cite{tpch_analyzed}.
 
-When evaluating benchmark results, the \textit{coefficient of variation} (CV)
-will be used, and it is a standardized measure of dispersion that expresses
-the standard deviation as a percentage of the mean~\cite{stats-libretexts-cv}.
-It is calculated as
+When evaluating benchmark results, the \textit{coefficient of variation} (CV) is used.
+This is a standardized measure of dispersion that expresses the standard deviation
+as a percentage of the mean~\cite{stats-libretexts-cv}. It is calculated as
 $CV = \frac{s}{\bar{X}} \cdot 100$, where $s$ is the sample standard deviation
 and $\bar{X}$ is the sample mean. The coefficient of variation is particularly
-useful when comparing the variability of datasets with different units or scales,
-as it provides a unitless measure that enables relative comparison of
-measurement precision across different benchmarking configurations.
+useful when comparing datasets with different units or scales, providing a unit-free
+measure for relative comparison of measurement precision.
