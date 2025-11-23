@@ -1,3 +1,18 @@
 \chapter{Conclusion}\label{ch:conclusion}
+pgx-lower demonstrates that JIT-compiled query execution can be integrated
+into production databases via extensions. We retrofitted LingoDB's compiler
+into PostgreSQL while maintaining ACID properties, achieving improved
+branch prediction and cache efficiency on TPC-H. The key contribution
+is methodological. Extension mechanisms provide a practical pathway for
+productionising database research without rewrites or official integration.
 
-Lorem Ipsum
+While only partial query coverage was implemented and performance is mixed,
+pgx-lower validates that production databases can adopt modern compiler
+techniques through extensions rather than from-scratch implementations. This
+bridges the gap between academic prototypes and production systems, suggesting
+a more realistic research methodology.
+
+Future work was proposed and discussed, including implementing all the
+plan and expression nodes in the executor, improving the runtime, or pivoting
+and targetting a different database system, compiler, or language in 
+subsection~\ref{subsec:future-work}.
