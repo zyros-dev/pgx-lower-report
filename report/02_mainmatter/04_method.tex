@@ -178,7 +178,7 @@ the logs are lengthy so it becomes easier to navigate.
 
 An issue that was encountered was that the LLVM/MLIR logs would route through
 stderr, and this caused difficult to debug issues until the hook was found
-to redirect this into \texttt{elog} as well. Subsection\~ref{subsec:debugging} will
+to redirect this into \texttt{elog} as well. Subsection~\ref{subsec:debugging} will
 explore one of the workarounds that was needed at this stage.
 
 Lastly, for error handling mostly \texttt{std::runtime\_error} was utilised. This served
@@ -194,7 +194,7 @@ the result is half-complete.
 An important property of PostgreSQL is that each client connection creates a new
 process. This means there are several layers to claw through to debug issues.
 First, is the PostgreSQL postmaster, then the client connection, then within
-that is the runtime hook entrance, which leads to $C++$, and inside $C++$
+that is the runtime hook entrance, which leads to C++, and inside C++
 we will be compiling into a JIT runtime, and the bugs can happen inside there.
 This poses a challenge for how to debug problems such as segmentation faults and
 errors without any logging.
@@ -223,10 +223,10 @@ errors were tackled.
 PostgreSQL has a large set of data types
 (\url{https://www.postgresql.org/docs/current/datatype.html}),
 and LingoDB has significantly less. However, for TPC-H we only require a subset
-of these. Table ~\ref{tab:lingodb-type-capabilities}
+of these. Table~\ref{tab:lingodb-type-capabilities}
 shows which of the LingoDB types are used,
 and table~\ref{tab:type-mapping} shows the type mappings. The two primary
-workarounds that were implemented was for decimals and the various types of strings.
+workarounds that were implemented were for decimals and the various types of strings.
 For decimals, \texttt{i128} is enough precision for most of the TPC-H tests, and is what
 LingoDB was using. However, adjustments had to be made to ensure impossible
 to allocate values do not appear, so the precision was capped at \texttt{<32, 6>}
@@ -562,7 +562,7 @@ These will be explained more specifically in the subsections.
 
 Some common definitions of nodes will also serve to be useful. Nodes commonly
 have a \texttt{InitPlan} parameter, which is a function that should be called
-before the node is used and contains initiailising variables such as the parameters,
+before the node is used and contains initialising variables such as the parameters,
 catalogue lookups, or other things. \texttt{targetlist} contains the output
 of the node, \texttt{qual} is the qualification of the node, which means
 what should be filtered as outputs. Join nodes will have a left and right tree,
@@ -632,8 +632,8 @@ the expression translator.
 For joins, there are two layers to translating them: the type of join, and
 the algorithm used by the join. The type of join refers to inner, semi, anti,
 right-anti, left/right joins, and full joins. The semi and anti join types are
-not specifically translated, and instead rely on an \texttt{EXISTS}/
-\texttt{NOT EXISTS} translations instead because they are semantically the same
+not specifically translated, and instead rely on \texttt{EXISTS}/
+\texttt{NOT EXISTS} translations because they are semantically the same
 operation.
 
 The algorithm used by the join refers to merge, nestloop, or hash joins. Following

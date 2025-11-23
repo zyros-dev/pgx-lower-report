@@ -32,11 +32,10 @@ DuckDB and extensions that turn PostgreSQL into an OLAP database are important.
 ClickHouse and NoisePage are standalone systems, while DuckDB is embedded
 and in-process, similar to SQLite. ClickHouse is a columnar, disk-oriented
 database with a vectorised execution engine with optional LLVM compilation
-for expressions (EXP)\cite{clickhouse}. NoisePage was created by the Carnegie
+for expressions (EXP) \cite{clickhouse}. NoisePage was created by the Carnegie
 Mellon Database group, and is columnar and in-memory
 with full query expression compilation (QEP), with a single node. They targeted
-ML-drive self optimisation in their research, but they were archived in February 21st
-2023 \cite{noisepage}. DuckDB is marketed
+ML-driven self optimisation in their research, but they were archived in February 21, 2023 \cite{noisepage}. DuckDB is marketed
 as the SQLite for analytical loads with in-memory disk spillage, or like a
 more sophisticated Pandas DataFrame \cite{duckdb}. Their engine supports
 vectorised execution because JIT would add too much overhead to their
@@ -89,12 +88,12 @@ documented in the official PostgreSQL documentation \cite{psql-jit-doc}.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{figures/pg-min-params.png}
-	\caption{Peter Eisentruat asking whether the defaults are too low.}
+	\caption{Peter Eisentraut asking whether the defaults are too low.}
 	\label{fig:pg-params-too-low}
 	\cite{postgres-pr-2}
 \end{figure}
 
-In the pull request Peter Eisentruat asked whether the default JIT
+In the pull request Peter Eisentraut asked whether the default JIT
 settings are too low, but in version 11 of PostgreSQL they went ahead with the
 release but with the JIT disabled by default. This didn't get much usage,
 and they decided that enabling it by default would give it exposure and testing \cite{psql-jit-discussion}.
@@ -185,8 +184,8 @@ strong typing which prevent numerous bugs in their original C++ approach.
 
 HyPer shows they reduced their compile time by doing this in
 figure~\ref{fig:hyper-compile-times} by many
-multiples, and in figure~\ref{fig:hyper-profiler} they show they achieve many times less branches,
-branch mispredicts, and other measurements compared to their baseline of MonetDB \cite{monetdb_x100}.
+multiples, and in figure~\ref{fig:hyper-profiler} they show they achieve many times fewer branches,
+branch mispredictions, and other measurements compared to their baseline of MonetDB \cite{monetdb_x100}.
 The cause of this is HyPer's output had less code in the compiled queries.
 
 \begin{figure}[H]
@@ -279,12 +278,12 @@ user-defined operators, enabling efficient integration of custom algorithms into
 %-------------------------------------------------------------------------------- 
 \section{Mutable}\label{sec:mutable}
 %-------------------------------------------------------------------------------- 
-In 2023, Mutable presented the concept of using a low latency JIT
+In 2023, Mutable presented the concept of using a low-latency JIT
 compiler (WebAssembly) rather than a heavy one in their initial paper \cite{mutable-1}.
 Its primary purpose, however, is to serve as a framework for implementing other
 concepts in database research so that they do not need to rewrite the framework
 later \cite{mutable-2}. However, using WebAssembly meant they can omit most of the optimisations
-that HyPer did while maintaining a higher of performance. Furthermore, they have
+that HyPer did while maintaining higher performance. Furthermore, they have
 a minimal query optimiser and instead rely on the V8 engine.
 
 The V8 engine contains a "Liftoff" component that adds an early-stage execution
