@@ -161,7 +161,7 @@ final product is useful, so other base databases, compilers, languages, and
 execution engines to integrate in can be considered.
 
 To progress this system further and make it a full extension, the plan tree
-nodes need to be fully implemented, and the query analyzer can be improved.
+nodes need to be fully implemented, and the query analyser can be improved.
 Only the minimum amount for TPC-H was implemented here, but pg\_bench
 and isolationtester should also be used before suggesting this system to
 users. This includes implementing indexes, WINDOW functions, the other
@@ -205,7 +205,7 @@ be better to build the engine, or find a better suited base system.
 The ideal here would be Umbra based on its description, but it is closed
 source. Another potential approach is to take an established OLAP system's
 engine (such as ClickHouse), and route to that instead of PostgreSQL's
-depending on the analyzer's rules.
+depending on the analyser's rules.
 
 MLIR was useful to give a strong set of dialect systems, but the main reason
 LingoDB used it was to give database optimisations clear layers. Furthermore,
