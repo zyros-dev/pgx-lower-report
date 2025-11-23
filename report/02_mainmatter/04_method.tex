@@ -656,11 +656,12 @@ Within operators, the primary challenge is the type conversions and quirks.
 Comparing two BPCHARs requires adding padding for the surrounding space.
 To implement implicit upcasting, a class was extracted from LingoDB's
 DB dialect: \texttt{SQLTypeInference}. Rather than relying on PostgreSQL's OID system
-for finding operations, operators are converted to strings ("\gt "\lt etc.) for lookup.
+for finding operations, operators are converted to strings (e.g., \texttt{">"} and \texttt{"<"}) for lookups.
 This prevents issues with OID precision specifications that lead to unidentified operations.
 The same approach is used in function nodes, aggregation functions, sort operations, and scalar maths.
-When performing operations on different types, \texttt{SQLTypeInference} automatically upcasts both operands
-to the larger datatype. For example, with \texttt{i16} + \texttt{i32}, both values are cast to \texttt{i32}.
+When performing operations on different types, \texttt{SQLTypeInference} upcasts the smaller operand
+to the larger datatype. For example, with \texttt{i16} + \texttt{i32}, \texttt{i16}
+is cast to \texttt{i32}.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Translation - Others}\label{subsubsec:translation-others}
@@ -675,8 +676,8 @@ and CastOps are also made frequently to defer casting to later layers.
 
 %===============================================================================
 \subsection{Configuring JIT compilation settings}\label{subsec:jit-config}
-Not much tinkering was done with the JIT optimisation flags, the minimum
-optimisation passes were used so that it can compile end-to-end, and
+Not much tinkering was done with the JIT optimisation flags; the minimum
+optimisation passes were used so that it can run end-to-end, and
 \texttt{llvm::CodeGenOptLevel::Default} was used as the optimisation level.
 These optimisation passes consist of SROA, InstCombinePass, PromotePass,
 LICM pass, reassociation pass, GVN pass, and simplify GVN pass.
@@ -691,7 +692,7 @@ moves loop-independent code outside of loops by hoisting to preheaders or sinkin
 The reassociation pass reorders expressions to enable further optimisations.
 GVN (Global Value Numbering) eliminates redundant computations by identifying values that must be equal.
 
-The consensus appeared to be that \texttt{-O2} should be used on it
+The community consensus appeared to be that \texttt{-O2} should be used on it
 and moved on. This means it is possible to do more tuning work on this.
 
 %===============================================================================
@@ -733,7 +734,8 @@ improved the latency from 4.5\,seconds to approximately 400\,milliseconds.
 	\label{fig:pgx-magic-after}
 \end{figure}
 
-Subsection~\ref{subsec:benchmarking} explains the specifics of running these in a stable way.
+Subsection~\ref{subsec:benchmarking} explains the specifics of running
+profiling jobs in a stable way.
 
 %===============================================================================
 \subsection{Website}\label{subsec:website}
@@ -756,21 +758,21 @@ This means we can specify runs beforehand, and run them robustly over a long
 period. Also, this benchmarking run computes a hash of the outputs
 between PostgreSQL and pgx-lower to validate the outputs are correct between
 all the runs, and the hashes were compared. This avoids storing large
-amounts of data over time, while the issue can still be rediscovered in
+amounts of data over time, while issues can still be rediscovered in
 a large batch of runs.
 
 The benchmark configurations used are displayed in Listing~\ref{lst:benchmark-config}.
 These configurations allow testing across different scale factors, with and without
 indexes, and with varying iteration counts to understand performance characteristics.
 With multiple iterations, graphs that contain distributions can be created.
-These were decided by bucketing queries into small scale factor (0.01, or 1\,MB
+These were decided by bucketing queries into small scale factor (0.01; 1\,MB
 of data) to show the overhead cost of the JIT compiler, medium scale factor
 (0.16) to show how Postgres scales while still keeping all the queries enabled
 with indexes, and lastly scale factor 1 with the very time-consuming queries
 completely disabled. These disabled queries would take on the order of hours in
 PostgreSQL, so benchmarking them for multiple iterations was too time-consuming.
 
-To disable indexes, \texttt{cur.execute("SET enable\_indexscan = off;")} and
+To disable indexes, \texttt{cur.execute("SET enable\_indexscan = off;")} and \newline
 \texttt{cur.execute("SET enable\_bitmapscan = off;")} were used in conjunction.
 This means when the benchmarks say index scan is disabled, the bit map scan
 is as well.
@@ -827,11 +829,11 @@ full:
       label: "SF=1, indexes disabled, excluding {q02,q17,q20,q21}, 100 iterations"
 \end{lstlisting}
 
+The magic trace profiling also functions through this script, which is
+what the \texttt{profile} tag there is for.
+
 One thing to note here is that it was decided that only PostgreSQL and pgx-lower
 would be compared, rather than all the databases mentioned in
 Chapter~\ref{ch:related-work}. As Section~\ref{sec:benchmarking} showed that
 the impact of PostgreSQL's architecture being on disk makes it significantly
 slower than any of the other databases.
-
-The magic trace profiling also functions through this script, which is
-what the \texttt{profile} tag there is for.
