@@ -31,7 +31,7 @@ effort the 2022 version was used from their initial paper.
 LingoDB was integrated into PostgreSQL as seen in figure~\ref{fig:overall-system-design}.
 The blue represents PostgreSQL components, with the pipeline on the left being
 the whole of PostgreSQL. A query reaches the runtime hooks, which gets analyzed
-by a hand-written analyzer for whether the query can be execution, and then parsed.
+by a hand-written analyser for whether the query can be execution, and then parsed.
 These hand writte components are annotated in light-peach.
 This goes through the code LingoDB created, but with custom runtime hooks and
 other small edits, annotated with green. Finally this is compiled into
@@ -340,6 +340,15 @@ mostly LLVM 20 API compatibility updates.
 This defines most of the supporting details, and the main two components of
 the implementation can be described: the runtime patterns and the plan tree
 translation.
+
+%===============================================================================
+\subsection{Query Analyser}\label{subsec:query-analyser}
+While the query analyser is fully written, in the final state it forces all 
+queries through to pgx-lower for testing. This enables testing new things and 
+where they fail. It functions by doing a depth-first-search through the plan 
+tree and validating the nodes are supported by the engine at this point, however,
+in the future there can be work here for deciding whether a query is worth 
+running based on its cost metrics as well.
 
 %===============================================================================
 \subsection{Runtime patterns}\label{subsec:runtime-patterns}

@@ -90,9 +90,19 @@ Appendix~\ref{appendix:q20-sql}, \ref{appendix:q20-postgres},
 \ref{appendix:q20-pgxlower} show the initial query, PostgreSQL's plan tree, and
 pgx-lower's output after the optimisation pass. Within the pgx-lower's output,
 the joins have a "hash" annotation which means they go towards the hash join.
-Overall, this means that it is not an entirely fair comparison on these 
-queries because pgx-lower gets to use a hash join while PostgreSQL is utilising 
+Overall, this means that it is not an entirely fair comparison on these
+queries because pgx-lower gets to use a hash join while PostgreSQL is utilising
 a NestLoop\_T, which would have been indexed with the indexing enabled.
+
+An interesting detail in figure~\ref{fig:q20-pgx-profile} is that
+the LLVM to bytecode compiler is very minimal. Out of the 1.18 second query,
+only 14.93 milliseconds is spent inside
+\texttt{llvm::SelectionDAGISel::runOnMachineFunction}, which is the step that 
+converts the LLVM IR into executable code. However, the overall compiler is 236
+milliseconds, with much of it being inside the MLIR passes themselves. That 
+means this MLIR code appears to be much heavier than the LLVM optimisations. 
+One explanation for this is that the LLVM ORC JIT compiler does a minimal amount 
+of work, and it happens in the background during execution.
 
 For the RAM usage, figure~\ref{fig:bench-mem-plots} and
 figure~\ref{fig:bench-mem-diff-plots} show that pgx-lower and PostgreSQL's
@@ -161,7 +171,7 @@ The other core work is optimising the system, both with existing research
 and clearer ways to use the PostgreSQL API. Namingly, pre-compiling
 functions in PostgreSQL into LLVM, then inlining them instead of
 crossing the LLVM-C++ boundary, adaptive compilation/query planning,
-and Umbra's LeanStore-style buffering system. Most of these 
+and Umbra's LeanStore-style buffering system. Most of these
 are only applicable inside a
 LLVM/MLIR system though, and if WebAssembly is used instead a lot of
 them can be skipped. More generically, parallelism can be improved,
@@ -205,7 +215,6 @@ short-lived processes, we would not be able to inline functions in the future.
 Either way, switching to a different compiler, or away from $C++$ into $C$ or
 Rust is appealing.
 
-% TODO: Is the signing off note I want to do? 
 This establishes a large set of different directions this research can take.
 The most appealing direction is attempting to take NoisePage or ClickHouse
 and inserting it into PostgreSQL as drop-in engine replacement.
