@@ -32,11 +32,11 @@ this tree where tuples are dragged upwards.
 
 The fundamental issue with this classical model is that it is heavily
 under-utilising the hardware \cite{branch-misprediction}. If only a single tuple is pulled, our CPU
-caches are barely used. An i5-570, a popular CPU in 2010 had a 8MB L3 cache,
-but in 2024 an i5-14600K has a 24MB L3 cache \cite{passmark_i5760},
-\cite{techpowerup_i5_14600k}. For disks, in 2010 the Segate Barracuda 7200.12
-was popular, which had a sustained read of 138MB/s, but in 2022 the Samsung
-V-NAND SSD 990 PRO released with a sustained read of 7450MB/s
+caches are barely used. An i5-570, a popular CPU in 2010 had an 8 megabyte L3 cache,
+but in 2024 an i5-14600K has a 24 megabyte L3 cache \cite{passmark_i5760},
+\cite{techpowerup_i5_14600k}. For disks, in 2010 the Seagate Barracuda 7200.12
+was popular, which had a sustained read of 138 MB/s, but in 2022 the Samsung
+V-NAND SSD 990 PRO released with a sustained read of 7450 MB/s
 \cite{seagate_barracuda_7200_12} \cite{samsung_990_pro}. Increases this
 large could mean the algorithms can fundamentally change.
 
@@ -71,20 +71,21 @@ $49.32\%$ across the tested queries.
 Arguably most of the recent databasing research has been inside the optimiser
 which is visible in figure~\ref{fig:database_structure}. This includes
 reordering join statements where the left and right sides are flipped,
-predicate pushdown where a conditional/filter on a node is moved
+predicate push down where a conditional/filter on a node is moved
 onto a lower node, extracting common subexpressions to prevent recomputation,
 constant folding where constant operations are evaluated inside
 the optimiser rather than in runtime, and more \cite{inersjo2021}. However, despite
-these advances, query optimizers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}. Another essential pattern to understand is genetic algorithms
-are used inside of optimisers for things like join orders, which can 
+these advances, query optimisers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}. Another essential pattern to understand is genetic algorithms
+are used inside of optimisers for things like join orders, which can
 cause the outputted plan to be non-deterministic \cite{utesch1997geqo}.
-A list of optimisations would be long enough for a thesis to be written to 
+A list of optimisations would be long enough for a thesis to be written to
 summarise them.
 
 Within traditional and volcano databases, the cache is managed through a set
 of buffer techniques while reading tuples. This works by the database
 reading a page, which usually has a fixed size and can be configured,
-such as 8KB. This is loaded into a buffer pool object which holds it inside
+such as eight kilobytes. This is loaded into a 
+buffer pool object which holds it inside
 of RAM. The operating system or environment manages where this memory goes
 inside the context of the L1/L2/L3 and ram caches depending on the access
 patterns \cite{database-concepts}. This buffer pool can change caching
@@ -106,7 +107,7 @@ such as Apache Hive such that a large amount of compute can be used across
 the system \cite{apache_hive}. In the context of PostgreSQL, it is a
 hybrid architecture that has support for both these operations
 \cite{herrera2021hybrid}. There is currently debate about whether
-this hybrid architecture is useful anymore because putting pressure
+this hybrid architecture is useful any more because putting pressure
 on your database serving users commonly causes reliability issues
 \cite{mooncake_htap}.
 
@@ -119,18 +120,18 @@ machine code. They are mostly used by interpreted languages to eliminate
 the ill-effects on performance \cite{long-masters-thesis}. Advanced compilers
 can run the primary program, then dedicate some background threads to
 improving the optimisation of the code, and swap it over to the optimized
-version when it is ready \cite{hyper-compiler-2}. This means the intial
+version when it is ready \cite{hyper-compiler-2}. This means the initial
 compilation can be faster, and the development cycle can go faster, as well as
 other benefits.
 
-Due to branch-prediction optimization, JIT compilers can be faster than
+Due to branch-prediction optimisation, JIT compilers can be faster than
 ahead of time compilers. In 1999, a benchmarking paper measured four
 commercial databases and found $10\%-20\%$ of their execution time was spent
 fixing poor predictions \cite{branch-misprediction}.
 Modern measurements still find 50\% of their query times are spent resolving
 hardware hazards, such as mispredictions, with improvements in this area
 making their queries 2.6x faster \cite{dbms-branches}. The Azul JIT compiler
-measured that their JIT solution's speculative optimizations can lead up to $50\%$ performance gains \cite{azul_jit_aot}.
+measured that their JIT solution's speculative optimisations can lead up to $50\%$ performance gains \cite{azul_jit_aot}.
 
 It is difficult to evaluate what a good branch prediction value is,
 but a reasonable baseline is $1\%$ is too high and should be optimised in
@@ -162,7 +163,7 @@ LLVM defines a language-independent intermediate representation
 (IR) based on Static Single Assignment (SSA) form and MLIR is an extension of
 this \cite{llvm-paper}. The architecture follows a three-phase design: a
 front-end parses source code
-and generates LLVM IR, an optimizer applies a series of transformation
+and generates LLVM IR, an optimiser applies a series of transformation
 passes to improve code quality, and a back-end generates machine code for
 the target architecture. MLIR extends this concept by introducing a
 flexible dialect system that
@@ -175,7 +176,7 @@ at appropriate abstraction levels.
 
 LLVM's On-Request-Compilation (ORC) JIT is a system for
 building JIT compilers with support for lazy compilation,
-concurrent compilation, and runtime optimization~\cite{llvm-jit-orc}.
+concurrent compilation, and runtime optimisation~\cite{llvm-jit-orc}.
 ORC can compile code on-demand as it is needed, reducing startup
 time by deferring compilation of functions until they are first
 called. The JIT supports concurrent compilation across
@@ -223,7 +224,7 @@ PostgreSQL provides the \texttt{EXPLAIN} command to inspect query execution
 plans, which is essential for understanding and optimizing query performance
 \cite{postgresql_explain}. This command displays the execution plan that the
 planner generates, including cost estimates and optional execution statistics,
-making it a critical tool for database optimization and analysis.
+making it a critical tool for database optimisation and analysis.
 
 \section{Database Benchmarking}\label{sec:database-benchmarking}
 % cite pg_bench

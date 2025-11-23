@@ -46,7 +46,7 @@ lightweight philosophy.
 \section{PostgreSQL and Extension Systems}\label{sec:postgresql-related}
 %-------------------------------------------------------------------------------- 
 PostgreSQL is a battle-tested system and is currently the most
-popular database in the world with $51.9$ of developers in a stackoverflow survey
+popular database in the world with $51.9$ of developers in a Stack Overflow survey
 saying they use it extensively in 2024 \cite{stackoverflow2024}. Within the context of compiled queries this means
 the database itself cannot be treated as a research system. Changes directly to
 it requires heavy-testing, but also, these changes will not be peer-reviewed
@@ -63,7 +63,7 @@ of GitHub stars, but TimescaleDB especially had over 500 paying customers in
 \cite{timescaledb_series_c}. This shows that the model of relying on the
 extension system is a robust, travelled road.
 
-There have also been several extension that attempt to make PostgreSQL more
+There have also been several extensions that attempt to make PostgreSQL more
 suited to OLAP workloads, with the most relevant one being pg\_duckdb
 \cite{pg_duckdb}. This system replaces PostgreSQL's engine with DuckDB which
 allows it to take advantage of the vectorised engine, and it is reasonably
@@ -71,7 +71,7 @@ popular with roughly 2700 stars on GitHub. Hydra is also worth mentioning,
 but this is closer to TimescaleDB \cite{hydra_columnar} and makes the system
 columnar with compression support. ParadeDB's pg\_analytics initially started
 in the same way as pg\_duckdb, but pivoted into supporting search functionality
-instead, similar to Elastic Search.
+instead, similar to Elasticsearch.
 
 There has been significant discussion about HyPer and JIT in regard to
 PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. The general response is doubt that
@@ -108,7 +108,7 @@ Two cases where QEP query compilation with PostgreSQL was implemented were found
 The first is Vitesse DB, which made a series of public posts about getting
 people to assist with testing it. They became generally available in 2015,
 but their website is offline now and there is not much mention of them.
-The second was at a PgCon presentation and achieved a 5.5x speedup on TPC-H query
+The second was at a PgCon presentation and achieved a 5.5x speed-up on TPC-H query
 1, and has more documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it's easy for people to use.
 
 This implementation of full JIT in PostgreSQL was preceded with
@@ -275,8 +275,6 @@ benchmarking \cite{clickbench}. The main complaint of the compiler being too hea
 but it shows the advantage of having direct access to the JIT compiler with
 its adaptive compilation to change optimisation choices. Additionally, Umbra supports
 user-defined operators, enabling efficient integration of custom algorithms into the database \cite{umbra-user-operators}.
-% I wonder if I can say more was included in the original literature review?
-% I guess the thesis is a standalone work though haha
 
 %-------------------------------------------------------------------------------- 
 \section{Mutable}\label{sec:mutable}
@@ -290,8 +288,8 @@ that HyPer did while maintaining a higher of performance. Furthermore, they have
 a minimal query optimiser and instead rely on the V8 engine.
 
 The V8 engine contains a "Liftoff" component that adds an early-stage execution
-step to lower the initial overhead of running the query \cite{wasm-liftoff}. The liftoff component
-produces machine code as fast as possible while skipping opimisations, then
+step to lower the initial overhead of running the query \cite{wasm-liftoff}. The LiftOff component
+produces machine code as fast as possible while skipping optimisations, then
 "turbofan" is a second-stage compiler that runs in the background
 while execution is running. However, HyPer has a direct bytecode interpreter
 which can result in a lower time to execution.
@@ -302,7 +300,7 @@ which can result in a lower time to execution.
 	\caption{Comparison of mutable to HyPer and Umbra.}
 	\label{fig:mutable-arch}
 	\cite{mutable-2}
-\end{figure}lation phase graph
+\end{figure}
 
 Mutable's benchmarks show they achieve similar compile and execution times to
 HyPer, and outperform them in many cases \cite{mutable-2}. While pushing Mutable to the
@@ -411,7 +409,7 @@ clear that the queries can become several times faster if optimised.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.4]{figures/pperf_psql.png}
-	\caption{PostgreSQL time spent in the CPU, measured with prof.}
+	\caption{PostgreSQL's time spent in the CPU, measured with prof.}
 	\label{fig:pprof-psql}
 \end{figure}
 
@@ -424,7 +422,7 @@ managed to commercialise their systems, but the other databases are strictly
 research systems and some do not support ACID, multithreading, or other core
 requirements such as index scans. Michael Stonebraker, a Turing Award recipient and the founder of
 PostgreSQL, writes that a fundamental issue in research is that they have
-forgotten the usecase of the systems and target the $0.01\%$ of users \cite{top-ten-fears}.
+forgotten the use case of the systems and target the $0.01\%$ of users \cite{top-ten-fears}.
 These commercial databases reaching high performance is a symptom of this.
 Testing the wide variety of ACID requirements is a significant undertaking.
 
@@ -452,7 +450,7 @@ of these systems being difficult to use widely, and potential to integrate it
 into the original system once stronger correctness and speed optimisations have
 been shown. Accomplishing this shows there is a way to rely on previous
 ACID-compliance and supporting code infrastructure. Users can install the
-extension, have faster query runs with rollbacks, and the implementation effort
+extension, have faster queries with rollbacks, and the implementation effort
 is lowered since core systems and algorithms can be skipped.
 
 A key output is showing that the system can operate within

@@ -1,7 +1,7 @@
 \chapter{Introduction}\label{sec:intro}
 Databases are a heavily used type of system that rely on correctness and speed.
 Nowadays, they are often the primary bottleneck in many systems - especially
-on webservers and other large data applications \cite{ddia}.
+on web servers and other large data applications \cite{ddia}.
 
 With modern hardware advances, the optimal way to structure these databases has
 drastically changed, but most databases are using architectures defined by older
@@ -9,8 +9,8 @@ hardware. Older databases assume the disk operations are the vast majority of
 runtime, but that has shifted to the CPU for heavy queries.
 
 These projects typically create standalone databases, but that means that
-distribution becomes harder and the projects need to implement their own database
-as well, which might require a large number of additional steps for serious
+distribution becomes harder, and the projects need to implement their own database
+as well, which might require many additional steps for serious
 projects. To productionise the system, this might include implementing ACID,
 MVCC, query plan optimisation, and more. By using an established database, we can
 address this issue.
