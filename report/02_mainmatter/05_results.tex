@@ -90,7 +90,7 @@ In contrast, pgx-lower shows consistent performance across these queries. Visibl
 Figures~\ref{fig:q20-psql-profile} and~\ref{fig:q20-pgx-profile}, the difference appears: PostgreSQL uses nested loop joins
 while pgx-lower uses hash joins.
 Appendices~\ref{appendix:q20-sql},~\ref{appendix:q20-postgres}, and~\ref{appendix:q20-pgxlower} show the query and both systems' plan trees. In pgx-lower's output,
-joins are annotated with "hash", indicating hash join usage. This comparison
+joins are annotated with ``hash'', indicating hash join usage. This comparison
 is not entirely fair because pgx-lower uses a hash join while PostgreSQL uses
 a nested loop join (NestLoop\_T), which would benefit from indexing.
 
@@ -162,7 +162,7 @@ deduplication, and further optimisations.
 
 Research impact remains vital in database systems, reflecting Michael Stonebraker's concern about field progress~\cite{top-ten-fears}. For
 successful projects, database costs are typically minor relative to overall profitability,
-making higher throughput less critical. Practically, latency gains more often come from application-level caching (like Redis) than database optimization.
+making higher throughput less critical. Practically, latency gains more often come from application-level caching (such as Redis) than database optimization.
 Complex OLAP queries often run on large-scale systems that migrate away from PostgreSQL to more scalable
 databases such as ClickHouse or Apache Hive. Alternative systems may provide better development platforms for this architecture.
 

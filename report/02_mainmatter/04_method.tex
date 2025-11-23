@@ -43,7 +43,7 @@ segmentation faults.
 AST Parser implementation was expected to be most time-consuming,
 as it receives the optimised plan tree from PostgreSQL.
 LingoDB was designed to parse query trees from the
-"Parser" stage in Figure~\ref{fig:overall-system-design}. The implementation includes 18 plan nodes and 14
+Parser stage in Figure~\ref{fig:overall-system-design}. The implementation includes 18 plan nodes and 14
 expression nodes.
 
 TPC-H query support was the final goal.
@@ -444,7 +444,7 @@ into the broader design. Within the AST Parser component, we examine the
 PostgreSQL tag on the node to determine the plan node type,
 then a recursive descent parser starts translating. Each translation function follows a consistent pattern.
 First, children of the plan are translated using post-order traversal.
-Then, the node is translated into the MLIR relational algebra dialect, and a "translation result" is returned.
+Then, the node is translated into the MLIR relational algebra dialect, and a translation result is returned.
 
 \begin{figure}[H]
 	\centering
