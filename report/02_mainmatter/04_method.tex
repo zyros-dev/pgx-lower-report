@@ -18,7 +18,7 @@ section~\ref{sec:postgresql-related}. The primary challenge with this is that Li
 in-memory database, so adjustments will be needed. Furthermore, LingoDB does
 not support indexes, which can make the benchmarks against PostgreSQL unfair.
 Another detail is that LingoDB's newer versions contain numerous
-features and optimisations that is not relevant to us, so to simplify implementation
+features and optimisations that are not relevant to us, so to simplify implementation
 effort the 2022 version was used from their initial paper.
 
 \begin{figure}[H]
@@ -31,7 +31,7 @@ effort the 2022 version was used from their initial paper.
 LingoDB was integrated into PostgreSQL as seen in figure~\ref{fig:overall-system-design}.
 The blue represents PostgreSQL components, with the pipeline on the left being
 the whole of PostgreSQL. A query reaches the runtime hooks, which gets analyzed
-by a handwritten analyser for whether the query can be execution, and then parsed.
+by a handwritten analyser for whether the query can be executed, and then parsed.
 These hand written components are annotated in light-peach.
 This goes through the code LingoDB created, but with custom runtime hooks and
 other small edits, annotated with green. Finally, this is compiled into
@@ -151,16 +151,16 @@ is not usually to replace the entire executor with these hooks, so the memory
 context had to be activated and switched into.
 
 Next, the \texttt{QueryDesc} pointer, which contains the query request,
-was to be passed through to \texttt{C++}. This causes a design decision. Good practice
+needed to be passed through to C++. This causes a design decision. Good practice
 here is to use smart pointers to prevent memory leaks, but this object is large
 and the source of truth about the request. Furthermore, the memory is handled by
 the PostgreSQL memory contexts. It was decided that these objects will remain
-as raw pointers, causing the \texttt{C++} to break conventions.
+as raw pointers, causing the C++ to break conventions.
 
 LingoDB was installed as a git submodule and set to a read-only permission.
 This was maintained for reference purposes only, and the compilation phases
 would be extracted. LingoDB used LLVM 14, and was upgraded to LLVM 20 to
-modernise it and slightly better support with \texttt{C++20} (some workarounds were
+modernise it and slightly better support with C++20 (some workarounds were
 required with LLVM 14 that could be skipped with LLVM 20). However,
 since this is the C++ API for LLVM, a large amount of the LingoDB code
 had to be adjusted to compile.
@@ -177,7 +177,7 @@ section of the codebase could be enabled. The core benefit of this is that
 the logs are lengthy so it becomes easier to navigate.
 
 An issue that was encountered was that the LLVM/MLIR logs would route through
-stderr, and this caused difficult to debug issues until the hook was found
+stderr, and this caused difficult-to-debug issues until the hook was found
 to redirect this into \texttt{elog} as well. Subsection~\ref{subsec:debugging} will
 explore one of the workarounds that was needed at this stage.
 
@@ -600,7 +600,7 @@ like a \texttt{qual}. In psql, these filter at different stages, but since we ar
 skipping the index implementation they become generic filters instead.
 
 CTE scan plans are defined within the InitPlan of nodes, but still route through
-the primary plan switch statement logic. Neither CTE plans or subqueries
+the primary plan switch statement logic. Neither CTE plans nor subqueries
 currently offer de-duplication to simplify implementation. That is, if a query
 uses the same CTE reference or writes the same subquery twice, they will
 currently be lowered into two different LLVM chunks of code rather than
@@ -760,9 +760,9 @@ the compiler without installing the system themselves at \url{https://pgx.zyros.
 Keep in mind that it relies on caching the results, it has a scale factor of 0.01
 (10 megabytes of data), and the pgx-lower system there is (as of writing),
 running a debug build which has significantly longer runtimes. The
-implementation for this can be is at \url{https://github.com/zyros-dev/pgx-lower-addons}.
-It is implemented with python for the backend server. SQLite for the query caching,
-react for the frontend, has docker containers to support the reverse proxy
+implementation for this is at \url{https://github.com/zyros-dev/pgx-lower-addons}.
+It is implemented with Python for the backend server, SQLite for the query caching,
+React for the frontend, and Docker containers to support the reverse proxy
 with Nginx, and a private Grafana health dashboard.
 
 %===============================================================================

@@ -73,14 +73,14 @@ in Python.
 
 \section{Discussion}\label{sec:Discussion}
 To reiterate, the goal is to show that using the extension system is a viable
-approach to introduce compiled queries into battle-tasted databases while
+approach to introduce compiled queries into battle-tested databases while
 maintaining their ACID properties. Previous studies have already found that
 this model has speed benefits.
 
 In terms of latency for queries, there are mixed results.
 In figure~\ref{fig:bench-box-plots} and figure~\ref{fig:bench-diff-plots}
 it is visible that if PostgreSQL has indexes disabled, at scale factor 0.01
-queries 7 and 20's latency is multiple magnitudes longer than the other queries,
+the latency of queries 7 and 20 is multiple magnitudes longer than the other queries,
 and this happens again at scale factor 0.16 even with the indexing enabled.
 In the differences plot, we can see that this clearly does not happen with
 pgx-lower, and the reason for this is visible in figure~\ref{fig:q20-psql-profile}
@@ -115,15 +115,14 @@ there is a mean difference across all these queries of 0.34 megabytes.
 The branch prediction in figure~\ref{fig:branch-miss-plot} shows potential.
 At scale factor 1, pgx-lower's median
 branch miss rate was 0.16\%, compared to Postgres's 0.28\%. However,
-at a smaller scale factor with smaller queries this inverses such that
+at a smaller scale factor with smaller queries this is inverted such that
 PostgreSQL had a median of 0.38\% and pgx-lower had 1.09\%. This means that
 the compiled JIT runtime has a better branch prediction rate, but potentially
 the code within the compilation stage, or before warm-up, has a worse rate.
-The difference could be attested to the number of branches, visible in
+The difference could be attributed to the number of branches, visible in
 figure~\ref{fig:num-branch-plot}. PostgreSQL had a median of 28,430,465
 branches, while pgx-lower had 195,299,021.50; 6.87 times more than PostgreSQL.
-This increase in the number of branches could mean that there are more low
-hanging-fruit.
+This increase in the number of branches could mean that there are more low-hanging fruit.
 
 For the last level cache miss rate, pgx-lower appears to perform better than
 PostgreSQL at smaller scale factors and appears similar to PostgreSQL at larger
@@ -142,7 +141,7 @@ be successful, and the variation is not too large. Some queries, such as in
 scale factor 0.01 with indexes disabled, in figure~\ref{fig:bench-box-plots},
 show the outliers do become extreme. On query 8, PostgreSQL had an outlier
 of 5008 milliseconds while the median was 12.42 milliseconds. However, the
-overall coefficient of variation was only 0.44\% overall during the
+coefficient of variation was only 0.44\% overall during the
 latency measurements in the scale factor 0.01. It's stable overall,
 but vital to do repeated tests to exclude these outliers from the system.
 
@@ -154,8 +153,8 @@ running minimal processes, system interrupts can also affect the results.
 
 \subsection{Future work}\label{subsec:future-work}
 Since replacing PostgreSQL's execution engine with a JIT-focused one is quite
-generic, there are a number of directions future works can take. The system
-itself and be improved by fully implementing the plan nodes, and it
+generic, there are a number of directions future work can take. The system
+itself can be improved by fully implementing the plan nodes, and it
 could be optimised further. However, it's important to ensure the
 final product is useful, so other base databases, compilers, languages, and
 execution engines to integrate in can be considered.
@@ -168,7 +167,7 @@ users. This includes implementing indexes, WINDOW functions, the other
 22 missing plan nodes, and the missing execution nodes.
 
 The other core work is optimising the system, both with existing research
-and clearer ways to use the PostgreSQL API. Namingly, pre-compiling
+and clearer ways to use the PostgreSQL API. Namely, pre-compiling
 functions in PostgreSQL into LLVM, then inlining them instead of
 crossing the LLVM-C++ boundary, adaptive compilation/query planning,
 and Umbra's LeanStore-style buffering system. Most of these
@@ -186,7 +185,7 @@ much smaller than the profitability of the project itself, so paying for
 higher throughput is commonly not a concern, and better gains for latency
 can be made by adding a custom caching mechanism to the service such as Redis.
 These complex queries are primarily in OLAP systems, and large-scale OLAP
-systems will usually move away from PostgreSQL and into a more scaleable
+systems will usually move away from PostgreSQL and into a more scalable
 database such as ClickHouse, or Apache HIVE. For this reason, there may be
 better systems to develop this architecture on.
 
@@ -199,7 +198,7 @@ OLAP systems will already be using a JIT or vectorized approach, though.
 During development, using LingoDB provided helpful constraints and made
 development easier since it is an established system. However, LingoDB's
 columnar, in-memory architecture required extensive modifications to suit
-needs. It also contains a query optimisation engine, which is unnecessary
+its needs. It also contains a query optimisation engine, which is unnecessary
 because PostgreSQL already has a thorough optimisation system. It would
 be better to build the engine, or find a better suited base system.
 The ideal here would be Umbra based on its description, but it is closed
@@ -217,7 +216,7 @@ Rust is appealing.
 
 This establishes a large set of different directions this research can take.
 The most appealing direction is attempting to take NoisePage or ClickHouse
-and inserting it into PostgreSQL as drop-in engine replacement.
+and inserting it into PostgreSQL as a drop-in engine replacement.
 This is a more complete ecosystem, and the primary work will be around the
 adapters to adjust queries. Furthermore, pg\_duckdb has already done
 this, but it is a vectorised engine.

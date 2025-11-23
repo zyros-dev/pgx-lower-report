@@ -4,7 +4,7 @@
 \section{Database Background}\label{sec:database_background}
 %-------------------------------------------------------------------------------
 The majority of databases are structured like Figure~\ref{fig:database_structure}.
-Structure Query Language (SQL) is parsed, turned to RA (relational-algebra),
+Structured Query Language (SQL) is parsed, turned to RA (relational-algebra),
 optimized, executed, then materialized into a table \cite{database-concepts}.
 
 \begin{figure}[H]
@@ -15,9 +15,9 @@ optimized, executed, then materialized into a table \cite{database-concepts}.
 	\cite{database-concepts}
 \end{figure}
 
-For non-compiler databases they use a volcano operator model tree, such as
+For non-compiler databases, a volcano operator model tree is used, such as
 Figure~\ref{fig:execution_tree} \cite{long-masters-thesis}. The root node has a \texttt{produce()} function
-which calls its children's \texttt{produce()}, until it calls a leave node,
+which calls its children's \texttt{produce()}, until it calls a leaf node,
 which calls \texttt{consume()} on itself, then that calls its parent's
 \texttt{consume()} function. In other words, a post-order traversal through
 this tree where tuples are dragged upwards.
@@ -37,10 +37,10 @@ but in 2024 an i5-14600K has a 24 megabyte L3 cache \cite{passmark_i5760},
 \cite{techpowerup_i5_14600k}. For disks, in 2010 the Seagate Barracuda 7200.12
 was popular, which had a sustained read of 138 MB/s, but in 2022 the Samsung
 V-NAND SSD 990 PRO released with a sustained read of 7450 MB/s
-\cite{seagate_barracuda_7200_12} \cite{samsung_990_pro}. Increases this
-large could mean the algorithms can fundamentally change.
+\cite{seagate_barracuda_7200_12} \cite{samsung_990_pro}. Such dramatic increases
+could mean the algorithms can fundamentally change.
 
-This has lead to the vectorized execution model and
+This has led to the vectorized execution model and
 the compiled model. With the vectorized model, multiple tuples are pulled
 up in a group rather than one at a time. A core advantage
 is that instructions per CPU cycle (IPC) can increase through single
@@ -54,7 +54,7 @@ section~\ref{sec:jit_background} and chapter~\ref{ch:related-work}.
 Relational databases prioritise ACID requirements - Atomicity, Consistency,
 Isolation and Durability \cite{database-concepts}. This is a critical
 requirement in this type of system, and usually one of the main reasons people
-pick a relational database. Atomicity refers to transactions are a single unit
+pick a relational database. Atomicity means transactions are a single unit
 of work, consistency means it must be in a valid state before and after the
 query, isolation means concurrent transactions do not interact with each other,
 and durability means once something is committed it will stay committed.
@@ -62,7 +62,7 @@ and durability means once something is committed it will stay committed.
 
 It is common for on-disk databases to consider the cost of CPU operations to
 be constant or cost-free \cite{database-concepts}. This is partially
-due to when these systems were made, the disks were much slower and
+due to the era in which these systems were developed, when disks were much slower and
 the caches were much smaller. In part A of this project, this was disproved
 for PostgreSQL as it was found that the time spent in the CPU was
 substantial: between $34.87\%$ and $76.56\%$ with an average of
