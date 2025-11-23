@@ -5,10 +5,10 @@ the volcano model subsequently took precedence due to its simpler implementation
 and minimal performance cost at the time. However, modern analytical engines
 are revisiting compilation approaches \cite{everything-vector}.
 
-PostgreSQL's extension system is covered in section~\ref{sec:postgresql-related}, followed by System R
-in section~\ref{sec:system-r} as a classical example. HyPer and Umbra (sections~\ref{sec:hyper} and~\ref{sec:umbra})
-re-introduced compilation in modern databases, while Mutable (section~\ref{sec:mutable}) and LingoDB
-(section~\ref{sec:lingodb}) provide research examples. PostgreSQL's JIT compilation and prior attempts conclude the survey.
+PostgreSQL's extension system is covered in Section~\ref{sec:postgresql-related}, followed by System R
+in Section~\ref{sec:system-r} as a classical example. HyPer and Umbra (Sections~\ref{sec:hyper} and~\ref{sec:umbra})
+re-introduced compilation in modern databases, while Mutable (Section~\ref{sec:mutable}) and LingoDB
+(Section~\ref{sec:lingodb}) provide research examples. PostgreSQL's JIT compilation and prior attempts conclude the survey.
 
 %-------------------------------------------------------------------------------- 
 \section{OLAP Systems}\label{sec:olap-systems}
@@ -25,10 +25,9 @@ DuckDB and extensions that turn PostgreSQL into an OLAP database are important.
 ClickHouse and NoisePage are standalone systems, while DuckDB is embedded
 and in-process, similar to SQLite. ClickHouse is a columnar, disk-oriented
 database with a vectorised execution engine with optional LLVM compilation
-for expressions (EXP) \cite{clickhouse}. NoisePage was created by the Carnegie
-Mellon Database group, and is columnar and in-memory
+for expressions (EXP) \cite{clickhouse}. The Carnegie Mellon Database group created NoisePage, a columnar, in-memory system
 with full query expression compilation (QEP), with a single node. They targeted
-ML-driven self optimisation in their research, but they were archived in February 21, 2023 \cite{noisepage}. DuckDB is marketed
+ML-driven self optimisation in their research, but the project archived in February 21, 2023 \cite{noisepage}. DuckDB is marketed
 as the SQLite for analytical loads with in-memory disk spillage, or like a
 more sophisticated Pandas DataFrame \cite{duckdb}. Their engine supports
 vectorised execution because JIT would add too much overhead to their
@@ -38,19 +37,19 @@ lightweight philosophy.
 \section{PostgreSQL and Extension Systems}\label{sec:postgresql-related}
 %-------------------------------------------------------------------------------- 
 PostgreSQL is a battle-tested system and the most
-popular database, with 51.9\% of developers in a Stack Overflow survey
+popular database, with $51.9\%$ of developers in a Stack Overflow survey
 reporting extensive use in 2024 \cite{stackoverflow2024}. In the context of compiled queries, this means
 PostgreSQL cannot be treated as a research prototype. Direct modifications require extensive testing, and
 such changes face casual code review via pull requests rather than formal peer review.
 
 Building extensions for PostgreSQL and making entire companies around these
-extensions is not a new endeavour. Three such examples are Citus~\cite{citus},
+extensions is well-established. Three such examples are Citus~\cite{citus},
 TimescaleDB~\cite{timescaledb}, and Apache AGE~\cite{apache_age}. Citus
 aims to add more horizontal scaling through sharding, TimescaleDB, now
 rebranded as TigerData, transforms the engine into a time series database,
 and Apache AGE turns it into a graph database. All have thousands
 of GitHub stars, with TimescaleDB especially boasting over 500 paying customers in
-2022 and claiming 20x revenue growth by 2024 \cite{timescale_2024_update}
+2022 and claiming $20\times$ revenue growth by 2024 \cite{timescale_2024_update}
 \cite{timescaledb_series_c}. The extension model has proven robust and well-travelled.
 
 There have also been several extensions that attempt to make PostgreSQL more
@@ -63,13 +62,13 @@ in the same way as pg\_duckdb, but pivoted into supporting search functionality
 instead, similar to Elasticsearch.
 
 There has been significant discussion about HyPer and JIT in regard to
-PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. Doubts were expressed about adding full query compilation support, with concerns that
+PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. Developers expressed doubts about adding full query compilation support, with concerns that
 rearchitecting such a core component introduces significant risk.
 
 However, in September 2017 Andres Freund started implementing JIT support for
 expressions \cite{psql-jit-release-plan}. Most CPU time occurs in expression components
 (such as y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
-there are significant benefits to tuple deformation as it interacts with the
+tuple deformation provides significant benefits as it interacts with the
 cache and has poor branch prediction. PostgreSQL's JIT implementation is
 documented in the official PostgreSQL documentation \cite{psql-jit-doc}.
 
@@ -82,22 +81,22 @@ documented in the official PostgreSQL documentation \cite{psql-jit-doc}.
 \end{figure}
 
 In a pull request, Peter Eisentraut questioned whether the default JIT settings
-were too low. Despite this concern, PostgreSQL version 11 was released with JIT disabled by default.
+were too low. Despite this concern, PostgreSQL version 11 released with JIT disabled by default.
 Limited adoption prompted them to enable JIT by default in later releases to increase
 exposure and testing opportunities \cite{psql-jit-discussion}.
 However, when released, the United Kingdom's critical service for a COVID-19
-dashboard automatically updated and spiked to a 70\% failure rate as
-some of their queries ran 2,229x slower \cite{psql-jit-failure}. Such failures reinforced the view that JIT features should remain disabled by default,
+dashboard automatically updated and spiked to a $70\%$ failure rate as
+some of their queries ran $2{,}229\times$ slower \cite{psql-jit-failure}. Such failures reinforced the view that JIT features should remain disabled by default,
 leading to negative perceptions of JIT and compiled queries.
 
-Two cases where QEP query compilation with PostgreSQL was implemented were found.
+Two implementations of QEP query compilation with PostgreSQL exist.
 Vitesse DB, the first implementation, made public posts seeking testing assistance. They became generally available in 2015,
 but their website is offline now and there is not much mention of them.
-A second implementation was presented at PgCon, achieving 5.5x speedup on TPC-H query 1
-with more extensive documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it's easy for people to use.
+PgCon presented a second implementation, achieving $5.5\times$ speedup on TPC-H query 1
+with more extensive documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it is easy for people to use.
 
 Full JIT implementation was preceded by profiling work showing different TPC-H benchmarks
-pressure different nodes (figure~\ref{fig:pgcon-profiling}), enabling informed decisions about optimization priorities.
+pressure different nodes (Figure~\ref{fig:pgcon-profiling}), enabling informed decisions about optimization priorities.
 Their core method is generating a function that represents a node in the
 plan tree, then inlining the function into the final LLVM IR \cite{pgcon_jit_2017}
 in a push-based model. Another
@@ -113,7 +112,7 @@ code \cite{pgcon_jit_2017}, similar to approaches taken by HyPer \cite{hyper-com
 	\cite{postgres-pr-2}
 \end{figure}
 
-Other database systems also support extensions, and there are many systems that
+Other database systems also support extensions, and many systems
 rely on PostgreSQL's extension system. MySQL, ClickHouse, DuckDB, Oracle
 Extensible Optimizer all support similar operations. More than just PostgreSQL can
 be extended in this manner, avoiding the need to create databases from scratch.
@@ -141,7 +140,7 @@ as databases, and over time the priorities of the systems changed.
 HyPer was a flagship system, and Umbra supersedes it. These are important
 systems in the JIT-database space as they developed many of the core features.
 Both were made by Thomas Neumann, and a core sign of its viability is that HyPer
-was purchased by Tableau in 2016 to be used in production \cite{tableau-hyper}, proving that
+Tableau purchased in 2016 for production use \cite{tableau-hyper}, proving that
 in-memory JIT databases can scale to production workloads. Development began in 2010, with their flagship paper releasing in 2011 for the compiler
 component \cite{hyper-compiler-1}, and in 2018 they released another flagship paper about
 adaptive compilation \cite{hyper-compiler-2}. However, commercialisation poses research challenges since
@@ -188,14 +187,14 @@ However, they had to create the byte code interpreter themselves to enable this.
 \end{figure}
 
 The 2018 paper also improved their query optimisation by adding a dynamic
-measurement for how long live queries are taking. This is because the
+measurement for how long live queries are taking. The
 optimiser's cost model did not lead to accurate measurements for compilation
 timing. Instead, they introduced an execution stage for workers, then
 in a "work-stealing" stage they log how long the job took. With a combination
 of the measurements and the query plan, they calculate estimates for jobs
 and optimal levels to compile them to.
 
-This approach was evaluated using TPC-H Query 11 with 4 threads. The adaptive
+They evaluated this approach using TPC-H Query 11 with 4 threads. The adaptive
 execution strategy outperformed bytecode-only execution by $40\%$, unoptimised
 compilation by $10\%$, and optimised compilation by $80\%$. This improvement occurs because
 the single-threaded compilation can run in parallel with query execution on other threads.
@@ -226,10 +225,10 @@ and faster than HyPer itself.
 
 % I skipped a paragraph about multi-level debugger here
 
-A novel optimisation they introduced was enabling the compiler to
+They introduced an optimisation enabling the compiler to
 dynamically change the query plan \cite{umbra-effec-compil}. Using metrics collected during
 execution, they swap join order or join types.
-Such dynamic planning improved data-centric query runtimes by a factor of two. Other
+Such dynamic planning improved data-centric query runtimes by a factor of $2$. Other
 databases achieve this by invoking the query optimiser multiple
 times; Umbra's approach of invoking the compiler multiple times during execution
 provides additional benefits.
@@ -297,9 +296,8 @@ tree, and either executing or compiling to a binary. MLIR streamlines this by pa
 to a high-level MLIR dialect, applying optimisation passes to the plan, and using LLVM
 compilation directly without intermediate conversions.
 
-The LingoDB architecture can be seen in figure~\ref{fig:lingo-db-arch}, which begins
-by parsing SQL into a relational algebra dialect. These dialects are defined using
-MLIR's dialect system and code generation. The compiler consists of multiple dialect layers:
+The LingoDB architecture can be seen in Figure~\ref{fig:lingo-db-arch}, which begins
+by parsing SQL into a relational algebra dialect. MLIR's dialect system and code generation define these dialects. The compiler consists of multiple dialect layers:
 a relational algebra dialect for high-level queries, a database dialect for database-specific
 types and operations, a DSA dialect for data structures and algorithms, and a utility
 dialect for support functions. This multi-stage design splits the intermediate representation
@@ -318,7 +316,7 @@ Results show lower performance than HyPer but better than
 DuckDB \cite{lingo-db-1}. Performance was not the primary focus; rather, implementing standard optimisation patterns within the compiler was key. Notably, LingoDB uses approximately 10,000 lines of code for query execution model,
 while Mutable uses 22,944 lines despite skipping query
 optimization. Comparisons show LingoDB uses three times
-less code than DuckDB and five times less than NoisePage.
+less code than DuckDB and $5\times$ less than NoisePage.
 
 \begin{figure}[H]
 	\centering
@@ -333,7 +331,7 @@ acceleration, using the Torch-MLIR project's dialect, representing queries
 as sub-operators for acceleration, non-relational systems, and more \cite{lingo-db-2}.
 For our purposes, the appealing part of their architecture is that they use
 \texttt{pg\_query} to parse the incoming SQL, which means their parser is the closest
-to PostgreSQL's. This will be explored in the design in Section~\ref{sec:design}.
+to PostgreSQL's. Section~\ref{sec:design} explores this in the design.
 % idk why \texttt doesn't work here.
 
 %-------------------------------------------------------------------------------- 
@@ -343,7 +341,7 @@ to PostgreSQL's. This will be explored in the design in Section~\ref{sec:design}
 These systems produced their own benchmarks and could selectively pick which
 systems to involve, so a recreation of the benchmarks was done. DuckDB, HyPer,
 Mutable, LingoDB and PostgreSQL were all compared to one another, and is
-visible in Figure~\ref{fig:created-benchmark-results}. TPC-H was used as most
+visible in Figure~\ref{fig:created-benchmark-results}. The benchmarks used TPC-H as most
 of the involved pieces used it themselves \cite{tpch_analyzed}, and docker containers were
 chosen to make deploying it easier. These benchmarks were
 created by relying on the Mutable codebase as they had significant infrastructure
@@ -363,10 +361,10 @@ and with a single core DuckDB is the slowest.
 \end{figure}
 
 To identify how much potential gain there is in a major on-disk database,
-\texttt{perf} was used on PostgreSQL during TPC-H queries 1, 3, 6, 12 and 14 in
-figure~\ref{fig:pprof-psql} \cite{perf_man_page}. These queries were chosen because the Mutable
+The analysis used \texttt{perf} on PostgreSQL during TPC-H queries 1, 3, 6, 12 and 14 in
+Figure~\ref{fig:pprof-psql} \cite{perf_man_page}. These queries were chosen because the Mutable
 code infrastructure directly supported them. This shows that the CPU time
-varied from between 34.87\% and 76.56\%, with an average of 49.32\%. These
+varied from between $34.87\%$ and $76.56\%$, with an average of $49.32\%$. These
 metrics were identified
 using the \texttt{prof} graph. With this much time in the CPU, it is
 clear that the queries can become several times faster if optimised.
@@ -397,8 +395,8 @@ production systems. Debugging a compiled program within a database is challengin
 and while solutions have been offered, such as Umbra's debugger \cite{umbra-debugger}, it is still
 challenging and questionable how transferable those tools are.
 
-Relying on an extension system such that it's an optional feature means users
-can install the optimisations, and tests can be done with production systems
+Relying on an extension system such that it is an optional feature means users
+can install the optimisations, and testing can occur with production systems
 without requesting pull requests into the system itself. Since these are large
 source code changes, it adds political complexity to have the solution
 added to the official system without production proof of it being used.
@@ -413,7 +411,7 @@ Tying this together, this piece aims to integrate a research compiler into a
 battle-tested system by using an extension system. This addresses the gap
 of these systems being difficult to use widely, and potential to integrate it
 into the original system once stronger correctness and speed optimisations have
-been shown. Accomplishing this shows there is a way to rely on previous
+been shown. Accomplishing this shows a way to rely on previous
 ACID-compliance and supporting code infrastructure. Users can install the
 extension, have faster queries with rollbacks, and the implementation effort
 is lowered since core systems and algorithms can be skipped.

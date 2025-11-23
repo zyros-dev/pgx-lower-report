@@ -1,10 +1,10 @@
 \chapter{Results and Discussion}\label{ch:results}
 \section{Results}\label{sec:results}
 
-Results using the method from subsection~\ref{subsec:benchmarking} were produced as follows.
+Results using the method from Subsection~\ref{subsec:benchmarking} were produced as follows.
 Box plots overlaid on graphs represent the 5th, 25th, 50th,
 75th, and 95th percentiles. Hollow circles mark outliers; when inconvenient to display
-(as in figure~\ref{fig:bench-mem-diff-plots}), arrow annotations are used
+(as in Figure~\ref{fig:bench-mem-diff-plots}), arrow annotations are used
 instead. Matplotlib and Seaborn generated all visualizations in Python.
 
 Another result worth mentioning is the integrated LingoDB code
@@ -87,7 +87,7 @@ Figures~\ref{fig:bench-box-plots} and~\ref{fig:bench-diff-plots} show that witho
 queries 7 and 20 are orders of magnitude slower than other queries.
 Such patterns repeat at scale factor 0.16 even with indexes enabled.
 In contrast, pgx-lower shows consistent performance across these queries. Visible in
-figures~\ref{fig:q20-psql-profile} and~\ref{fig:q20-pgx-profile}, the difference appears: PostgreSQL uses nested loop joins
+Figures~\ref{fig:q20-psql-profile} and~\ref{fig:q20-pgx-profile}, the difference appears: PostgreSQL uses nested loop joins
 while pgx-lower uses hash joins.
 Appendices~\ref{appendix:q20-sql},~\ref{appendix:q20-postgres}, and~\ref{appendix:q20-pgxlower} show the query and both systems' plan trees. In pgx-lower's output,
 joins are annotated with "hash", indicating hash join usage. This comparison
@@ -99,41 +99,40 @@ only 14.93 milliseconds occurs in \texttt{llvm::SelectionDAGISel::runOnMachineFu
 time reaches 236 milliseconds, with most spent in MLIR passes. These results suggest
 MLIR optimization is more expensive than LLVM code generation. Possibly the LLVM ORC JIT does minimal work for each query, spreading compilation across background execution.
 
-RAM usage appears similar between pgx-lower and PostgreSQL (figures~\ref{fig:bench-mem-plots} and~\ref{fig:bench-mem-diff-plots}).
+RAM usage appears similar between pgx-lower and PostgreSQL (Figures~\ref{fig:bench-mem-plots} and~\ref{fig:bench-mem-diff-plots}).
 Such similarity demonstrates successful adaptation of LingoDB's in-memory operations to PostgreSQL's disk-oriented architecture. Maximum difference is just over 3 MB, with a mean difference of 0.34 MB across all queries.
 
-Branch prediction potential appears in figure~\ref{fig:branch-miss-plot}.
+Branch prediction potential appears in Figure~\ref{fig:branch-miss-plot}.
 At scale factor 1, pgx-lower achieved a median
-branch miss rate of 0.16\%, compared to PostgreSQL's 0.28\%. However,
-smaller scale factors with smaller queries inverted this: PostgreSQL had 0.38\% and pgx-lower had 1.09\%. Such results suggest
+branch miss rate of $0.16\%$, compared to PostgreSQL's $0.28\%$. However,
+smaller scale factors with smaller queries inverted this: PostgreSQL had $0.38\%$ and pgx-lower had $1.09\%$. Such results suggest
 the compiled JIT runtime has better branch prediction, but
 the compilation stage or pre-warm-up code has worse prediction.
-Number of branches explains part of the difference (figure~\ref{fig:num-branch-plot}): PostgreSQL had 28,430,465
-median branches, while pgx-lower had 195,299,021.50 (6.87 times more).
+Number of branches explains part of the difference (Figure~\ref{fig:num-branch-plot}): PostgreSQL had 28,430,465
+median branches, while pgx-lower had 195,299,021.50 ($6.87\times$ more).
 Higher branch counts could indicate more optimization opportunities.
 
 For the last level cache miss rate, pgx-lower appears to perform better than
 PostgreSQL at smaller scale factors and appears similar to PostgreSQL at larger
-ones, which can be seen in figure~\ref{fig:llc-miss-plot}. PostgreSQL
-has a median 31.20\% miss rate at scale factor 0.01, while pgx-lower has a
-median of 6.19\%. When increased to a scale factor of 1, PostgreSQL has a median
-of 33.16\%, and pgx-lower has a median of 34.81\%. A likely explanation: the LLVM compiler stage uses its cache much more effectively, but the
+ones, which can be seen in Figure~\ref{fig:llc-miss-plot}. PostgreSQL
+has a median $31.20\%$ miss rate at scale factor 0.01, while pgx-lower has a
+median of $6.19\%$. When increased to a scale factor of 1, PostgreSQL has a median
+of $33.16\%$, and pgx-lower has a median of $34.81\%$. A likely explanation: the LLVM compiler stage uses its cache much more effectively, but the
 actual JIT runtime performs comparably. Expected with the current approach,
 improvements would emerge if the JIT stage dynamically changed
 the plan, similar to HyPer's approach.
 
 \subsection{Test Validity}\label{subsec:test-validity}
-Increasing the number of iterations to make the outputs more reliable seems to
-be successful, and the variation is not too large. Some queries, such as in
-scale factor 0.01 with indexes disabled, in figure~\ref{fig:bench-box-plots},
+Increasing the number of iterations to make the outputs more reliable succeeds, and the variation is not too large. Some queries, such as in
+scale factor 0.01 with indexes disabled, in Figure~\ref{fig:bench-box-plots},
 show the outliers do become extreme. On query 8, PostgreSQL had an outlier
 of 5008 milliseconds while the median was 12.42 milliseconds. However, the
-coefficient of variation was only 0.4\% overall during the
+coefficient of variation was only $0.4\%$ overall during the
 latency measurements in the scale factor 0.01. It's stable overall,
 but vital to do repeated tests to exclude these outliers from the system.
 
 These variations will primarily be caused by PostgreSQL's optimiser containing
-genetic algorithms, as mentioned in section~\ref{sec:postgresql-background}. It
+genetic algorithms, as mentioned in Section~\ref{sec:postgresql-background}. It
 can cause plans to change significantly and makes them non-deterministic.
 While these tests were done on an isolated docker container in a Linux machine
 running minimal processes, system interrupts can also affect the results.

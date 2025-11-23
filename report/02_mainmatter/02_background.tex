@@ -15,7 +15,7 @@ optimize it, execute it, and materialize the results into a table \cite{database
 	\cite{database-concepts}
 \end{figure}
 
-For non-compiler databases, a volcano operator model tree is used, such as
+Non-compiler databases use a volcano operator model tree, such as
 Figure~\ref{fig:execution_tree} \cite{long-masters-thesis}. A \texttt{produce()} function at the root node
 calls its children's \texttt{produce()}, until it calls a leaf node,
 which calls \texttt{consume()} on itself, then that calls its parent's
@@ -31,23 +31,22 @@ the tree where tuples are dragged upwards.
 \end{figure}
 
 Classical models suffer a fundamental issue: heavy under-utilisation of hardware \cite{branch-misprediction}. If only a single tuple is pulled, CPU
-caches are barely used. An i5-570, a popular CPU in 2010 had an 8 megabyte L3 cache,
-but in 2024 an i5-14600K has a 24 megabyte L3 cache \cite{passmark_i5760},
+caches are barely used. An i5-570, a popular CPU in 2010 had an 8 MB L3 cache,
+but in 2024 an i5-14600K has a 24 MB L3 cache \cite{passmark_i5760},
 \cite{techpowerup_i5_14600k}. For disks, in 2010 the Seagate Barracuda 7200.12
 was popular, which had a sustained read of 138 MB/s, but in 2022 the Samsung
 V-NAND SSD 990 PRO released with a sustained read of 7450 MB/s
-\cite{seagate_barracuda_7200_12} \cite{samsung_990_pro}. Such dramatic increases
+\cite{seagate_barracuda_7200_12,samsung_990_pro}. Such dramatic increases
 could mean the algorithms can fundamentally change.
 
-These observations led to the vectorized and compiled execution models. With the vectorized model, multiple tuples are pulled
+These observations led to the vectorized and compiled execution models. The vectorized model pulls multiple tuples
 up in a group rather than one at a time. A core advantage
 is that instructions per CPU cycle (IPC) can increase through single
 instruction, multiple data (SIMD) operations \cite{everything-vector}. However,
 this can cause deep copy operations to be required, or more disk spillage
 than necessary \cite{sequntial-execution}. For instance, if a sort or a join allocates new space
 that is too much for the cache, the handling can become poor.
-Compilation approaches will be explored in
-section~\ref{sec:jit_background} and chapter~\ref{ch:related-work}.
+Section~\ref{sec:jit_background} and Chapter~\ref{ch:related-work} explore compilation approaches.
 
 Relational databases prioritise ACID requirements - Atomicity, Consistency,
 Isolation and Durability \cite{database-concepts}. A critical requirement in database systems,
@@ -64,7 +63,7 @@ substantial overhead: between $34.87\%$ and $76.56\%$ with an average of
 $49.32\%$ across tested queries.
 
 Most of the recent databasing research has focused on the optimiser,
-which is visible in figure~\ref{fig:database_structure}. Common optimization techniques include
+which is visible in Figure~\ref{fig:database_structure}. Common optimization techniques include
 reordering join statements where the left and right sides are flipped, and
 predicate push down, where a conditional/filter on a node is moved
 onto a lower node \cite{inersjo2021}. Additionally, extracting common subexpressions
@@ -111,9 +110,9 @@ Due to branch-prediction optimisation, JIT compilers can be faster than
 ahead of time compilers. In 1999, a benchmarking paper measured four
 commercial databases and found $10\%-20\%$ of their execution time was spent
 fixing poor predictions \cite{branch-misprediction}.
-Modern measurements still find 50\% of their query times are spent resolving
+Modern measurements still find $50\%$ of their query times are spent resolving
 hardware hazards, such as mispredictions, with improvements in this area
-making their queries 2.6x faster \cite{dbms-branches}. Azul's JIT compiler
+making their queries $2.6\times$ faster \cite{dbms-branches}. Azul's JIT compiler
 measurements show that speculative optimisations can lead up to $50\%$ performance gains \cite{azul_jit_aot}.
 
 Evaluating good branch prediction is difficult. A reasonable baseline is that a
@@ -127,14 +126,13 @@ $10\%$ of runtime spent resolving mispredictions \cite{eyerman2006branch}.
 In the context of databases, compilers fall into two categories: those that compile only
 expressions (typically called EXP), and those that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
-itself, they have EXP support using \texttt{llvm-jit}. A variety of research databases
-will be examined in chapter~\ref{ch:related-work}.
+itself, they have EXP support using \texttt{llvm-jit}. Chapter~\ref{ch:related-work} examines a variety of research databases.
 
 \section{LLVM and MLIR}\label{sec:llvm-mlir}
 The LLVM Project is a compiler infrastructure that eliminates the need to
 re-implement common compiler optimisations, making it easier to build compilers~\cite{llvm-paper}. Multi-Level
 Intermediate Representation (MLIR) is another, newer toolkit that is
-tightly coupled with the LLVM project~\cite{mlir-paper}. It provides a framework to define custom dialects and progressively lower them to machine code. A key benefit is that developers can define high-level dialects that others can target and build upon.
+tightly coupled with the LLVM project~\cite{mlir-paper}. It provides a framework to define custom dialects and progressively lower them to machine code. Developers can define high-level dialects that others can target and build upon.
 
 LLVM defines a language-independent intermediate representation
 (IR) based on Static Single Assignment (SSA) form, while MLIR extends
@@ -192,7 +190,7 @@ Interface (SPI) \cite{postgresql_spi_memory}.
 PostgreSQL defines query trees, plan trees, plan nodes, and expression nodes.
 A query tree is the initial version of the parsed SQL, which is passed through
 the optimiser which is then called a plan tree. These stages are visible in
-figure~\ref{fig:database_structure}. The nodes in these plan trees
+Figure~\ref{fig:database_structure}. The nodes in these plan trees
 can broadly be identified as plan nodes or expression nodes.
 Plan nodes include an implementation detail (aggregation, scanning a table,
 nest loop joins) and expression nodes consist of individual operations (binaryop, null test, case expressions) \cite{postgresql_querytree}.
@@ -205,7 +203,7 @@ making it a critical tool for database optimisation and analysis.
 
 \section{Database Benchmarking}\label{sec:database-benchmarking}
 % cite pg_bench
-Benchmarking a database is a difficult task because there is a variety of
+Benchmarking a database is difficult because of the variety of
 workloads. Many systems create their own benchmarking libraries,
 such as \texttt{pg\_bench} by PostgreSQL \cite{postgresql_pgbench} or
 LinkBench \cite{linkbench} by Facebook, but in academics the
@@ -213,7 +211,7 @@ more common benchmarks are from
 the Transaction Processing Council, which is a group that defines benchmarks
 \cite{tpch_analyzed}.  Over the years they have made TPC-C for an order-entry
 environment, TPC-E, for a broker firm's operations, TPC-DS for a decision
-support benchmark. The most common one in research appears to be TPC-H,
+support benchmark. TPC-H is the most common in research,
 where the H informally means "hybrid". It has a mix of analytical and
 transactional elements inside it \cite{tpch_analyzed}.
 
