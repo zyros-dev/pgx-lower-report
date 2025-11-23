@@ -95,12 +95,12 @@ is not entirely fair because pgx-lower uses a hash join while PostgreSQL uses
 a nested loop join (NestLoop\_T), which would benefit from indexing.
 
 Figure~\ref{fig:q20-pgx-profile} reveals minimal time spent in LLVM code generation. Of the 1.18 second total query execution time,
-only 14.93 milliseconds occurs in \texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine code conversion step. Total compilation
+only 15 milliseconds occurs in \texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine code conversion step. Total compilation
 time reaches 236 milliseconds, with most spent in MLIR passes. These results suggest
 MLIR optimization is more expensive than LLVM code generation. Possibly the LLVM ORC JIT does minimal work for each query, spreading compilation across background execution.
 
 RAM usage appears similar between pgx-lower and PostgreSQL (figures~\ref{fig:bench-mem-plots} and~\ref{fig:bench-mem-diff-plots}).
-Such similarity demonstrates successful adaptation of LingoDB's in-memory operations to PostgreSQL's disk-oriented architecture. Maximum difference is just over 3 megabytes, with a mean difference of 0.34 megabytes across all queries.
+Such similarity demonstrates successful adaptation of LingoDB's in-memory operations to PostgreSQL's disk-oriented architecture. Maximum difference is just over 3 MB, with a mean difference of 0.34 MB across all queries.
 
 Branch prediction potential appears in figure~\ref{fig:branch-miss-plot}.
 At scale factor 1, pgx-lower achieved a median
@@ -128,7 +128,7 @@ be successful, and the variation is not too large. Some queries, such as in
 scale factor 0.01 with indexes disabled, in figure~\ref{fig:bench-box-plots},
 show the outliers do become extreme. On query 8, PostgreSQL had an outlier
 of 5008 milliseconds while the median was 12.42 milliseconds. However, the
-coefficient of variation was only 0.44\% overall during the
+coefficient of variation was only 0.4\% overall during the
 latency measurements in the scale factor 0.01. It's stable overall,
 but vital to do repeated tests to exclude these outliers from the system.
 
