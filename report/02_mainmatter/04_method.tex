@@ -17,7 +17,7 @@ hooks. An example of this is TimescaleDB (now TigerData) \cite{timescaledb}, whi
 section~\ref{sec:postgresql-related}. The primary challenge with this is that LingoDB is a columnar,
 in-memory database, so adjustments will be needed. Furthermore, LingoDB does
 not support indexes, which can make the benchmarks against PostgreSQL unfair.
-Another detail is that LingoDB's newer versions contain a large number of
+Another detail is that LingoDB's newer versions contain numerous
 features and optimisations that is not relevant to us, so to simplify implementation
 effort the 2022 version was used from their initial paper.
 
@@ -31,10 +31,10 @@ effort the 2022 version was used from their initial paper.
 LingoDB was integrated into PostgreSQL as seen in figure~\ref{fig:overall-system-design}.
 The blue represents PostgreSQL components, with the pipeline on the left being
 the whole of PostgreSQL. A query reaches the runtime hooks, which gets analyzed
-by a hand-written analyser for whether the query can be execution, and then parsed.
-These hand writte components are annotated in light-peach.
+by a handwritten analyser for whether the query can be execution, and then parsed.
+These hand written components are annotated in light-peach.
 This goes through the code LingoDB created, but with custom runtime hooks and
-other small edits, annotated with green. Finally this is compiled into
+other small edits, annotated with green. Finally, this is compiled into
 LLVM IR, which has the runtime hooks for reading from PostgreSQL embedded inside.
 
 In the case that a query fails, the system should still support returning the
@@ -58,76 +58,76 @@ development, and a quick way to validate changes are safe.
 
 Table~\ref{tab:regression-tests} shows the complete regression test suite,
 organized to progressively build complexity from single-row operations to
-full TPC-H queries. 
+full TPC-H queries.
 
-{\footnotesize
-\begin{longtable}{p{4.5cm}p{9cm}}
-\caption{Regression test suite files and their aims} \label{tab:regression-tests} \\
-\toprule
-\textbf{File Name} & \textbf{Aim} \\
-\midrule
-\endfirsthead
+	{\footnotesize
+		\begin{longtable}{p{4.5cm}p{9cm}}
+			\caption{Regression test suite files and their aims} \label{tab:regression-tests}               \\
+			\toprule
+			\textbf{File Name}                    & \textbf{Aim}                                            \\
+			\midrule
+			\endfirsthead
 
-\multicolumn{2}{c}{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
-\toprule
-\textbf{File Name} & \textbf{Aim} \\
-\midrule
-\endhead
+			\multicolumn{2}{c}{\tablename\ \thetable\ -- \textit{Continued from previous page}}             \\
+			\toprule
+			\textbf{File Name}                    & \textbf{Aim}                                            \\
+			\midrule
+			\endhead
 
-\midrule
-\multicolumn{2}{r}{\textit{Continued on next page}} \\
-\endfoot
+			\midrule
+			\multicolumn{2}{r}{\textit{Continued on next page}}                                             \\
+			\endfoot
 
-\bottomrule
-\endlastfoot
+			\bottomrule
+			\endlastfoot
 
-1\_one\_tuple.sql & Single row insertion and selection \\
-2\_two\_tuples.sql & Multiple row retrieval \\
-3\_lots\_of\_tuples.sql & Large dataset handling (5000 rows) \\
-4\_two\_columns\_ints.sql & Multiple integer columns \\
-5\_two\_columns\_diff.sql & Mixed column types (INTEGER, BOOLEAN) \\
-6\_every\_type.sql & All supported data types with projections \\
-7\_sub\_select.sql & Column subsetting across Boolean columns \\
-8\_subset\_all\_types.sql & Column subsets from multi-type tables \\
-9\_basic\_arithmetic\_ops.sql & Arithmetic operators (+, -, *, /, \%) \\
-10\_comparison\_ops.sql & Comparison operators (=, <>, !=, <, <=, >, >=) \\
-11\_logical\_ops.sql & Logical operators (AND, OR, NOT) \\
-12\_null\_handling.sql & NULL operations (IS NULL, COALESCE) \\
-13\_text\_operations.sql & Text operations (LIKE, \textbar\textbar) \\
-14\_aggregate\_functions.sql & Aggregates without GROUP BY (SUM, COUNT, AVG, MIN, MAX) \\
-15\_special\_operators.sql & BETWEEN, IN, CASE WHEN \\
-16\_debug\_text.sql & CHAR(10) with LPAD \\
-17\_where\_simple\_conditions.sql & WHERE with simple comparisons \\
-18\_where\_logical\_combinations.sql & WHERE with AND/OR/NOT combinations \\
-19\_where\_null\_patterns.sql & WHERE with NULL checks and COALESCE \\
-20\_where\_pattern\_matching.sql & WHERE with LIKE and IN operators \\
-21\_order\_by\_basic.sql & ORDER BY single columns (integers, strings, decimals) \\
-22\_order\_by\_multiple\_columns.sql & ORDER BY multiple columns with mixed directions \\
-23\_order\_by\_expressions.sql & ORDER BY expressions (not supported - placeholder) \\
-24\_order\_by\_with\_where.sql & ORDER BY combined with WHERE \\
-25\_group\_by\_simple.sql & GROUP BY with aggregations and ORDER BY \\
-26\_before\_check\_types.sql & All PostgreSQL types with casts and aggregations \\
-27\_group\_by\_having.sql & GROUP BY with HAVING clause \\
-28\_group\_by\_with\_where.sql & GROUP BY with WHERE filtering \\
-29\_expressions\_in\_aggregations.sql & Expressions in aggregates (arithmetic, ABS) \\
-30\_test\_missing\_expressions.sql & PostgreSQL expression types coverage \\
-31\_distinct\_statement.sql & DISTINCT in SELECT and aggregates \\
-32\_decimal\_maths.sql & Decimal arithmetic operations \\
-33\_basic\_joins.sql & INNER JOIN \\
-34\_advanced\_joins.sql & LEFT, RIGHT, SEMI, ANTI joins \\
-35\_nested\_queries.sql & Nested and correlated subqueries \\
-36\_tpch\_minimal.sql & TPC-H minimal schema variant 1 \\
-37\_tpch\_minimal\_2.sql & TPC-H minimal schema variant 2 \\
-38\_tpch\_minimal\_3.sql & TPC-H minimal schema variant 3 \\
-39\_tpch\_minimal.sql & TPC-H minimal schema variant 4 \\
-40\_tpch\_not\_lowered.sql & TPC-H queries without lowering \\
-41\_sorts.sql & Sorting with joins \\
-42\_test\_relalg\_function.sql & Direct RelAlg MLIR execution \\
-init\_tpch.sql & TPC-H table initialization \\
-tpch.sql & Full TPC-H benchmark in pgx-lower \\
-tpch\_no\_lower.sql & TPC-H inside pure PostgreSQL for validation \\
-\end{longtable}
-}
+			1\_one\_tuple.sql                     & Single row insertion and selection                      \\
+			2\_two\_tuples.sql                    & Multiple row retrieval                                  \\
+			3\_lots\_of\_tuples.sql               & Large dataset handling (5000 rows)                      \\
+			4\_two\_columns\_ints.sql             & Multiple integer columns                                \\
+			5\_two\_columns\_diff.sql             & Mixed column types (INTEGER, BOOLEAN)                   \\
+			6\_every\_type.sql                    & All supported data types with projections               \\
+			7\_sub\_select.sql                    & Column subsetting across Boolean columns                \\
+			8\_subset\_all\_types.sql             & Column subsets from multi-type tables                   \\
+			9\_basic\_arithmetic\_ops.sql         & Arithmetic operators (+, -, *, /, \%)                   \\
+			10\_comparison\_ops.sql               & Comparison operators (=, <>, !=, <, <=, >, >=)          \\
+			11\_logical\_ops.sql                  & Logical operators (AND, OR, NOT)                        \\
+			12\_null\_handling.sql                & NULL operations (IS NULL, COALESCE)                     \\
+			13\_text\_operations.sql              & Text operations (LIKE, \textbar\textbar)                \\
+			14\_aggregate\_functions.sql          & Aggregates without GROUP BY (SUM, COUNT, AVG, MIN, MAX) \\
+			15\_special\_operators.sql            & BETWEEN, IN, CASE WHEN                                  \\
+			16\_debug\_text.sql                   & CHAR(10) with LPAD                                      \\
+			17\_where\_simple\_conditions.sql     & WHERE with simple comparisons                           \\
+			18\_where\_logical\_combinations.sql  & WHERE with AND/OR/NOT combinations                      \\
+			19\_where\_null\_patterns.sql         & WHERE with NULL checks and COALESCE                     \\
+			20\_where\_pattern\_matching.sql      & WHERE with LIKE and IN operators                        \\
+			21\_order\_by\_basic.sql              & ORDER BY single columns (integers, strings, decimals)   \\
+			22\_order\_by\_multiple\_columns.sql  & ORDER BY multiple columns with mixed directions         \\
+			23\_order\_by\_expressions.sql        & ORDER BY expressions (not supported - placeholder)      \\
+			24\_order\_by\_with\_where.sql        & ORDER BY combined with WHERE                            \\
+			25\_group\_by\_simple.sql             & GROUP BY with aggregations and ORDER BY                 \\
+			26\_before\_check\_types.sql          & All PostgreSQL types with casts and aggregations        \\
+			27\_group\_by\_having.sql             & GROUP BY with HAVING clause                             \\
+			28\_group\_by\_with\_where.sql        & GROUP BY with WHERE filtering                           \\
+			29\_expressions\_in\_aggregations.sql & Expressions in aggregates (arithmetic, ABS)             \\
+			30\_test\_missing\_expressions.sql    & PostgreSQL expression types coverage                    \\
+			31\_distinct\_statement.sql           & DISTINCT in SELECT and aggregates                       \\
+			32\_decimal\_maths.sql                & Decimal arithmetic operations                           \\
+			33\_basic\_joins.sql                  & INNER JOIN                                              \\
+			34\_advanced\_joins.sql               & LEFT, RIGHT, SEMI, ANTI joins                           \\
+			35\_nested\_queries.sql               & Nested and correlated subqueries                        \\
+			36\_tpch\_minimal.sql                 & TPC-H minimal schema variant 1                          \\
+			37\_tpch\_minimal\_2.sql              & TPC-H minimal schema variant 2                          \\
+			38\_tpch\_minimal\_3.sql              & TPC-H minimal schema variant 3                          \\
+			39\_tpch\_minimal.sql                 & TPC-H minimal schema variant 4                          \\
+			40\_tpch\_not\_lowered.sql            & TPC-H queries without lowering                          \\
+			41\_sorts.sql                         & Sorting with joins                                      \\
+			42\_test\_relalg\_function.sql        & Direct RelAlg MLIR execution                            \\
+			init\_tpch.sql                        & TPC-H table initialization                              \\
+			tpch.sql                              & Full TPC-H benchmark in pgx-lower                       \\
+			tpch\_no\_lower.sql                   & TPC-H inside pure PostgreSQL for validation             \\
+		\end{longtable}
+	}
 
 Node implementation ordering followed the dependency analysis. Foundational
 nodes such as the sequential scan and projection are in virtually every query,
@@ -205,7 +205,7 @@ a script to connect \texttt{gdb} to dump the stack. The regression tests were al
 explored, but the unit tests consist of testing anything unconnected to PostgreSQL.
 The issue is that this extension creates a \texttt{pgx\_lower.so} which is installed
 within PostgreSQL, then the PostgreSQL libraries are used from inside there.
-This means if we run without being inside of PostgreSQL, no psql libaries can
+This means if we run without being inside of PostgreSQL, no psql libraries can
 be used. As a result, unit tests can only test MLIR functions. Most of the
 unit tests were highly situational, and are used when a proper interactive GDB
 connection was required within the IDE. Furthermore, unit tests allow the \texttt{stderr}
@@ -232,7 +232,7 @@ LingoDB was using. However, adjustments had to be made to ensure impossible
 to allocate values do not appear, so the precision was capped at \texttt{<32, 6>}
 That is, 32 digits in the integer part, 6 digits in the decimal places.
 
-For the date types, a comprimise was made that when it receives an interval
+For the date types, a compromise was made that when it receives an interval
 type with a months column, it will turn this into days and introduce errors.
 However, since the TPC-H queries never use month intervals, this is acceptable.
 
@@ -343,11 +343,11 @@ translation.
 
 %===============================================================================
 \subsection{Query Analyser}\label{subsec:query-analyser}
-While the query analyser is fully written, in the final state it forces all 
-queries through to pgx-lower for testing. This enables testing new things and 
-where they fail. It functions by doing a depth-first-search through the plan 
+While the query analyser is fully written, in the final state it forces all
+queries through to pgx-lower for testing. This enables testing new things and
+where they fail. It functions by doing a depth-first-search through the plan
 tree and validating the nodes are supported by the engine at this point, however,
-in the future there can be work here for deciding whether a query is worth 
+in the future there can be work here for deciding whether a query is worth
 running based on its cost metrics as well.
 
 %===============================================================================
@@ -356,7 +356,7 @@ Runtime functions are used in LingoDB for difficult to implement methods in
 LLVM, such as a sort algorithm. \texttt{pgx-lower} implemented reading tuples from
 PostgreSQL, storing them as a result so that they can be streamed one by one,
 adjusted several runtime implementations from LingoDB, and changed the sort and
-hashtable implementations to rely on the PostgreSQL API rather than standard
+hash table implementations to rely on the PostgreSQL API rather than standard
 collections.
 
 Figure~\ref{fig:runtime-functions} shows the high-level components in a
@@ -389,15 +389,16 @@ developer does not need to reimplement that section repeatedly.
 
 The PostgreSQL runtime implements zero-copy tuple access for reading and
 result accumulation for output. When scanning a table,
-\texttt{openpostgrestable()} creates a heap scan
-using \texttt{heapbeginscan()}, and \texttt{readnexttuplefromtable()} stores a
+\texttt{open\_postgres\_table()} creates a heap scan
+using \texttt{heap\_begin\_scan()}, and
+\texttt{read\_next\_tuple\_from\_table()} stores a
 pointer (not a copy) to each tuple in the global
-\texttt{gcurrenttuplepassthrough} structure. JIT code
-extracts fields via \texttt{extractfield()}, which uses \texttt{heapgetattr()}
+\texttt{g\_current\_tuple\_passthrough} structure. JIT code
+extracts fields via \texttt{extract\_field()}, which uses \texttt{heap\_get\_attr()}
 and converts PostgreSQL \texttt{Datum} values to native types. For results,
-\texttt{tablebuilderadd()} accumulates computed values as \texttt{Datum}
+\texttt{table\_builder\_add()} accumulates computed values as \texttt{Datum}
 arrays in \texttt{ComputedResultStorage}. When a result tuple
-completes, \texttt{addtupletoresult()} streams it back through
+completes, \texttt{add\_tuple\_to\_result()} streams it back through
 PostgreSQL's \texttt{TupleStreamer} by populating a \texttt{TupleTableSlot} and
 calling the destination receiver, enabling direct integration with
 PostgreSQL's tuple pipeline.
@@ -609,7 +610,7 @@ congregated and referenced.
 \subsubsection{Plan translation - Aggregations}\label{subsubsec:plan-aggregations}
 Aggregation is a complicated node type. It consists of an aggregation strategy,
 which is ignored as we have a simple algorithm instead, splitting specification,
-which is also unutilised, group columns, number of groups, it can produce
+which is also not utilised, group columns, number of groups, it can produce
 parameters, and it has its own operators such as COUNT, SUM, and so on.
 Furthermore, it uses special varnos to do lookups for variables (-2),
 so it requires a new context object, and supports DISTINCT statements.
@@ -655,7 +656,7 @@ but LingoDB appeared to have operations inside the lowerings where previously
 non-null objects could become nullable (outer joins, aggregations, unions,
 predicate evaluation can all cause this). Since nullability affects every
 object and functions in the same way as not-a-number (anything it touches becomes
-NaN/nullable), this introduce implementation pains.
+NaN/nullable), this introduces implementation pains.
 
 One note to be aware of is that LingoDB and PostgreSQL have inverted null flags.
 That is, in LingoDB 1 means valid, and in PostgreSQL 1 means null. This
@@ -665,7 +666,7 @@ forth.
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Operators and OID strings}\label{subsubsec:expr-operators}
 Within operators, the primary challenge is the type conversions and quirks.
-Comparing two BPCHARs requires adding padding for the space around them,
+Comparing two BPCHARs requires adding padding for the surrounding space,
 and to implicitly upcast operations a class was extracted from LingoDB's
 DB dialect (\texttt{SQLTypeInference}). Furthermore, rather than relying on
 PostgreSQL's OID system for finding which operation to use, they were
@@ -679,7 +680,7 @@ both be cast into i32 first.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Translation - Others}\label{subsubsec:translation-others}
-A large number of these nodes are pass through nodes or delegated to another,
+Many of these nodes are pass through nodes or delegated to another,
 sibling node, such as \texttt{T\_Hash}, \texttt{T\_Material},
 \texttt{T\_Memoize}, and \texttt{T\_RelabelType}. Furthermore, nodes
 also come with executor hints and cost metrics which were skipped over rather
@@ -698,7 +699,7 @@ LICM pass, reassociation pass, GVN pass, and simplify GVN pass.
 
 These passes perform fundamental optimisations~\cite{llvm-passes}. SROA (Scalar
 Replacement of Aggregates) promotes stack-allocated structures into SSA registers.
-That is, an allocation on the stack is hoisted up into global space so that 
+That is, an allocation on the stack is hoisted up into global space so that
 the space is reused rather than reallocated every time.
 InstCombine simplifies instructions through algebraic transformations; PromotePass
 elevates memory operations to register operations; LICM (Loop Invariant Code Motion)
@@ -714,7 +715,7 @@ and moved on. This means it is possible to do more tuning work on this.
 \subsection{Profiling Support}\label{subsec:profiling}
 Code infrastructure was written to support magic-trace for profiling and
 isolating issues, and a physical computer with an Intel CPU was set up
-with an i5-6500T, 16GB of RAM and a Samsung MZVLB256HAHQ-000L7 NVMe disk.
+with an i5-6500T, 16 GB of RAM and a Samsung MZVLB256HAHQ-000L7 NVMe disk.
 This was particularly useful for isolating obvious bottlenecks
 within the system and understanding the latency when compared to PostgreSQL.
 Figure~\ref{fig:psql-magic} represents the flame chart for query 3, and has a
@@ -768,7 +769,7 @@ with Nginx, and a private Grafana health dashboard.
 \subsection{Benchmarking and Validation}\label{subsec:benchmarking}
 A challenge is that PostgreSQL contains a non-deterministic optimiser,
 and many small factors can affect runs. For this reason, a python script
-was created that reads from a yaml file, and does a benchmark run.
+was created that reads from a YAML file, and does a benchmark run.
 This means we can specify runs beforehand, and run them robustly over a long
 period. Also, this benchmarking run computes a hash of the outputs
 between PostgreSQL and pgx-lower to validate the outputs are correct between
