@@ -227,7 +227,7 @@ of these. Table ~\ref{tab:lingodb-type-capabilities}
 shows which of the LingoDB types are used,
 and table~\ref{tab:type-mapping} shows the type mappings. The two primary
 workarounds that were implemented was for decimals and the various types of strings.
-For decimals, i128 is enough precision for most of the TPC-H tests, and is what
+For decimals, \texttt{i128} is enough precision for most of the TPC-H tests, and is what
 LingoDB was using. However, adjustments had to be made to ensure impossible
 to allocate values do not appear, so the precision was capped at \texttt{<32, 6>}
 That is, 32 digits in the integer part, 6 digits in the decimal places.
@@ -675,8 +675,8 @@ issues with precision specifications in the OID leading to unidentified
 operations, and a similar approach was used in function nodes, aggregation functions,
 sort operations, and scalar maths. With these casts, the SQLTypeInference object
 supports upcasting such that if two types have an operation, they are both
-first cast into the larger datatype, such as i16 + i32, then the smaller one will
-both be cast into i32 first.
+first cast into the larger datatype, such as \texttt{i16} + \texttt{i32}, then the smaller one will
+both be cast into \texttt{i32} first.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Translation - Others}\label{subsubsec:translation-others}

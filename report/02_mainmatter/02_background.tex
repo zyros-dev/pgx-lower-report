@@ -146,7 +146,7 @@ will be spent fixing mispredictions \cite{eyerman2006branch}.
 In the context of databases, most compilers can be split into only compiling
 expressions (typically called EXP for expression), and others that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
-itself, they have EXP support using $llvm-jit$. A variety of research databases
+itself, they have EXP support using \texttt{llvm-jit}. A variety of research databases
 will be examined in chapter~\ref{ch:related-work}.
 
 \section{LLVM and MLIR}\label{sec:llvm-mlir}
@@ -197,7 +197,7 @@ to create machine code as fast as possible and skip optimisations.
 Other common JIT compilers are the Java Virtual Machine (JVM), SpiderMonkey
 (Mozilla Firefox's JIT), JavaScriptCore/Nitro (Safari/Webkit), PyPy, various
 python JIT compilers, LuaJIT for Lua, HHVM for PHP, Rubinius for Ruby,
-RyuJIT for $C\#$, and more \cite{jit_attacks_survey}. The JVM has also been used for compiled
+RyuJIT for C\#, and more \cite{jit_attacks_survey}. The JVM has also been used for compiled
 query execution engines \cite{jamdb}. These all target different work profiles.
 
 \section{PostgreSQL Background}\label{sec:postgresql-background}
@@ -230,7 +230,7 @@ making it a critical tool for database optimisation and analysis.
 % cite pg_bench
 Benchmarking a database is a difficult task because there is a variety of
 workloads. Many systems create their own benchmarking libraries,
-such as $pg_bench$ by PostgreSQL \cite{postgresql_pgbench} or
+such as \texttt{pg\_bench} by PostgreSQL \cite{postgresql_pgbench} or
 LinkBench \cite{linkbench} by Facebook, but in academics the
 more common benchmarks are from
 the Transaction Processing Council, which is a group that defines benchmarks
