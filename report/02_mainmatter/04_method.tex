@@ -17,7 +17,7 @@ TimescaleDB (now TigerData), discussed in Section~\ref{sec:postgresql-related}, 
 in-memory architecture required substantial adjustments. Additionally, LingoDB lacks
 index support, potentially biasing benchmarks against PostgreSQL.
 LingoDB's recent versions contain numerous
-unneeded features and optimisations, so the 2022 version from their initial paper was used to simplify implementation
+unneeded features and optimisations, so the 2022 version from their initial paper was selected to simplify implementation
 effort.
 
 \begin{figure}[H]
@@ -27,7 +27,7 @@ effort.
 	\label{fig:overall-system-design}
 \end{figure}
 
-LingoDB was integrated into PostgreSQL as seen in Figure~\ref{fig:overall-system-design}.
+LingoDB is integrated into PostgreSQL as seen in Figure~\ref{fig:overall-system-design}.
 Blue components represent PostgreSQL, with the left pipeline showing
 the entire PostgreSQL execution flow. Queries reach runtime hooks, where a handwritten analyser determines executability before parsing.
 Handwritten components appear in light-peach.
@@ -40,7 +40,7 @@ the AST parser entrance routes failed queries back to PostgreSQL.
 However, such protection does not prevent system panics such as
 segmentation faults.
 
-AST Parser implementation was expected to be most time-consuming,
+AST Parser implementation is expected to be most time-consuming,
 as it receives the optimised plan tree from PostgreSQL.
 LingoDB was designed to parse query trees from the
 Parser stage in Figure~\ref{fig:overall-system-design}. The implementation includes 18 plan nodes and 14
@@ -197,7 +197,7 @@ that lack logging information.
 This was solved with a combination of the regression tests, unit testing, and
 a script to connect \texttt{gdb} to dump the stack. The regression tests were already
 explored, but the unit tests test components unconnected to PostgreSQL.
-The issue is that this extension creates a \texttt{pgx\_lower.so} which is loaded
+The issue is that this extension creates a \texttt{pgx-lower.so} which is loaded
 into PostgreSQL, and the PostgreSQL libraries are used from that context.
 This means if we run without being inside PostgreSQL, no psql libraries can
 be used. As a result, unit tests can only test MLIR functions. Most of the
@@ -304,7 +304,7 @@ However, since the TPC-H queries never use month intervals, this is acceptable.
 The MLIR dialects from LingoDB required modifications to support LLVM 20 and
 pgx-lower's specific needs. Table~\ref{tab:dialect-summary} summarizes the key
 changes across the DB, DSA, RelAlg, and Util dialects. The changes were primarily API compatibility updates with minimal semantic modifications.
-The scope included 94 operations total across all dialects (93 in LingoDB, 94 in PGX)
+The scope included 94 operations total across all dialects (93 in LingoDB, 94 in pgx-lower)
 and 21 types (identical count), with most changes addressing LLVM 20 API compatibility.
 
 \begin{table}[H]
@@ -762,7 +762,7 @@ of data) to show the overhead cost of the JIT compiler, medium scale factor
 (0.16) to show how Postgres scales while still keeping all the queries enabled
 with indexes, and lastly scale factor 1 with the very time-consuming queries
 completely disabled. These disabled queries would take on the order of hours in
-PostgreSQL, so benchmarking them was too time-consuming.
+PostgreSQL, so benchmarking them for multiple iterations was too time-consuming.
 
 To disable indexes, \texttt{cur.execute("SET enable\_indexscan = off;")} and
 \texttt{cur.execute("SET enable\_bitmapscan = off;")} were used in conjunction.

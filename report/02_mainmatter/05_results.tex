@@ -96,7 +96,7 @@ a nested loop join (NestLoop\_T), which would benefit from indexing.
 
 Figure~\ref{fig:q20-pgx-profile} reveals minimal time spent in LLVM code generation. Of the 1.18\,second total query execution time,
 only 14.93\,milliseconds occurs in \texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine code conversion step. Total compilation
-time reaches 236\,milliseconds, with most spent in MLIR passes. These results suggest
+time reaches 236.32\,milliseconds, with most spent in MLIR passes. These results suggest
 MLIR optimization is more expensive than LLVM code generation. Possibly the LLVM ORC JIT does minimal work for each query, spreading compilation across background execution.
 
 RAM usage appears similar between pgx-lower and PostgreSQL (Figures~\ref{fig:bench-mem-plots} and~\ref{fig:bench-mem-diff-plots}).
