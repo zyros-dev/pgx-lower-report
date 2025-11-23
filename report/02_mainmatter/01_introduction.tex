@@ -8,11 +8,10 @@ drastically changed, but most databases are using architectures defined by older
 hardware. Older databases assume the disk operations are the vast majority of
 runtime, but that has shifted to the CPU for heavy queries.
 
-Research projects typically create standalone databases. However, this approach makes distribution
+Research projects typically create standalone databases. However, such approaches make distribution
 harder, requiring projects to implement all supporting infrastructure themselves.
-For serious projects, this involves many additional implementation steps. To productionise the system, this might include implementing ACID,
-MVCC, query plan optimisation, and more. By using an established database, we can
-address this issue.
+For serious projects, supporting infrastructure requires implementing ACID, MVCC, query plan optimisation, and more. By using an established database, we can
+address this entirely.
 
 pgx-lower replaces PostgreSQL's execution engine with LingoDB's compiler
 to bridge the gap of modern compilers with established systems. PostgreSQL's
@@ -21,9 +20,6 @@ features that can be used within PostgreSQL that can assist with this research.
 One concern, however, is the additional complexities in implementation
 and testing.
 
-This thesis is separated into a background in Chapter~\ref{ch:background} which
-includes fundamental concepts and the definition/goal of the project,
-then a light literature survey will be conducted in
-Chapter~\ref{ch:related-work}. The project's solution will
-be introduced in Chapter~\ref{ch:project}, and finally conclusions will be
-drawn in Chapter~\ref{ch:conclusion}.
+Chapter~\ref{ch:background} covers fundamental concepts and project definition.
+Chapter~\ref{ch:related-work} provides a literature survey, followed by the solution
+in Chapter~\ref{ch:project}. Conclusions are drawn in Chapter~\ref{ch:conclusion}.

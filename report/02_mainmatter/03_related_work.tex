@@ -1,17 +1,14 @@
 \chapter{Related Work}\label{ch:related-work}
 
-This chapter summarises relevant works in the compiled query space and their
-architectures. The database industry originally favoured compiled query engines \cite{system-r}, but
-the volcano model subsequently dominated because it simplified implementation
-with minimal performance cost at the time. However, modern analytical engines
+We summarise relevant works in the compiled query space and their architectures. Compiled query engines originally dominated the database industry \cite{system-r}, but
+the volcano model subsequently took precedence due to its simpler implementation
+and minimal performance cost at the time. However, modern analytical engines
 are revisiting compilation approaches \cite{everything-vector}.
 
-This chapter begins with PostgreSQL's extension system in
-section~\ref{sec:postgresql-related}, followed by System R in section~\ref{sec:system-r} as a classical example
-of early compilation. HyPer and Umbra (sections~\ref{sec:hyper} and~\ref{sec:umbra})
-re-introduced compilation in modern databases. Two research databases are then examined: Mutable
-(section~\ref{sec:mutable}) and LingoDB (section~\ref{sec:lingodb}). Finally,
-PostgreSQL's own expression-based JIT compilation and prior compilation attempts are discussed.
+PostgreSQL's extension system is covered in section~\ref{sec:postgresql-related}, followed by System R
+in section~\ref{sec:system-r} as a classical example. HyPer and Umbra (sections~\ref{sec:hyper} and~\ref{sec:umbra})
+re-introduced compilation in modern databases, while Mutable (section~\ref{sec:mutable}) and LingoDB
+(section~\ref{sec:lingodb}) provide research examples. PostgreSQL's JIT compilation and prior attempts conclude the survey.
 
 %-------------------------------------------------------------------------------- 
 \section{OLAP Systems}\label{sec:olap-systems}
@@ -21,8 +18,7 @@ Compiled query engines primarily benefit OLAP workloads, since
 OLTP workloads typically involve simpler retrieval queries \cite{ddia}.
 At scale, Apache Hive is commonly used, but it is a data warehouse
 system rather than a database, storing data in Hadoop's distributed file system,
-which is closer to flat storage~\cite{apache_hive}. The common OLAP
-databases are MonetDB, SnowFlake, ClickHouse, RedShift and Vectorwise
+which is closer to flat storage~\cite{apache_hive}. Common OLAP databases include MonetDB, SnowFlake, ClickHouse, RedShift, and Vectorwise
 \cite{htap_survey}. For our context, understanding ClickHouse, NoisePage,
 DuckDB and extensions that turn PostgreSQL into an OLAP database are important.
 
@@ -52,31 +48,27 @@ extensions is not a new endeavour. Three such examples are Citus~\cite{citus},
 TimescaleDB~\cite{timescaledb}, and Apache AGE~\cite{apache_age}. Citus
 aims to add more horizontal scaling through sharding, TimescaleDB, now
 rebranded as TigerData, transforms the engine into a time series database,
-and Apache AGE turns it into a graph database. These all have thousands
-of GitHub stars, but TimescaleDB especially had over 500 paying customers in
-2022, and claimed their revenue climbed 20x by 2024 \cite{timescale_2024_update}
-\cite{timescaledb_series_c}. This shows that the model of relying on the
-extension system is a robust, travelled road.
+and Apache AGE turns it into a graph database. All have thousands
+of GitHub stars, with TimescaleDB especially boasting over 500 paying customers in
+2022 and claiming 20x revenue growth by 2024 \cite{timescale_2024_update}
+\cite{timescaledb_series_c}. The extension model has proven robust and well-travelled.
 
 There have also been several extensions that attempt to make PostgreSQL more
 suited to OLAP workloads, with the most relevant one being pg\_duckdb
-\cite{pg_duckdb}. This system replaces PostgreSQL's engine with DuckDB which
-allows it to take advantage of the vectorised engine, and it is reasonably
-popular with roughly 2700 stars on GitHub. Hydra is also worth mentioning,
+\cite{pg_duckdb}. pg\_duckdb replaces PostgreSQL's engine with DuckDB, enabling vectorised execution with
+reasonable popularity at roughly 2700 GitHub stars. Hydra is also worth mentioning,
 but this is closer to TimescaleDB \cite{hydra_columnar} and makes the system
 columnar with compression support. ParadeDB's pg\_analytics initially started
 in the same way as pg\_duckdb, but pivoted into supporting search functionality
 instead, similar to Elasticsearch.
 
 There has been significant discussion about HyPer and JIT in regard to
-PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. The general response expressed doubt that
-someone would add support
-for full query compilation, noting that rearchitecting such a core
-component introduces significant risk.
+PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. Doubts were expressed about adding full query compilation support, with concerns that
+rearchitecting such a core component introduces significant risk.
 
 However, in September 2017 Andres Freund started implementing JIT support for
-expressions \cite{psql-jit-release-plan}. The reasoning was that most of the CPU time is in the expression
-components, (such as y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
+expressions \cite{psql-jit-release-plan}. Most CPU time occurs in expression components
+(such as y > 8 in SELECT * from table WHERE x > 8;). Furthermore,
 there are significant benefits to tuple deformation as it interacts with the
 cache and has poor branch prediction. PostgreSQL's JIT implementation is
 documented in the official PostgreSQL documentation \cite{psql-jit-doc}.
@@ -91,25 +83,21 @@ documented in the official PostgreSQL documentation \cite{psql-jit-doc}.
 
 In a pull request, Peter Eisentraut questioned whether the default JIT settings
 were too low. Despite this concern, PostgreSQL version 11 was released with JIT disabled by default.
-This conservative approach resulted in limited adoption initially, so they later decided to enable
-JIT by default to increase exposure and testing opportunities \cite{psql-jit-discussion}.
+Limited adoption prompted them to enable JIT by default in later releases to increase
+exposure and testing opportunities \cite{psql-jit-discussion}.
 However, when released, the United Kingdom's critical service for a COVID-19
 dashboard automatically updated and spiked to a 70\% failure rate as
-some of their queries ran 2,229x slower \cite{psql-jit-failure}. This incident reinforced
-the view that JIT features should be disabled by default, and
-has led to negative opinions about JIT and compiled queries.
+some of their queries ran 2,229x slower \cite{psql-jit-failure}. Such failures reinforced the view that JIT features should remain disabled by default,
+leading to negative perceptions of JIT and compiled queries.
 
 Two cases where QEP query compilation with PostgreSQL was implemented were found.
-The first is Vitesse DB, which made a series of public posts about getting
-people to assist with testing it. They became generally available in 2015,
+Vitesse DB, the first implementation, made public posts seeking testing assistance. They became generally available in 2015,
 but their website is offline now and there is not much mention of them.
-The second was at a PgCon presentation and achieved a 5.5x speed-up on TPC-H query
-1, and has more documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it's easy for people to use.
+A second implementation was presented at PgCon, achieving 5.5x speedup on TPC-H query 1
+with more extensive documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it's easy for people to use.
 
-This implementation of full JIT in PostgreSQL was preceded by
-profiling work which showed that different TPC-H benchmarks place pressure on
-different nodes, as shown in figure~\ref{fig:pgcon-profiling}. This is important
-because they can make informed decisions about where to focus their efforts.
+Full JIT implementation was preceded by profiling work showing different TPC-H benchmarks
+pressure different nodes (figure~\ref{fig:pgcon-profiling}), enabling informed decisions about optimization priorities.
 Their core method is generating a function that represents a node in the
 plan tree, then inlining the function into the final LLVM IR \cite{pgcon_jit_2017}
 in a push-based model. Another
@@ -127,9 +115,8 @@ code \cite{pgcon_jit_2017}, similar to approaches taken by HyPer \cite{hyper-com
 
 Other database systems also support extensions, and there are many systems that
 rely on PostgreSQL's extension system. MySQL, ClickHouse, DuckDB, Oracle
-Extensible Optimizer all support similar operations. This means more than
-only PostgreSQL can be extended in this same manner rather than creating
-databases from scratch.
+Extensible Optimizer all support similar operations. More than just PostgreSQL can
+be extended in this manner, avoiding the need to create databases from scratch.
 
 %-------------------------------------------------------------------------------- 
 \section{System R}\label{sec:system-r}
@@ -144,9 +131,8 @@ the design.
 Due to the implementation overhead of parsing, validity checking, and access
 path selection, a compiler was appealing. These were not supported within the
 running transaction by default, and they leveraged pre-compiled fragments of
-Cobol for the reused functions to improve their compile times. This was
-completely custom-made at the time because there were not many tools to support
-writing compilers. System R shows the idea of compiled queries is as old
+Cobol for the reused functions to improve their compile times. Such custom implementation was necessary at the time due to the lack of compiler
+writing tools. System R shows the idea of compiled queries is as old
 as databases, and over time the priorities of the systems changed.
 
 %-------------------------------------------------------------------------------- 
@@ -155,19 +141,16 @@ as databases, and over time the priorities of the systems changed.
 HyPer was a flagship system, and Umbra supersedes it. These are important
 systems in the JIT-database space as they developed many of the core features.
 Both were made by Thomas Neumann, and a core sign of its viability is that HyPer
-was purchased by Tableau in 2016 to be used in production \cite{tableau-hyper}. This shows
-that it is possible to use an in-memory JIT database at scale. The project
-began in 2010, with their flagship paper releasing in 2011 for the compiler
+was purchased by Tableau in 2016 to be used in production \cite{tableau-hyper}, proving that
+in-memory JIT databases can scale to production workloads. Development began in 2010, with their flagship paper releasing in 2011 for the compiler
 component \cite{hyper-compiler-1}, and in 2018 they released another flagship paper about
-adaptive compilation \cite{hyper-compiler-2}. However, the database being commercialised poses issues
-for outside research because the source code is not accessible, but there is a
-binary on their website that can be used for benchmarking.
+adaptive compilation \cite{hyper-compiler-2}. However, commercialisation poses research challenges since
+the source code is not accessible, though a binary is available on their website for benchmarking.
 
 Their 2011 paper on the compiler identifies that translating queries into C or
 C++ introduced significant overhead compared to compiling into LLVM. As a result,
 they suggested using pre-compiled C++ objects of common functions then
-inlining them into the LLVM IR. This LLVM IR is executed by the LLVM's JIT
-executor. By utilising LLVM IR, they can take advantage of overflow flags and
+inlining them into the LLVM IR. LLVM's JIT executor then executes the IR. By utilising LLVM IR, they can take advantage of overflow flags and
 strong typing which prevent numerous bugs in their original C++ approach.
 
 \begin{figure}[H]
@@ -180,7 +163,7 @@ strong typing which prevent numerous bugs in their original C++ approach.
 
 Figure~\ref{fig:hyper-compile-times} demonstrates that HyPer reduced compile time by many multiples.
 Figure~\ref{fig:hyper-profiler} shows they achieved many times fewer branches and branch mispredictions
-compared to their MonetDB baseline \cite{monetdb_x100}. This improvement resulted from HyPer's
+compared to their MonetDB baseline \cite{monetdb_x100}. Such improvements resulted from HyPer's
 output containing less code in the compiled queries.
 
 \begin{figure}[H]
@@ -191,11 +174,9 @@ output containing less code in the compiled queries.
 	\cite{hyper-compiler-1}
 \end{figure}
 
-Hyper continues on in 2018 where they separated the compiler into multiple rounds.
-They introduced an interpreter on the byte code generated from LLVM IR, then they
-can run unoptimised machine code, and on the final stage they can run optimised
-machine code. Figure~\ref{fig:hyper-adaptive} visualises this with
-the compile times of each stage.
+In 2018, HyPer separated the compiler into multiple rounds.
+An interpreter executes byte code generated from LLVM IR, allowing unoptimised machine code execution in initial stages and optimised
+machine code in later stages. Figure~\ref{fig:hyper-adaptive} visualises compilation times for each stage.
 However, they had to create the byte code interpreter themselves to enable this.
 
 \begin{figure}[H]
@@ -219,21 +200,20 @@ execution strategy outperformed bytecode-only execution by $40\%$, unoptimised
 compilation by $10\%$, and optimised compilation by $80\%$. This improvement occurs because
 the single-threaded compilation can run in parallel with query execution on other threads.
 
-Utilising additional stages of the LLVM compiler, improving the cost model, and
-supporting multi threading the compilation and execution combined into a viable
-JIT compiled-query application. The primary criticism is that they effectively
-wrote the JIT compiler from the ground-up, which requires large amounts
-of engineering time. Majority of the additions here are not unique to a database's
-JIT compiler, and are mostly ways to target the compiler's latency.
+Utilising additional LLVM compiler stages, improved cost models, and
+multi-threaded compilation/execution created a viable JIT compiled-query application. A primary criticism: they effectively
+wrote the JIT compiler from scratch, requiring substantial
+engineering effort. Most additions are not unique to database JIT compilers;
+they mostly address compiler latency.
 
 %-------------------------------------------------------------------------------- 
 \section{Umbra}\label{sec:umbra}
 %-------------------------------------------------------------------------------- 
-Umbra, created in 2020 by Thomas Neumann (creator of HyPer), demonstrates that HyPer's in-memory
-database concepts can be applied to on-disk systems \cite{umbra}. This became possible due to
-recent improvements in SSDs and buffer management. Umbra integrates concepts from LeanStore for
-buffer management and latching, combined with multi-version concurrency, compilation, and execution
-strategies from HyPer. This hybrid approach produced an on-disk database that is scalable, flexible,
+Umbra, created in 2020 by Thomas Neumann (HyPer's creator), demonstrates that HyPer's in-memory
+concepts apply to on-disk systems \cite{umbra}. Recent SSD improvements and buffer management advances made
+this possible. Umbra integrates LeanStore concepts for
+buffer management and latching, combined with HyPer's multi-version concurrency, compilation, and execution
+strategies. A hybrid approach produced an on-disk database that is scalable, flexible,
 and faster than HyPer itself.
 
 \begin{figure}[H]
@@ -246,13 +226,13 @@ and faster than HyPer itself.
 
 % I skipped a paragraph about multi-level debugger here
 
-A novel optimisation they introduced later was enabling the compiler to
-change the query plan \cite{umbra-effec-compil}. That is, they can use the metrics collected during
-execution to swap the order of joins, or the type of join being used.
-This improved the runtime of the data-centric queries by a factor of two. Some other
-databases introduce this concept by invoking the query optimiser multiple
-times, but since their compiler is invoked multiple times during execution this
-adds additional benefit.
+A novel optimisation they introduced was enabling the compiler to
+dynamically change the query plan \cite{umbra-effec-compil}. Using metrics collected during
+execution, they swap join order or join types.
+Such dynamic planning improved data-centric query runtimes by a factor of two. Other
+databases achieve this by invoking the query optimiser multiple
+times; Umbra's approach of invoking the compiler multiple times during execution
+provides additional benefits.
 
 \begin{figure}[H]
 	\centering
@@ -263,10 +243,9 @@ adds additional benefit.
 \end{figure}
 
 Umbra is currently ranked as the most effective database on ClickHouse's
-benchmarking \cite{clickbench}. The main complaint of the compiler being too heavy is still there,
-but it shows the advantage of having direct access to the JIT compiler with
-its adaptive compilation to change optimisation choices. Additionally, Umbra supports
-user-defined operators, enabling efficient integration of custom algorithms into the database \cite{umbra-user-operators}.
+benchmarks \cite{clickbench}. Compiler overhead remains a criticism,
+but direct JIT compiler access enabling adaptive compilation for optimisation choice changes provides distinct advantages. Additionally, Umbra supports
+user-defined operators, enabling efficient custom algorithm integration \cite{umbra-user-operators}.
 
 %-------------------------------------------------------------------------------- 
 \section{Mutable}\label{sec:mutable}
@@ -279,12 +258,12 @@ later \cite{mutable-2}. However, using WebAssembly meant they can omit most of t
 that HyPer did while maintaining higher performance. Furthermore, they have
 a minimal query optimiser and instead rely on the V8 engine.
 
-The V8 engine contains a "Liftoff" component that adds an early-stage execution
-step to lower the initial overhead of running the query \cite{wasm-liftoff}. The LiftOff component
-produces machine code as fast as possible while skipping optimisations, then
-"turbofan" is a second-stage compiler that runs in the background
-while execution is running. However, HyPer has a direct bytecode interpreter
-which can result in a lower time to execution.
+V8's "Liftoff" component adds early-stage execution
+to reduce query startup overhead \cite{wasm-liftoff}. Liftoff
+produces machine code quickly while skipping optimisations;
+"turbofan" then provides second-stage compilation in the background
+during execution. HyPer's direct bytecode interpreter
+achieves lower execution startup times.
 
 \begin{figure}[H]
 	\centering
@@ -335,13 +314,11 @@ into three levels: relational algebra, a mixed dialect layer, and finally LLVM c
 	\cite{lingo-db-1}
 \end{figure}
 
-Their result is that they are less performant than HyPer, but do better than
-DuckDB \cite{lingo-db-1}. This performance is not their key output, rather, it is that they can
-implement the standard optimisation patterns within the compiler. Another feat
-is that they are approximately 10,000 lines of code in the query execution model,
-and Mutable is at 22,944 lines for their code despite skipping query
-optimisation. Within LingoDB's paper they also compare this to being three times
-less than DuckDB and five times less than NoisePage.
+Results show lower performance than HyPer but better than
+DuckDB \cite{lingo-db-1}. Performance was not the primary focus; rather, implementing standard optimisation patterns within the compiler was key. Notably, LingoDB uses approximately 10,000 lines of code for query execution model,
+while Mutable uses 22,944 lines despite skipping query
+optimization. Comparisons show LingoDB uses three times
+less code than DuckDB and five times less than NoisePage.
 
 \begin{figure}[H]
 	\centering

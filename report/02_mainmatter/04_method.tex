@@ -3,23 +3,22 @@ In section~\ref{sec:design} the overarching design is described,
 then section~\ref{sec:implementation} goes over the implementation.
 
 \section{Design}\label{sec:design}
-The first decision is which database and which compiler this project should use.
-Something with strong extension support, wide-spread usage, high performance,
-and a volcano execution model is needed as a base. For the compiler,
-it would be ideal if they already use a similar interface to the target database
-when they parse SQL, and have promising results in their performance. This
-removes HyPer, Umbra, and System R, and leaves Mutable and LingoDB. LingoDB
-parses its inputs with \texttt{pg\_query}, so it matches with PostgreSQL.
+A database and compiler selection required several criteria: strong extension support, wide-spread usage, high performance,
+and a volcano execution model as a base. For the compiler,
+ideally it would use a similar interface to the target database
+when parsing SQL, demonstrate strong performance results, and be open source. 
+Such criteria eliminated HyPer, Umbra, and System R, 
+leaving Mutable and LingoDB. LingoDB
+parses inputs with \texttt{pg\_query}, matching PostgreSQL well.
 
-As a result, PostgreSQL and LingoDB were chosen. PostgreSQL offers strong support
-for extensions, and it is possible to override its execution engine using runtime
-hooks. An example of this is TimescaleDB (now TigerData) \cite{timescaledb}, which was explored in
-section~\ref{sec:postgresql-related}. The primary challenge with this is that LingoDB is a columnar,
-in-memory database, so adjustments will be needed. Furthermore, LingoDB does
-not support indexes, which can make the benchmarks against PostgreSQL unfair.
-Another detail is that LingoDB's newer versions contain numerous
-features and optimisations that are not relevant to us, so to simplify implementation
-effort the 2022 version was used from their initial paper.
+PostgreSQL and LingoDB were selected. PostgreSQL offers strong extension support,
+enabling runtime hook-based execution engine overrides.
+TimescaleDB (now TigerData), discussed in section~\ref{sec:postgresql-related}, exemplifies such approaches \cite{timescaledb}. A significant challenge arose: LingoDB's columnar,
+in-memory architecture required substantial adjustments. Additionally, LingoDB lacks
+index support, potentially biasing benchmarks against PostgreSQL.
+LingoDB's recent versions contain numerous
+unneeded features and optimisations, so the 2022 version from their initial paper was used to simplify implementation
+effort.
 
 \begin{figure}[H]
 	\centering
@@ -29,32 +28,30 @@ effort the 2022 version was used from their initial paper.
 \end{figure}
 
 LingoDB was integrated into PostgreSQL as seen in figure~\ref{fig:overall-system-design}.
-The blue represents PostgreSQL components, with the pipeline on the left being
-the whole of PostgreSQL. A query reaches the runtime hooks, which gets analyzed
-by a handwritten analyser for whether the query can be executed, and then parsed.
-These hand written components are annotated in light-peach.
-This goes through the code LingoDB created, but with custom runtime hooks and
-other small edits, annotated with green. Finally, this is compiled into
-LLVM IR, which has the runtime hooks for reading from PostgreSQL embedded inside.
+Blue components represent PostgreSQL, with the left pipeline showing
+the entire PostgreSQL execution flow. Queries reach runtime hooks, where a handwritten analyser determines executability before parsing.
+Handwritten components appear in light-peach.
+Processing continues through LingoDB code with custom runtime hooks and
+minor edits (annotated in green). Finally, compilation produces
+LLVM IR with embedded runtime hooks for PostgreSQL data access.
 
-In the case that a query fails, the system should still support returning the
-results and gracefully roll over to PostgreSQL. This was done by ensuring the
-AST parser entrance has a try-catch pattern that routes back to PostgreSQL
-even in failures. However, this does not protect from system panics such as
+Query failures should still allow result return and graceful fallback to PostgreSQL. A try-catch pattern at
+the AST parser entrance routes failed queries back to PostgreSQL.
+However, such protection does not prevent system panics such as
 segmentation faults.
 
-The most time-consuming part of this is expected to be the AST Parser section,
-because it will be receiving the plan tree with the optimisations from PostgreSQL.
-LingoDB was designed to parse the query tree, which would come from the
+AST Parser implementation was expected to be most time-consuming,
+as it receives the optimised plan tree from PostgreSQL.
+LingoDB was designed to parse query trees from the
 "Parser" stage in figure~\ref{fig:overall-system-design}. 18 plan nodes and 14
 expression nodes were implemented.
 
-The final goal here is to support the TPC-H query set.
-To drive this implementation, a test-driven approach was used where PostgreSQL's
-\texttt{pg\_regress} module added support for creating SQL queries and defining
-expected outputs. With this, a test set of basic queries was created which built
-up to TPC-H queries. This allowed progressive node implementation during
-development, and a quick way to validate changes are safe.
+TPC-H query support was the final goal.
+Test-driven development drove implementation using PostgreSQL's
+\texttt{pg\_regress} module for SQL query creation and expected output definition.
+A progressive test set built from basic queries up to TPC-H queries.
+Such progression enabled incremental node implementation during
+development and quick validation of safe changes.
 
 Table~\ref{tab:regression-tests} shows the complete regression test suite,
 organized to progressively build complexity from single-row operations to
@@ -146,12 +143,11 @@ may lead to issues when installing it independently.
 The project was started from \url{https://github.com/mkindahl/pg_extension},
 then \texttt{ExecutorRun\_hook} inside of executor.h in PostgreSQL
 was used \url{https://doxygen.postgresql.org/executor_8h_source.html} as the
-entrance. Within PostgreSQL there are some surrounding steps since the intention
-is not usually to replace the entire executor with these hooks, so the memory
-context had to be activated and switched into.
+entrance. Within PostgreSQL there are surrounding steps since the intention is not to replace the entire
+executor with hooks, requiring memory context activation and switching.
 
-Next, the \texttt{QueryDesc} pointer, which contains the query request,
-needed to be passed through to C++. This causes a design decision. Good practice
+Next, the \texttt{QueryDesc} pointer, containing the query request, needed to be passed
+to C++. A design decision arose from this requirement: Good practice
 here is to use smart pointers to prevent memory leaks, but this object is large
 and the source of truth about the request. Furthermore, the memory is handled by
 the PostgreSQL memory contexts. It was decided that these objects will remain
@@ -192,8 +188,8 @@ the result is half-complete.
 %===============================================================================
 \subsection{Debugging Support}\label{subsec:debugging}
 An important property of PostgreSQL is that each client connection creates a new
-process. This means there are several debugging layers to navigate: the PostgreSQL
-postmaster, the client connection, the runtime hook entrance, C++ code, and the JIT runtime.
+process. Debugging requires navigating several layers: the PostgreSQL postmaster, the client connection,
+the runtime hook entrance, C++ code, and the JIT runtime.
 Bugs can occur at any of these levels, making debugging challenging.
 This poses a particular difficulty when dealing with segmentation faults and other errors
 that lack logging information.
