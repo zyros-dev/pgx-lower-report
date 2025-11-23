@@ -1,9 +1,6 @@
 % TODO 
 % 2. add a table of the MLIR dialect, and what we had to change 
 % 3. add a test suite table for the .sql files in the regression. 
-% 4 ok, define upcasting. 
-% 5. talk about how runtime functions were linked by using LingoDB's infrastructure. 
-% 6. when error, dump progress. 
 
 \chapter{Method}\label{ch:project}
 In section~\ref{sec:design} the overarching design is described,
@@ -119,7 +116,9 @@ Lastly, for error handling mostly \texttt{std::runtime\_error} was utilised. Thi
 as a global way to log the stack trace and roll back to PostgreSQL's execution.
 There initially was an implementation of error handling with severity levels
 and messages, but the simplicity of a single command that rolled back to
-PostgreSQL was more generally useful.
+PostgreSQL was more generally useful. If an error is thrown in pgx-lower, the
+progress in compiling is dumped then it fully falls over to PostgreSQL, even if
+the result is half-complete.
 
 %===============================================================================
 \subsection{Debugging Support}\label{subsec:debugging}
@@ -267,6 +266,11 @@ PostgreSQL-specific operations like tuple access, sorting via
 contexts. This pattern allows complex operations to be implemented once in C++
 and reused across all queries, while maintaining type safety and null handling
 semantics through the MLIR type system.
+
+LingoDB had a code generation step in their CMakeLists, \texttt{gen\_rt\_def},
+which supports this. It parses a given C++ file, then generates a header
+file in the build files which has the mangled name lookup, so that the
+developer does not need to reimplement that section repeatedly.
 
 \begin{figure}[H]
 	\centering
@@ -560,7 +564,10 @@ PostgreSQL's OID system for finding which operation to use, they were
 converted to strings (">", "<", and so on) then these were used. This prevents
 issues with precision specifications in the OID leading to unidentified
 operations, and a similar approach was used in function nodes, aggregation functions,
-sort operations, and scalar maths.
+sort operations, and scalar maths. With these casts, the SQLTypeInference object
+supports upcasting such that if two types have an operation, they are both
+first cast into the larger datatype, such as i16 + i32, then the smaller one will
+both be cast into i32 first.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Translation - Others}\label{subsubsec:expr-operators}
@@ -663,7 +670,7 @@ PostgreSQL, so benchmarking them was too time-consuming.
 
 To disable indexes, \texttt{cur.execute("SET enable\_indexscan = off;")} and
 \texttt{cur.execute("SET enable\_bitmapscan = off;")} were used in conjunction.
-This means when the benchmarks say index scan is disabled, the bit map scan 
+This means when the benchmarks say index scan is disabled, the bit map scan
 is as well.
 
 \begin{lstlisting}[caption={Benchmark configurations for TPC-H testing},label={lst:benchmark-config}]
