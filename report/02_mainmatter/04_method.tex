@@ -238,6 +238,36 @@ However, since the TPC-H queries never use month intervals, this is acceptable.
 	\label{tab:type-mapping}
 \end{table}
 
+\subsection{LingoDB Dialect Changes}\label{subsec:dialect-changes}
+The MLIR dialects from LingoDB required modifications to support LLVM 20 and
+pgx-lower's specific needs. Table~\ref{tab:dialect-summary} summarizes the key
+changes across the DB, DSA, RelAlg, and Util dialects. The changes were primarily
+API compatibility updates with minimal semantic modifications: 94 operations total
+across all dialects (93 in LingoDB, 94 in PGX), 21 types (identical count), and
+mostly LLVM 20 API compatibility updates.
+
+\begin{table}[H]
+	\centering
+	\small
+	\begin{tabular}{lp{2.5cm}p{7.5cm}}
+		\toprule
+		\textbf{Category}        & \textbf{Count} & \textbf{Description}                                                  \\
+		\midrule
+		MLIR API Updates         & ~30 changes    & NoSideEffect → Pure, Optional → std::optional, added OpaqueProperties \\
+		Include Path Changes     & 100\% of files & mlir/Dialect/ → lingodb/mlir/Dialect/                                 \\
+		Dialect Renames          & 1              & Arithmetic → Arith (MLIR core change)                                 \\
+		New Operations           & 1              & SetDecimalScaleOp in DSA                                              \\
+		Modified Operations      & 2              & DSA\_SortOp (supports collections), BaseTableOp (added column\_order) \\
+		Namespace Clarifications & 6 interfaces   & Added explicit cppNamespace declarations                              \\
+		Convenience Features     & 4 dialects     & Added useDefaultTypePrinterParser = 1                                 \\
+		Fastmath Support         & 2 patterns     & Added fastmath flags to arithmetic canonicalization                   \\
+		Code Cleanup             & ~5 locations   & Removed comments, simplified logic                                    \\
+		\bottomrule
+	\end{tabular}
+	\caption{Summary of key differences between LingoDB and pgx-lower dialects}
+	\label{tab:dialect-summary}
+\end{table}
+
 This defines most of the supporting details, and the main two components of
 the implementation can be described: the runtime patterns and the plan tree
 translation.
