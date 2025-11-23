@@ -119,12 +119,65 @@ of 5008 milliseconds while the median was 12.42 milliseconds. However, the
 overall coefficient of variation was only 0.44\% overall during the
 latency measurements in the scale factor 0.01. It's stable overall,
 but vital to do repeated tests to exclude these outliers from the system.
-% TODO: Introduce the meaning of the coefficient of variation
+% TODO: Introduce the meaning of the coefficient of variation back in the background
+% 		section
 
 These variations will primarily be caused by PostgreSQL's optimiser containing
 genetic algorithms, as mentioned in section~\ref{sec:postgresql-background}. It
-can cause plans to change significantly and makes them non-deterministic. 
-While these tests were done on an isolated docker container in a Linux machine 
+can cause plans to change significantly and makes them non-deterministic.
+While these tests were done on an isolated docker container in a Linux machine
 running minimal processes, system interrupts can also affect the results.
 
 \subsection{Future work}\label{subsec:future-work}
+% TODO: I need to write about how clickhouse, apache hive, and some 
+% other OLAP databases' execution engines
+% TODO: I also need to make the Umbra history clearer and what features it has
+To progress this system further and make it a full extension, the plan tree
+nodes need to be fully implemented, and the query analyzer can be improved.
+Only the minimum amount for TPC-H was implemented here, but pg\_bench
+and isolationtester should also be used before suggesting this system to
+users. This includes implementing indexes, WINDOW functions, the other
+22 missing plan nodes, and the missing execution nodes.
+
+The other core work is optimising the system, both with existing research
+and clearer ways to use the PostgreSQL API. Namingly, pre-compiling
+functions in PostgreSQL into LLVM, then inlining them instead of
+crossing the LLVM-C++ boundary, adaptive compilation/query planning,
+and Umbra's caching system. Most of these are only applicable inside a
+LLVM/MLIR system though, and if WebAssembly is used instead a lot of
+them can be skipped.
+
+In databasing, and research broadly, it is vital to keep in mind whether the
+research is useful and impactful, as per Michael Stonebraker's fear that
+the field is becoming polishing a round ball~\cite{top-ten-fears}. For
+successful projects, the dollar-cost of a live system database is typically
+much smaller than the profitability of the project itself, so paying for
+higher throughput is commonly not a concern, and better gains for latency
+can be made by adding a custom caching mechanism to the service such as Redis.
+These complex queries are primarily in OLAP systems, and large-scale OLAP
+systems will usually move away from PostgreSQL and into a more scaleable
+database such as ClickHouse, or Apache HIVE. For this reason, there may be
+better systems to develop this architecture on.
+
+PostgreSQL was chosen due to its large popularity and LingoDB was used
+because it reasonably matched PostgreSQL's interfaces while being open source.
+While PostgreSQL is reasonably good for this approach, and this can solve a
+real problem with it, there might be a better database. Most of these dedicated
+OLAP systems will already be using a JIT or vectorized approach, though.
+
+During development, using LingoDB provided helpful constraints and made
+development easier since it is an established system. However, LingoDB's
+columnar, in-memory architecture required extensive modifications to suit
+needs. It also contains a query optimisation engine, which is unnecessary
+because PostgreSQL already has a thorough optimisation system. It would
+be better to build the engine, or find a better suited base system.
+The ideal here would be Umbra based on its description, but it is closed
+source.
+
+MLIR was useful to give a strong set of dialect systems, but the main reason
+LingoDB used it was to give database optimisations clear layers. Furthermore,
+the LLVM/MLIR ecosystem targets ahead of time compilation, or longer-running
+JIT systems. While WebAssembly is appealing here because it targets
+short-lived processes, we would not be able to inline functions in the future.
+Either way, switching to a different compiler, or away from $C++$ into $C$ or 
+Rust is appealing.
