@@ -1,0 +1,225 @@
+\chapter{Appendices}\label{appendix:tpch-q20}
+
+This appendix contains the execution plans for TPC-H Query 20, demonstrating
+the differences between PostgreSQL's traditional query execution plan and
+pgx-lower's MLIR-based compilation approach.
+
+\section{Query 20 SQL}\label{appendix:q20-sql}
+
+\begin{lstlisting}[language=SQL, basicstyle=\ttfamily\footnotesize, breaklines=true]
+select
+        s_name,
+        s_address
+from
+        supplier,
+        nation
+where
+        s_suppkey in (
+                select
+                        ps_suppkey
+                from
+                        partsupp
+                where
+                        ps_partkey in (
+                                select
+                                        p_partkey
+                                from
+                                        part
+                                where
+                                        p_name like 'forest%'
+                        )
+                        and ps_availqty > (
+                                select
+                                        0.5 * sum(l_quantity)
+                                from
+                                        lineitem
+                                where
+                                        l_partkey = ps_partkey
+                                        and l_suppkey = ps_suppkey
+                                        and l_shipdate >= date '1994-01-01'
+                                        and l_shipdate < date '1995-01-01'
+                        )
+        )
+        and s_nationkey = n_nationkey
+        and n_name = 'CANADA'
+order by
+        s_name
+\end{lstlisting}
+
+\section{PostgreSQL Execution Plan}\label{appendix:q20-postgres}
+
+\begin{lstlisting}[basicstyle=\ttfamily\tiny, breaklines=true]
+Sort  (cost=46847.99..46848.00 rows=1 width=52) (actual time=69.713..69.728 rows=1 loops=1)
+  Sort Key: supplier.s_name
+  Sort Method: quicksort  Memory: 25kB
+  ->  Nested Loop Semi Join  (cost=0.42..46847.98 rows=1 width=52) (actual time=68.025..69.569 rows=1 loops=1)
+        ->  Nested Loop  (cost=0.14..29.27 rows=1 width=56) (actual time=0.493..0.667 rows=3 loops=1)
+              Join Filter: (nation.n_nationkey = supplier.s_nationkey)
+              Rows Removed by Join Filter: 97
+              ->  Index Scan using supplier_pkey on supplier  (cost=0.14..15.64 rows=100 width=60) (actual time=0.029..0.131 rows=100 loops=1)
+              ->  Materialize  (cost=0.00..12.13 rows=1 width=4) (actual time=0.004..0.005 rows=1 loops=100)
+                    ->  Seq Scan on nation  (cost=0.00..12.12 rows=1 width=4) (actual time=0.414..0.421 rows=1 loops=1)
+                          Filter: (n_name = 'CANADA'::bpchar)
+                          Rows Removed by Filter: 24
+        ->  Nested Loop  (cost=0.28..46818.70 rows=1 width=4) (actual time=22.958..22.958 rows=0 loops=3)
+              ->  Seq Scan on part  (cost=0.00..66.00 rows=20 width=4) (actual time=0.111..1.250 rows=16 loops=3)
+                    Filter: ((p_name)::text ~~ 'forest%'::text)
+                    Rows Removed by Filter: 1973
+              ->  Index Scan using partsupp_pkey on partsupp  (cost=0.28..2337.63 rows=1 width=8) (actual time=1.355..1.355 rows=0 loops=48)
+                    Index Cond: ((ps_partkey = part.p_partkey) AND (ps_suppkey = supplier.s_suppkey))
+                    Filter: ((ps_availqty)::numeric > (SubPlan 1))
+                    Rows Removed by Filter: 0
+                    SubPlan 1
+                      ->  Aggregate  (cost=2330.51..2330.52 rows=1 width=32) (actual time=31.616..31.617 rows=1 loops=2)
+                            ->  Seq Scan on lineitem  (cost=0.00..2330.50 rows=1 width=5) (actual time=25.850..31.589 rows=2 loops=2)
+                                  Filter: ((l_shipdate >= '1994-01-01'::date) AND (l_shipdate < '1995-01-01'::date) AND (l_partkey = partsupp.ps_partkey) AND (l_suppkey = partsupp.ps_suppkey))
+                                  Rows Removed by Filter: 60173
+Planning Time: 16.634 ms
+Execution Time: 70.580 ms
+\end{lstlisting}
+
+\section{pgx-lower MLIR Execution Plan}\label{appendix:q20-pgxlower}
+
+\begin{lstlisting}[basicstyle=\ttfamily\tiny, breaklines=true]
+// MLIR Module Debug Dump: Phase 3a AFTER: RelAlg -> Optimised RelAlg
+// Generated: 2025-11-22 23:21:32
+// Total Operations: 120
+// Module Valid: YES
+
+module {
+  func.func @main() -> !dsa.table {
+    %true = arith.constant true
+    %0 = relalg.basetable  {column_order = ["l_orderkey", "l_partkey", "l_suppkey", "l_linenumber", "l_quantity", "l_extendedprice", "l_discount", "l_tax", "l_returnflag", "l_linestatus", "l_shipdate", "l_commitdate", "l_receiptdate", "l_shipinstruct", "l_shipmode", "l_comment"], rows = 0.000000e+00 : f64, table_identifier = "lineitem|oid:16425"} columns: {l_comment => @lineitem::@l_comment({type = !db.string}), l_commitdate => @lineitem::@l_commitdate({type = !db.date<day>}), l_discount => @lineitem::@l_discount({type = !db.decimal<12, 2>}), l_extendedprice => @lineitem::@l_extendedprice({type = !db.decimal<12, 2>}), l_linenumber => @lineitem::@l_linenumber({type = i32}), l_linestatus => @lineitem::@l_linestatus({type = !db.string}), l_orderkey => @lineitem::@l_orderkey({type = i32}), l_partkey => @lineitem::@l_partkey({type = i32}), l_quantity => @lineitem::@l_quantity({type = !db.decimal<12, 2>}), l_receiptdate => @lineitem::@l_receiptdate({type = !db.date<day>}), l_returnflag => @lineitem::@l_returnflag({type = !db.string}), l_shipdate => @lineitem::@l_shipdate({type = !db.date<day>}), l_shipinstruct => @lineitem::@l_shipinstruct({type = !db.string}), l_shipmode => @lineitem::@l_shipmode({type = !db.string}), l_suppkey => @lineitem::@l_suppkey({type = i32}), l_tax => @lineitem::@l_tax({type = !db.decimal<12, 2>})}
+    %1 = relalg.selection %0 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @lineitem::@l_shipdate : !db.date<day>
+      %40 = db.constant(-2191 : i32) : !db.date<day>
+      %41 = db.constant(-1826 : i32) : !db.date<day>
+      %42 = db.between %39 : !db.date<day> between %40 : !db.date<day>, %41 : !db.date<day>, lowerInclusive : true, upperInclusive : false
+      relalg.return %42 : i1
+    } attributes {cost = 1.000000e+00 : f64, rows = 1.000000e+00 : f64}
+    %2 = relalg.basetable  {column_order = ["ps_partkey", "ps_suppkey", "ps_availqty", "ps_supplycost", "ps_comment"], rows = 0.000000e+00 : f64, table_identifier = "partsupp|oid:16410"} columns: {ps_availqty => @partsupp::@ps_availqty({type = i32}), ps_comment => @partsupp::@ps_comment({type = !db.string}), ps_partkey => @partsupp::@ps_partkey({type = i32}), ps_suppkey => @partsupp::@ps_suppkey({type = i32}), ps_supplycost => @partsupp::@ps_supplycost({type = !db.decimal<12, 2>})}
+    %3 = relalg.basetable  {column_order = ["n_nationkey", "n_name", "n_regionkey", "n_comment"], rows = 0.000000e+00 : f64, table_identifier = "nation|oid:16395"} columns: {n_comment => @nation::@n_comment({type = !db.string}), n_name => @nation::@n_name({type = !db.string}), n_nationkey => @nation::@n_nationkey({type = i32}), n_regionkey => @nation::@n_regionkey({type = i32})}
+    %4 = relalg.selection %3 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @nation::@n_name : !db.string
+      %40 = db.constant("CANADA                   ") : !db.string
+      %41 = db.compare eq %39 : !db.string, %40 : !db.string
+      relalg.return %41 : i1
+    } attributes {cost = 1.000000e-01 : f64, rows = 1.000000e-01 : f64}
+    %5 = relalg.basetable  {column_order = ["s_suppkey", "s_name", "s_address", "s_nationkey", "s_phone", "s_acctbal", "s_comment"], rows = 0.000000e+00 : f64, table_identifier = "supplier|oid:16405"} columns: {s_acctbal => @supplier::@s_acctbal({type = !db.decimal<12, 2>}), s_address => @supplier::@s_address({type = !db.string}), s_comment => @supplier::@s_comment({type = !db.string}), s_name => @supplier::@s_name({type = !db.string}), s_nationkey => @supplier::@s_nationkey({type = i32}), s_phone => @supplier::@s_phone({type = !db.string}), s_suppkey => @supplier::@s_suppkey({type = i32})}
+    %6 = relalg.join %4, %5 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @nation::@n_nationkey : i32
+      %40 = relalg.getcol %arg0 @supplier::@s_nationkey : i32
+      %41 = db.compare eq %39 : i32, %40 : i32
+      relalg.return %41 : i1
+    } attributes {cost = 1.110000e+00 : f64, impl = "hash", rows = 0.010000000000000002 : f64}
+    %7 = relalg.projection all [@supplier::@s_name,@supplier::@s_address,@supplier::@s_suppkey] %6
+    %8 = relalg.tmp %7 [@supplier::@s_address,@supplier::@s_name,@supplier::@s_suppkey]
+    %9 = relalg.projection distinct [@supplier::@s_suppkey] %8
+    %10 = relalg.tmp %9 [@supplier::@s_suppkey]
+    %11 = relalg.join %2, %10 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @partsupp::@ps_suppkey : i32
+      %40 = db.as_nullable %39 : i32 -> <i32>
+      %41 = relalg.getcol %arg0 @supplier::@s_suppkey : !db.nullable<i32>
+      %42 = db.compare eq %40 : !db.nullable<i32>, %41 : !db.nullable<i32>
+      %43 = db.derive_truth %42 : !db.nullable<i1>
+      relalg.return %43 : i1
+    } attributes {cost = 2.100000e+00 : f64, impl = "hash", rows = 1.000000e-01 : f64}
+    %12 = relalg.basetable  {column_order = ["p_partkey", "p_name", "p_mfgr", "p_brand", "p_type", "p_size", "p_container", "p_retailprice", "p_comment"], rows = 0.000000e+00 : f64, table_identifier = "part|oid:16400"} columns: {p_brand => @part::@p_brand({type = !db.string}), p_comment => @part::@p_comment({type = !db.string}), p_container => @part::@p_container({type = !db.string}), p_mfgr => @part::@p_mfgr({type = !db.string}), p_name => @part::@p_name({type = !db.string}), p_partkey => @part::@p_partkey({type = i32}), p_retailprice => @part::@p_retailprice({type = !db.decimal<12, 2>}), p_size => @part::@p_size({type = i32}), p_type => @part::@p_type({type = !db.string})}
+    %13 = relalg.selection %12 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @part::@p_name : !db.string
+      %40 = db.constant("forest%") : !db.string
+      %41 = db.runtime_call "Like"(%39, %40) : (!db.string, !db.string) -> i1
+      relalg.return %41 : i1
+    } attributes {cost = 1.000000e-01 : f64, rows = 1.000000e-01 : f64}
+    %14 = relalg.tmp %13 [@part::@p_partkey]
+    %15 = relalg.projection distinct [@part::@p_partkey] %14
+    %16 = relalg.tmp %15 [@part::@p_partkey]
+    %17 = relalg.join %11, %16 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @partsupp::@ps_partkey : i32
+      %40 = db.as_nullable %39 : i32 -> <i32>
+      %41 = relalg.getcol %arg0 @part::@p_partkey : !db.nullable<i32>
+      %42 = db.compare eq %40 : !db.nullable<i32>, %41 : !db.nullable<i32>
+      %43 = db.derive_truth %42 : !db.nullable<i1>
+      relalg.return %43 : i1
+    } attributes {cost = 3.110000e+00 : f64, impl = "hash", rows = 0.010000000000000002 : f64}
+    %18 = relalg.tmp %17 [@partsupp::@ps_availqty,@partsupp::@ps_suppkey,@supplier::@s_suppkey,@part::@p_partkey,@partsupp::@ps_partkey]
+    %19 = relalg.projection distinct [@partsupp::@ps_suppkey,@partsupp::@ps_partkey] %18
+    %20 = relalg.join %1, %19 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @lineitem::@l_suppkey : i32
+      %40 = relalg.getcol %arg0 @partsupp::@ps_suppkey : i32
+      %41 = db.compare eq %39 : i32, %40 : i32
+      %42 = relalg.getcol %arg0 @lineitem::@l_partkey : i32
+      %43 = relalg.getcol %arg0 @partsupp::@ps_partkey : i32
+      %44 = db.compare eq %42 : i32, %43 : i32
+      %45 = db.and %44, %41 : i1, i1
+      relalg.return %45 : i1
+    } attributes {cost = 2.010000e+00 : f64, impl = "hash", rows = 0.010000000000000002 : f64}
+    %21 = relalg.crossproduct %20, %10
+    %22 = relalg.crossproduct %21, %16
+    %23 = relalg.aggregation %22 [@partsupp::@ps_suppkey,@partsupp::@ps_partkey,@part::@p_partkey,@supplier::@s_suppkey] computes : [@aggr0::@agg_0({type = !db.nullable<!db.decimal<32, 6>>})] (%arg0: !relalg.tuplestream,%arg1: !relalg.tuple){
+      %39 = relalg.aggrfn sum @lineitem::@l_quantity %arg0 : !db.nullable<!db.decimal<32, 6>>
+      relalg.return %39 : !db.nullable<!db.decimal<32, 6>>
+    }
+    %24 = relalg.map %23 computes : [@postmap::@postproc_1({type = !db.nullable<!db.decimal<32, 6>>})] (%arg0: !relalg.tuple){
+      %39 = db.constant("0.5") : !db.decimal<32, 6>
+      %40 = db.as_nullable %39 : !db.decimal<32, 6> -> <!db.decimal<32, 6>>
+      %41 = relalg.getcol %arg0 @aggr0::@agg_0 : !db.nullable<!db.decimal<32, 6>>
+      %42 = db.mul %40 : !db.nullable<!db.decimal<32, 6>>, %41 : !db.nullable<!db.decimal<32, 6>>
+      relalg.return %42 : !db.nullable<!db.decimal<32, 6>>
+    }
+    %25 = relalg.renaming %24 renamed : [@renaming::@renamed0({type = i32})=[@partsupp::@ps_suppkey],@renaming::@renamed1({type = i32})=[@partsupp::@ps_partkey]]
+    %26 = relalg.renaming %25 renamed : [@renaming1::@renamed0({type = i32})=[@part::@p_partkey]]
+    %27 = relalg.renaming %26 renamed : [@renaming3::@renamed0({type = i32})=[@supplier::@s_suppkey]]
+    %28 = relalg.singlejoin %18, %27 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @partsupp::@ps_suppkey : i32
+      %40 = relalg.getcol %arg0 @renaming::@renamed0 : i32
+      %41 = db.compare eq %39 : i32, %40 : i32
+      %42 = relalg.getcol %arg0 @partsupp::@ps_partkey : i32
+      %43 = relalg.getcol %arg0 @renaming::@renamed1 : i32
+      %44 = db.compare eq %42 : i32, %43 : i32
+      %45 = relalg.getcol %arg0 @part::@p_partkey : i32
+      %46 = relalg.getcol %arg0 @renaming1::@renamed0 : i32
+      %47 = db.compare eq %45 : i32, %46 : i32
+      %48 = relalg.getcol %arg0 @supplier::@s_suppkey : i32
+      %49 = relalg.getcol %arg0 @renaming3::@renamed0 : i32
+      %50 = db.compare eq %48 : i32, %49 : i32
+      %51 = db.and %50, %44, %41, %47 : i1, i1, i1, i1
+      relalg.return %51 : i1
+    }  mapping: {@singlejoin::@sjattr({type = !db.nullable<!db.decimal<32, 6>>})=[@postmap::@postproc_1]} attributes {cost = 3.000000e+00 : f64, impl = "hash", rows = 1.000000e+00 : f64}
+    %29 = relalg.selection %28 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @partsupp::@ps_availqty : i32
+      %40 = db.cast %39 : i32 -> !db.decimal<38, 0>
+      %41 = db.cast %40 : !db.decimal<38, 0> -> !db.decimal<32, 6>
+      %42 = db.as_nullable %41 : !db.decimal<32, 6> -> <!db.decimal<32, 6>>
+      %43 = relalg.getcol %arg0 @singlejoin::@sjattr : !db.nullable<!db.decimal<32, 6>>
+      %44 = db.compare gt %42 : !db.nullable<!db.decimal<32, 6>>, %43 : !db.nullable<!db.decimal<32, 6>>
+      %45 = db.derive_truth %44 : !db.nullable<i1>
+      relalg.return %45 : i1
+    } attributes {cost = 3.000000e+00 : f64, rows = 1.000000e+00 : f64}
+    %30 = relalg.renaming %29 renamed : [@renaming2::@renamed0({type = i32})=[@part::@p_partkey]]
+    %31 = relalg.join %14, %30 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @part::@p_partkey : i32
+      %40 = relalg.getcol %arg0 @renaming2::@renamed0 : i32
+      %41 = db.compare eq %39 : i32, %40 : i32
+      %42 = db.and %true, %41 : i1, i1
+      relalg.return %42 : i1
+    } attributes {cost = 2.100000e+00 : f64, impl = "hash", rows = 1.000000e-01 : f64}
+    %32 = relalg.projection all [@partsupp::@ps_suppkey,@supplier::@s_suppkey] %31
+    %33 = relalg.map %32 computes : [@map::@tmp_attr0({type = i32})] (%arg0: !relalg.tuple){
+      %39 = db.constant(1 : i32) : i32
+      relalg.return %39 : i32
+    }
+    %34 = relalg.renaming %33 renamed : [@renaming4::@renamed0({type = i32})=[@supplier::@s_suppkey]]
+    %35 = relalg.semijoin %8, %34 (%arg0: !relalg.tuple){
+      %39 = relalg.getcol %arg0 @supplier::@s_suppkey : i32
+      %40 = relalg.getcol %arg0 @renaming4::@renamed0 : i32
+      %41 = db.compare eq %39 : i32, %40 : i32
+      relalg.return %41 : i1
+    } attributes {cost = 2.100000e+00 : f64, impl = "hash", rows = 1.000000e-01 : f64}
+    %36 = relalg.projection all [@supplier::@s_name,@supplier::@s_address] %35
+    %37 = relalg.sort %36 [(@supplier::@s_name,asc)]
+    %38 = relalg.materialize %37 [@supplier::@s_name,@supplier::@s_address] => ["s_name", "s_address"] : !dsa.table
+    return %38 : !dsa.table
+  }
+}
+\end{lstlisting}

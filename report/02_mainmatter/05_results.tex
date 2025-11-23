@@ -56,6 +56,21 @@ in Python.
 	\caption{Instructions per (CPU) cycle plot}
 	\label{fig:ipc-plot}
 \end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.15]{figures/q20-index-on-sf0.16-psql.png}
+	\caption{PostgreSQL TPC-H query 20 indexes enabled at SF = 0.16. 15 minutes
+		runtime}
+	\label{fig:q20-psql-profile}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.15]{figures/q20-pgx-profile.png}
+	\caption{pgx-lower TPC-H query 20 indexes enabled at SF = 0.16. 1.18 seconds
+		runtime}
+	\label{fig:q20-pgx-profile}
+\end{figure}
+
 \section{Discussion}\label{sec:Discussion}
 To reiterate, the goal is to show that using the extension system is a viable
 approach to introduce compiled queries into battle-tasted databases while
@@ -68,8 +83,16 @@ it is visible that if PostgreSQL has indexes disabled, at scale factor 0.01
 queries 7 and 20's latency is multiple magnitudes longer than the other queries,
 and this happens again at scale factor 0.16 even with the indexing enabled.
 In the differences plot, we can see that this clearly does not happen with
-pgx-lower, and the reason for this is... (need to show the plans and profiles)
-% TODO: Add some graphs with profiling flame charts
+pgx-lower, and the reason for this is visible in figure~\ref{fig:q20-psql-profile}
+and figure~\ref{fig:q20-pgx-profile}. PostgreSQL opted to do a nested join
+instead of relying on an index, while pgx-lower opted to build a hash join.
+Appendix~\ref{appendix:q20-sql}, \ref{appendix:q20-postgres},
+\ref{appendix:q20-pgxlower} show the initial query, PostgreSQL's plan tree, and
+pgx-lower's output after the optimisation pass. Within the pgx-lower's output,
+the joins have a "hash" annotation which means they go towards the hash join.
+Overall, this means that it is not an entirely fair comparison on these 
+queries because pgx-lower gets to use a hash join while PostgreSQL is utilising 
+a NestLoop\_T, which would have been indexed with the indexing enabled.
 
 For the RAM usage, figure~\ref{fig:bench-mem-plots} and
 figure~\ref{fig:bench-mem-diff-plots} show that pgx-lower and PostgreSQL's
@@ -187,5 +210,5 @@ This establishes a large set of different directions this research can take.
 The most appealing direction is attempting to take NoisePage or ClickHouse
 and inserting it into PostgreSQL as drop-in engine replacement.
 This is a more complete ecosystem, and the primary work will be around the
-adapters to adjust queries. Furthermore, pg\_duckdb has already done 
-this, but it is a vectorised engine. 
+adapters to adjust queries. Furthermore, pg\_duckdb has already done
+this, but it is a vectorised engine.
