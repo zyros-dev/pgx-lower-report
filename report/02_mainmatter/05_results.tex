@@ -143,7 +143,6 @@ While these tests were done on an isolated docker container in a Linux machine
 running minimal processes, system interrupts can also affect the results.
 
 \subsection{Future work}\label{subsec:future-work}
-% TODO: I also need to make the Umbra history clearer and what features it has
 Since replacing PostgreSQL's execution engine with a JIT-focused one is quite
 generic, there are a number of directions future works can take. The system
 itself and be improved by fully implementing the plan nodes, and it
@@ -162,7 +161,8 @@ The other core work is optimising the system, both with existing research
 and clearer ways to use the PostgreSQL API. Namingly, pre-compiling
 functions in PostgreSQL into LLVM, then inlining them instead of
 crossing the LLVM-C++ boundary, adaptive compilation/query planning,
-and Umbra's caching system. Most of these are only applicable inside a
+and Umbra's LeanStore-style buffering system. Most of these 
+are only applicable inside a
 LLVM/MLIR system though, and if WebAssembly is used instead a lot of
 them can be skipped. More generically, parallelism can be improved,
 JIT compilation tuning, cross-platform support, subquery
