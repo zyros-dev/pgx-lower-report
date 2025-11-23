@@ -17,6 +17,32 @@ as it uses expression-based compilation and there has been an attempt to create
 a compiled engine before.
 
 %-------------------------------------------------------------------------------- 
+\section{OLAP Systems}\label{sec:olap-systems}
+%-------------------------------------------------------------------------------- 
+
+Most of the benefit of a compiled query engine is in OLAP contexts since the
+OLTP contexts are usually retrieval queries and not too complicated \cite{ddia}.
+In large-scale contexts Apache HIVE is common, but this is a data warehouse
+system, not a database, that contains data within Hadoop's distributed file store,
+which is closer to a flat-storage~\cite{apache_hive}. The common OLAP
+databases are MonetDB, SnowFlake, ClickHouse, RedShift and Vectorwise
+\cite{htap_survey}. For our context, understanding ClickHouse, NoisePage,
+DuckDB and extensions that turn PostgreSQL into an OLAP database are important.
+
+ClickHouse and NoisePage are standalone systems, while DuckDB is embedded
+and in-process, similar to SQLite. ClickHouse is a columnar, disk-oriented
+database with a vectorised execution engine with optional LLVM compilation
+for expressions (EXP)\cite{clickhouse}. NoisePage was created by the Carnegie
+Mellon Database group, and is columnar and in-memory
+with full query expression compilation (QEP), with a single node. They targeted
+ML-drive self optimisation in their research, but they were archived in February 21st
+2023 \cite{noisepage}. DuckDB is marketed
+as the SQLite for analytical loads with in-memory disk spillage, or like a
+more sophisticated Pandas DataFrame \cite{duckdb}. Their engine supports
+vectorised execution because JIT would add too much overhead to their
+lightweight philosophy.
+
+%-------------------------------------------------------------------------------- 
 \section{PostgreSQL and Extension Systems}\label{sec:postgresql-related}
 %-------------------------------------------------------------------------------- 
 PostgreSQL is a battle-tested system and is currently the most
@@ -37,7 +63,17 @@ of GitHub stars, but TimescaleDB especially had over 500 paying customers in
 \cite{timescaledb_series_c}. This shows that the model of relying on the
 extension system is a robust, travelled road.
 
-There has been significant discussion about HyPer and JIT with regards to
+There have also been several extension that attempt to make PostgreSQL more
+suited to OLAP workloads, with the most relevant one being pg\_duckdb
+\cite{pg_duckdb}. This system replaces PostgreSQL's engine with DuckDB which
+allows it to take advantage of the vectorised engine, and it is reasonably
+popular with roughly 2700 stars on GitHub. Hydra is also worth mentioning,
+but this is closer to TimescaleDB \cite{hydra_columnar} and makes the system
+columnar with compression support. ParadeDB's pg\_analytics initially started
+in the same way as pg\_duckdb, but pivoted into supporting search functionality
+instead, similar to Elastic Search.
+
+There has been significant discussion about HyPer and JIT in regard to
 PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. The general response is doubt that
 someone will add support
 for full compiling full query expressions, and rearchitecting such a core
@@ -294,7 +330,6 @@ tree into a high-level dialect in MLIR, then doing optimisation passes on the
 plan itself, and the LLVM compiler can be used directly to turn this into
 LLVM, streamlining the process.
 
-% todo lol
 The LingoDB architecture can be seen in figure~\ref{fig:lingo-db-arch}, which begins
 by parsing the
 SQL into a relational algebra dialect. These dialects are defined using
@@ -406,7 +441,7 @@ source code changes, it adds political complexity to have the solution
 added to the official system without production proof of it being used.
 The result of this would be an useable compiler accelerator, that can easily
 be installed into existing systems, and once used in many scenarios is
-easier to add to the official system. % TODO badly written lol
+easier to add to the official system.
 
 %================================================================================ 
 \section{Aims}\label{sec:lit-rev}
@@ -428,5 +463,5 @@ but the expectation is not to be faster than it.
 One concern is these databases are large systems while the research systems
 are smaller. This increases the testing difficulty because a complete system
 has more variables, such as genetic algorithms in the query optimiser that makes
-performance non-deterministic. To counter this, a large number of benchmarks can
-be executed, and a standard deviation can be calculated.
+performance non-deterministic. To counter this, benchmarks can
+be executed multiple times, and a standard deviation can be calculated.

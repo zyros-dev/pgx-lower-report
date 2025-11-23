@@ -1,11 +1,9 @@
 % TODO 
-% 1. add a sentence about postgres optimisations to prevent misunderstandings about them being skipped 
 % 2. add a table of the MLIR dialect, and what we had to change 
 % 3. add a test suite table for the .sql files in the regression. 
 % 4 ok, define upcasting. 
 % 5. talk about how runtime functions were linked by using LingoDB's infrastructure. 
 % 6. when error, dump progress. 
-% 7. language fixes (typos etc)
 
 \chapter{Method}\label{ch:project}
 In section~\ref{sec:design} the overarching design is described,
@@ -663,6 +661,11 @@ with indexes, and lastly scale factor 1 with the very time-consuming queries
 completely disabled. These disabled queries would take on the order of hours in
 PostgreSQL, so benchmarking them was too time-consuming.
 
+To disable indexes, \texttt{cur.execute("SET enable\_indexscan = off;")} and
+\texttt{cur.execute("SET enable\_bitmapscan = off;")} were used in conjunction.
+This means when the benchmarks say index scan is disabled, the bit map scan 
+is as well.
+
 \begin{lstlisting}[caption={Benchmark configurations for TPC-H testing},label={lst:benchmark-config}]
 full:
   runs:
@@ -722,4 +725,4 @@ the impact of PostgreSQL's architecture being on disk makes it significantly
 slower than any of the other databases.
 
 The magic trace profiling also functions through this script, which is
-what the \texttt{profile} tag there is for. 
+what the \texttt{profile} tag there is for.

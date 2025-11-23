@@ -75,8 +75,11 @@ predicate pushdown where a conditional/filter on a node is moved
 onto a lower node, extracting common subexpressions to prevent recomputation,
 constant folding where constant operations are evaluated inside
 the optimiser rather than in runtime, and more \cite{inersjo2021}. However, despite
-these advances, query optimizers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}.
-A list of optimisations would be long enough for a thesis to be written to summarise them.
+these advances, query optimizers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}. Another essential pattern to understand is genetic algorithms
+are used inside of optimisers for things like join orders, which can 
+cause the outputted plan to be non-deterministic \cite{utesch1997geqo}.
+A list of optimisations would be long enough for a thesis to be written to 
+summarise them.
 
 Within traditional and volcano databases, the cache is managed through a set
 of buffer techniques while reading tuples. This works by the database
@@ -182,7 +185,6 @@ suitable for dynamic language implementations, REPLs
 (Read-Eval-Print Loops), and high-performance JIT compilers.
 
 \section{WebAssembly and others}\label{sec:webassembly}
-% Also, a paragraph on what is WASM, why is wasm special
 The V8 compiler used for WebAssembly has a unique architecture because
 it targets short-lived programs. Majority of JIT applications
 are used for long-running services, but this is used for web pages which are
@@ -223,8 +225,6 @@ plans, which is essential for understanding and optimizing query performance
 planner generates, including cost estimates and optional execution statistics,
 making it a critical tool for database optimization and analysis.
 
-% TODO: I need to talk about the genetic optimisations in postgresql here!
-
 \section{Database Benchmarking}\label{sec:database-benchmarking}
 % cite pg_bench
 Benchmarking a database is a difficult task because there is a variety of
@@ -238,3 +238,13 @@ environment, TPC-E, for a broker firm's operations, TPC-DS for a decision
 support benchmark. The most common one in research appears to be TPC-H,
 where the H informally means "hybrid". It has a mix of analytical and
 transactional elements inside it \cite{tpch_analyzed}.
+
+When evaluating benchmark results, the \textit{coefficient of variation} (CV)
+will be used, and it is a standardized measure of dispersion that expresses
+the standard deviation as a percentage of the mean~\cite{stats-libretexts-cv}.
+It is calculated as
+$CV = \frac{s}{\bar{X}} \cdot 100$, where $s$ is the sample standard deviation
+and $\bar{X}$ is the sample mean. The coefficient of variation is particularly
+useful when comparing the variability of datasets with different units or scales,
+as it provides a unitless measure that enables relative comparison of
+measurement precision across different benchmarking configurations.

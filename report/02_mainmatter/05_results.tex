@@ -1,11 +1,4 @@
-% for the discussion, I think the branch prediction readings might drive a lot 
-% describe the readings, describe which situations we win in and which we 
-% lose in
-% go compare this to the literature we reviewed 
-% argue about threats to the validity of these benchmarks 
-% define the future work needed here
-
-\chapter{Results}\label{ch:results}
+\chapter{Results and Discussion}\label{ch:results}
 \section{Results}\label{sec:results}
 
 These are produced with the method detailed in subsection~\ref{subsec:benchmarking}.
@@ -76,7 +69,7 @@ queries 7 and 20's latency is multiple magnitudes longer than the other queries,
 and this happens again at scale factor 0.16 even with the indexing enabled.
 In the differences plot, we can see that this clearly does not happen with
 pgx-lower, and the reason for this is... (need to show the plans and profiles)
-% TODO: Write in the method how we disabled indexes
+% TODO: Add some graphs with profiling flame charts
 
 For the RAM usage, figure~\ref{fig:bench-mem-plots} and
 figure~\ref{fig:bench-mem-diff-plots} show that pgx-lower and PostgreSQL's
@@ -119,8 +112,6 @@ of 5008 milliseconds while the median was 12.42 milliseconds. However, the
 overall coefficient of variation was only 0.44\% overall during the
 latency measurements in the scale factor 0.01. It's stable overall,
 but vital to do repeated tests to exclude these outliers from the system.
-% TODO: Introduce the meaning of the coefficient of variation back in the background
-% 		section
 
 These variations will primarily be caused by PostgreSQL's optimiser containing
 genetic algorithms, as mentioned in section~\ref{sec:postgresql-background}. It
@@ -129,9 +120,14 @@ While these tests were done on an isolated docker container in a Linux machine
 running minimal processes, system interrupts can also affect the results.
 
 \subsection{Future work}\label{subsec:future-work}
-% TODO: I need to write about how clickhouse, apache hive, and some 
-% other OLAP databases' execution engines
 % TODO: I also need to make the Umbra history clearer and what features it has
+Since replacing PostgreSQL's execution engine with a JIT-focused one is quite
+generic, there are a number of directions future works can take. The system
+itself and be improved by fully implementing the plan nodes, and it
+could be optimised further. However, it's important to ensure the
+final product is useful, so other base databases, compilers, languages, and
+execution engines to integrate in can be considered.
+
 To progress this system further and make it a full extension, the plan tree
 nodes need to be fully implemented, and the query analyzer can be improved.
 Only the minimum amount for TPC-H was implemented here, but pg\_bench
@@ -145,7 +141,9 @@ functions in PostgreSQL into LLVM, then inlining them instead of
 crossing the LLVM-C++ boundary, adaptive compilation/query planning,
 and Umbra's caching system. Most of these are only applicable inside a
 LLVM/MLIR system though, and if WebAssembly is used instead a lot of
-them can be skipped.
+them can be skipped. More generically, parallelism can be improved,
+JIT compilation tuning, cross-platform support, subquery
+deduplication, and further tuning.
 
 In databasing, and research broadly, it is vital to keep in mind whether the
 research is useful and impactful, as per Michael Stonebraker's fear that
@@ -172,12 +170,22 @@ needs. It also contains a query optimisation engine, which is unnecessary
 because PostgreSQL already has a thorough optimisation system. It would
 be better to build the engine, or find a better suited base system.
 The ideal here would be Umbra based on its description, but it is closed
-source.
+source. Another potential approach is to take an established OLAP system's
+engine (such as ClickHouse), and route to that instead of PostgreSQL's
+depending on the analyzer's rules.
 
 MLIR was useful to give a strong set of dialect systems, but the main reason
 LingoDB used it was to give database optimisations clear layers. Furthermore,
 the LLVM/MLIR ecosystem targets ahead of time compilation, or longer-running
 JIT systems. While WebAssembly is appealing here because it targets
 short-lived processes, we would not be able to inline functions in the future.
-Either way, switching to a different compiler, or away from $C++$ into $C$ or 
+Either way, switching to a different compiler, or away from $C++$ into $C$ or
 Rust is appealing.
+
+% TODO: Is the signing off note I want to do? 
+This establishes a large set of different directions this research can take.
+The most appealing direction is attempting to take NoisePage or ClickHouse
+and inserting it into PostgreSQL as drop-in engine replacement.
+This is a more complete ecosystem, and the primary work will be around the
+adapters to adjust queries. Furthermore, pg\_duckdb has already done 
+this, but it is a vectorised engine. 
