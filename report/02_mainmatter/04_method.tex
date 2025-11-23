@@ -1,6 +1,3 @@
-% TODO 
-% 3. add a test suite table for the .sql files in the regression. 
-
 \chapter{Method}\label{ch:project}
 In section~\ref{sec:design} the overarching design is described,
 then section~\ref{sec:implementation} goes over the implementation.
@@ -58,6 +55,79 @@ To drive this implementation, a test-driven approach was used where PostgreSQL's
 expected outputs. With this, a test set of basic queries was created which built
 up to TPC-H queries. This allowed progressive node implementation during
 development, and a quick way to validate changes are safe.
+
+Table~\ref{tab:regression-tests} shows the complete regression test suite,
+organized to progressively build complexity from single-row operations to
+full TPC-H queries. 
+
+{\footnotesize
+\begin{longtable}{p{4.5cm}p{9cm}}
+\caption{Regression test suite files and their aims} \label{tab:regression-tests} \\
+\toprule
+\textbf{File Name} & \textbf{Aim} \\
+\midrule
+\endfirsthead
+
+\multicolumn{2}{c}{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+\toprule
+\textbf{File Name} & \textbf{Aim} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{2}{r}{\textit{Continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+1\_one\_tuple.sql & Single row insertion and selection \\
+2\_two\_tuples.sql & Multiple row retrieval \\
+3\_lots\_of\_tuples.sql & Large dataset handling (5000 rows) \\
+4\_two\_columns\_ints.sql & Multiple integer columns \\
+5\_two\_columns\_diff.sql & Mixed column types (INTEGER, BOOLEAN) \\
+6\_every\_type.sql & All supported data types with projections \\
+7\_sub\_select.sql & Column subsetting across Boolean columns \\
+8\_subset\_all\_types.sql & Column subsets from multi-type tables \\
+9\_basic\_arithmetic\_ops.sql & Arithmetic operators (+, -, *, /, \%) \\
+10\_comparison\_ops.sql & Comparison operators (=, <>, !=, <, <=, >, >=) \\
+11\_logical\_ops.sql & Logical operators (AND, OR, NOT) \\
+12\_null\_handling.sql & NULL operations (IS NULL, COALESCE) \\
+13\_text\_operations.sql & Text operations (LIKE, \textbar\textbar) \\
+14\_aggregate\_functions.sql & Aggregates without GROUP BY (SUM, COUNT, AVG, MIN, MAX) \\
+15\_special\_operators.sql & BETWEEN, IN, CASE WHEN \\
+16\_debug\_text.sql & CHAR(10) with LPAD \\
+17\_where\_simple\_conditions.sql & WHERE with simple comparisons \\
+18\_where\_logical\_combinations.sql & WHERE with AND/OR/NOT combinations \\
+19\_where\_null\_patterns.sql & WHERE with NULL checks and COALESCE \\
+20\_where\_pattern\_matching.sql & WHERE with LIKE and IN operators \\
+21\_order\_by\_basic.sql & ORDER BY single columns (integers, strings, decimals) \\
+22\_order\_by\_multiple\_columns.sql & ORDER BY multiple columns with mixed directions \\
+23\_order\_by\_expressions.sql & ORDER BY expressions (not supported - placeholder) \\
+24\_order\_by\_with\_where.sql & ORDER BY combined with WHERE \\
+25\_group\_by\_simple.sql & GROUP BY with aggregations and ORDER BY \\
+26\_before\_check\_types.sql & All PostgreSQL types with casts and aggregations \\
+27\_group\_by\_having.sql & GROUP BY with HAVING clause \\
+28\_group\_by\_with\_where.sql & GROUP BY with WHERE filtering \\
+29\_expressions\_in\_aggregations.sql & Expressions in aggregates (arithmetic, ABS) \\
+30\_test\_missing\_expressions.sql & PostgreSQL expression types coverage \\
+31\_distinct\_statement.sql & DISTINCT in SELECT and aggregates \\
+32\_decimal\_maths.sql & Decimal arithmetic operations \\
+33\_basic\_joins.sql & INNER JOIN \\
+34\_advanced\_joins.sql & LEFT, RIGHT, SEMI, ANTI joins \\
+35\_nested\_queries.sql & Nested and correlated subqueries \\
+36\_tpch\_minimal.sql & TPC-H minimal schema variant 1 \\
+37\_tpch\_minimal\_2.sql & TPC-H minimal schema variant 2 \\
+38\_tpch\_minimal\_3.sql & TPC-H minimal schema variant 3 \\
+39\_tpch\_minimal.sql & TPC-H minimal schema variant 4 \\
+40\_tpch\_not\_lowered.sql & TPC-H queries without lowering \\
+41\_sorts.sql & Sorting with joins \\
+42\_test\_relalg\_function.sql & Direct RelAlg MLIR execution \\
+init\_tpch.sql & TPC-H table initialization \\
+tpch.sql & Full TPC-H benchmark in pgx-lower \\
+tpch\_no\_lower.sql & TPC-H inside pure PostgreSQL for validation \\
+\end{longtable}
+}
 
 Node implementation ordering followed the dependency analysis. Foundational
 nodes such as the sequential scan and projection are in virtually every query,
