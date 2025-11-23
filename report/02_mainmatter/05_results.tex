@@ -75,40 +75,25 @@ approach to introduce compiled queries into battle-tested databases while
 maintaining their ACID properties. Previous studies have already found that
 this model has speed benefits.
 
-In terms of latency for queries, there are mixed results.
-In figure~\ref{fig:bench-box-plots} and figure~\ref{fig:bench-diff-plots}
-it is visible that if PostgreSQL has indexes disabled, at scale factor 0.01
-the latency of queries 7 and 20 is multiple magnitudes longer than the other queries,
-and this happens again at scale factor 0.16 even with the indexing enabled.
-In the differences plot, we can see that this clearly does not happen with
-pgx-lower, and the reason for this is visible in figure~\ref{fig:q20-psql-profile}
-and figure~\ref{fig:q20-pgx-profile}. PostgreSQL opted to do a nested join
-instead of relying on an index, while pgx-lower opted to build a hash join.
-Appendix~\ref{appendix:q20-sql}, \ref{appendix:q20-postgres},
-\ref{appendix:q20-pgxlower} show the initial query, PostgreSQL's plan tree, and
-pgx-lower's output after the optimisation pass. Within the pgx-lower's output,
-the joins have a "hash" annotation which means they go towards the hash join.
-Overall, this means that it is not an entirely fair comparison on these
-queries because pgx-lower gets to use a hash join while PostgreSQL is utilising
-a NestLoop\_T, which would have been indexed with the indexing enabled.
+In terms of latency, results are mixed.
+Figures~\ref{fig:bench-box-plots} and~\ref{fig:bench-diff-plots} show that without indexes at scale factor 0.01,
+queries 7 and 20 are orders of magnitude slower than other queries.
+This pattern repeats at scale factor 0.16 even with indexes enabled.
+In contrast, pgx-lower shows consistent performance across these queries. The reason is visible in
+figures~\ref{fig:q20-psql-profile} and~\ref{fig:q20-pgx-profile}: PostgreSQL uses a nested loop join
+while pgx-lower uses a hash join.
+Appendices~\ref{appendix:q20-sql},~\ref{appendix:q20-postgres}, and~\ref{appendix:q20-pgxlower} show the query and both systems' plan trees. In pgx-lower's output,
+joins are annotated with "hash", indicating hash join usage. This comparison
+is not entirely fair because pgx-lower uses a hash join while PostgreSQL uses
+a nested loop join (NestLoop\_T), which would benefit from indexing.
 
-An interesting detail in figure~\ref{fig:q20-pgx-profile} is that
-the LLVM to bytecode compiler is very minimal. Out of the 1.18 second query,
-only 14.93 milliseconds is spent inside
-\texttt{llvm::SelectionDAGISel::runOnMachineFunction}, which is the step that
-converts the LLVM IR into executable code. However, the overall compiler is 236
-milliseconds, with much of it being inside the MLIR passes themselves. That
-means this MLIR code appears to be much heavier than the LLVM optimisations.
-One explanation for this is that the LLVM ORC JIT compiler does a minimal amount
-of work, and it happens in the background during execution.
+A notable detail in figure~\ref{fig:q20-pgx-profile} is the minimal time spent in LLVM code generation. Of the 1.18 second total query execution time,
+only 14.93 milliseconds is spent in \texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine code conversion step. However, total compilation
+time is 236 milliseconds, with most of this spent in MLIR passes. This suggests
+MLIR optimization is more expensive than LLVM code generation. One explanation is that the LLVM ORC JIT does minimal work per query and spreads compilation across the execution in the background.
 
-For the RAM usage, figure~\ref{fig:bench-mem-plots} and
-figure~\ref{fig:bench-mem-diff-plots} show that pgx-lower and PostgreSQL's
-peak memory usage is approximately aligned. This is ideal as it means the
-in-memory functionality of LingoDB was sufficiently moved to on-disk in
-pgx-lower. Figure~\ref{fig:bench-mem-diff-plots} in particular shows
-the difference is only a bit over 3 megabytes at most, and the tests showed
-there is a mean difference across all these queries of 0.34 megabytes.
+For RAM usage, figures~\ref{fig:bench-mem-plots} and~\ref{fig:bench-mem-diff-plots} show pgx-lower and PostgreSQL
+have similar peak memory usage. This is encouraging because it demonstrates that LingoDB's in-memory operations were successfully adapted to PostgreSQL's disk-oriented architecture. Figure~\ref{fig:bench-mem-diff-plots} shows the maximum difference is just over 3 megabytes, with a mean difference of 0.34 megabytes across all queries.
 
 The branch prediction in figure~\ref{fig:branch-miss-plot} shows potential.
 At scale factor 1, pgx-lower's median

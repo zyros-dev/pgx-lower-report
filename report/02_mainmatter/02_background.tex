@@ -99,7 +99,7 @@ handles the work profile of an online service that frequently performs key-value
 On the other hand, OLAP databases focus on analytical work profiles
 where aggregations are requested or operations span large
 chunks of the database \cite{ddia}. OLAP systems can be highly distributed,
-such as Apache Hive, which allows a large amount of compute to be used across
+such as Apache Hive, which allows compute to be distributed across
 the system \cite{apache_hive}. In the context of PostgreSQL, it is a
 hybrid architecture that supports both OLTP and OLAP operations
 \cite{herrera2021hybrid}. There is currently debate about whether
@@ -114,11 +114,10 @@ Just-in-time (JIT) compilers work with multiple layers of compilation such
 as raw interpretation of bytecode, unoptimized machine code, and optimized
 machine code. They are primarily used with interpreted languages to eliminate
 the ill-effects on performance \cite{long-masters-thesis}. Advanced compilers
-can run the primary program, then dedicate some background threads to
-improving the optimisation of the code, and swap it over to the optimized
-version when it is ready \cite{hyper-compiler-2}. This means the initial
-compilation can be faster, and the development cycle can go faster, as well as
-other benefits.
+can run the primary program, then dedicate background threads to
+improving code optimisation and swap in the optimized
+version when ready \cite{hyper-compiler-2}. This provides benefits such as faster initial
+compilation and faster development cycles.
 
 Due to branch-prediction optimisation, JIT compilers can be faster than
 ahead of time compilers. In 1999, a benchmarking paper measured four
@@ -129,35 +128,31 @@ hardware hazards, such as mispredictions, with improvements in this area
 making their queries 2.6x faster \cite{dbms-branches}. The Azul JIT compiler
 measured that their JIT solution's speculative optimisations can lead up to $50\%$ performance gains \cite{azul_jit_aot}.
 
-It is difficult to evaluate what a good branch prediction value is,
-but a reasonable baseline is $1\%$ is too high and should be optimised in
+Evaluating a good branch prediction value is difficult,
+but a reasonable baseline is that $1\%$ misprediction rate is too high and should be optimised in
 a low latency environment \cite{farrier2025branch}. This is not a formal
-definition, and is more based on tribal knowledge \cite{branch-prediction-values}. Depending on the
+standard, but rather based on empirical knowledge \cite{branch-prediction-values}. Depending on the
 CPU, a branch mispredict can cost between 10 and 35 CPU cycles, with a
-safe interval being 14-25. Meaning, if there is
-1 branch every 10 instruction, with a $5\%$ misprediction rate
-and a 20 cycle penalty per misprediction, $10\%$ of the runtime
-will be spent fixing mispredictions \cite{eyerman2006branch}.
+safe range being 14-25 cycles. That is, with
+1 branch every 10 instructions, a $5\%$ misprediction rate,
+and a 20 cycle penalty per misprediction, approximately $10\%$ of the runtime
+will be spent resolving mispredictions \cite{eyerman2006branch}.
 
-In the context of databases, most compilers can be split into only compiling
-expressions (typically called EXP for expression), and others that compile the
+In the context of databases, compilers fall into two categories: those that compile only
+expressions (typically called EXP), and those that compile the
 entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
 itself, they have EXP support using \texttt{llvm-jit}. A variety of research databases
 will be examined in chapter~\ref{ch:related-work}.
 
 \section{LLVM and MLIR}\label{sec:llvm-mlir}
-The LLVM Project is a compiler infrastructure that supports creating
-compilers so that common, but complex, compiler optimisations do not have
-to be re- implemented~\cite{llvm-paper}. Multi-Level
+The LLVM Project is a compiler infrastructure that eliminates the need to
+re-implement common compiler optimisations, making it easier to build compilers~\cite{llvm-paper}. Multi-Level
 Intermediate Representation (MLIR) is another, newer toolkit that is
-tightly coupled with the LLVM project~\cite{mlir-paper}. It adds a
-framework to define dialects, and lower through these dialects into machine code. One of the primary benefits of this is if you make
-a compiler, you can define a high level dialect, then another person
-can target your custom high-level dialect.
+tightly coupled with the LLVM project~\cite{mlir-paper}. It provides a framework to define custom dialects and progressively lower them to machine code. A key benefit is that developers can define high-level dialects that others can target and build upon.
 
 LLVM defines a language-independent intermediate representation
-(IR) based on Static Single Assignment (SSA) form and MLIR is an extension of
-this \cite{llvm-paper}. The architecture follows a three-phase design: a
+(IR) based on Static Single Assignment (SSA) form, while MLIR extends
+this concept \cite{llvm-paper}. The architecture follows a three-phase design: a
 front-end parses source code
 and generates LLVM IR, an optimiser applies a series of transformation
 passes to improve code quality, and a back-end generates machine code for

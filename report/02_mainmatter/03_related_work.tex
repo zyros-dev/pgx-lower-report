@@ -1,30 +1,27 @@
 \chapter{Related Work}\label{ch:related-work}
 
-This chapter summarises relevant works in the compiled queries space and their
-architectures. Originally, the industry began with compiled query engines \cite{system-r}, but
-this was overtaken by volcano models as they simplified the implementation
-details with little cost at the time. However, now analytical engines are
-examining compilers again \cite{everything-vector}.
+This chapter summarises relevant works in the compiled query space and their
+architectures. The database industry originally favoured compiled query engines \cite{system-r}, but
+the volcano model subsequently dominated because it simplified implementation
+with minimal performance cost at the time. However, modern analytical engines
+are revisiting compilation approaches \cite{everything-vector}.
 
-This begins with PostgreSQL and their extension system in
-section~\ref{sec:postgresql-related}, in section~\ref{sec:system-r} system R
-will be explored as the classical
-example, followed by HyPer and Umbra in section~\ref{sec:hyper} and
-section~\ref{sec:umbra} which re-introduced the concept. Mutable in
-section~\ref{sec:mutable} and LingoDB in section~\ref{sec:lingodb} are research
-databases. Lastly, PostgreSQL will be examined in section~\ref{sec:postgresql-related}
-as it uses expression-based compilation and there has been an attempt to create
-a compiled engine before.
+This chapter begins with PostgreSQL's extension system in
+section~\ref{sec:postgresql-related}, followed by System R in section~\ref{sec:system-r} as a classical example
+of early compilation. HyPer and Umbra (sections~\ref{sec:hyper} and~\ref{sec:umbra})
+re-introduced compilation in modern databases. Two research databases are then examined: Mutable
+(section~\ref{sec:mutable}) and LingoDB (section~\ref{sec:lingodb}). Finally,
+PostgreSQL's own expression-based JIT compilation and prior compilation attempts are discussed.
 
 %-------------------------------------------------------------------------------- 
 \section{OLAP Systems}\label{sec:olap-systems}
 %-------------------------------------------------------------------------------- 
 
-Most of the benefit of a compiled query engine is in OLAP contexts since the
-OLTP contexts are usually retrieval queries and not too complicated \cite{ddia}.
-In large-scale contexts Apache HIVE is common, but this is a data warehouse
-system, not a database, that contains data within Hadoop's distributed file store,
-which is closer to a flat-storage~\cite{apache_hive}. The common OLAP
+Compiled query engines primarily benefit OLAP workloads, since
+OLTP workloads typically involve simpler retrieval queries \cite{ddia}.
+At scale, Apache Hive is commonly used, but it is a data warehouse
+system rather than a database, storing data in Hadoop's distributed file system,
+which is closer to flat storage~\cite{apache_hive}. The common OLAP
 databases are MonetDB, SnowFlake, ClickHouse, RedShift and Vectorwise
 \cite{htap_survey}. For our context, understanding ClickHouse, NoisePage,
 DuckDB and extensions that turn PostgreSQL into an OLAP database are important.
@@ -44,12 +41,11 @@ lightweight philosophy.
 %-------------------------------------------------------------------------------- 
 \section{PostgreSQL and Extension Systems}\label{sec:postgresql-related}
 %-------------------------------------------------------------------------------- 
-PostgreSQL is a battle-tested system and is currently the most
-popular database in the world with $51.9$ of developers in a Stack Overflow survey
-saying they use it extensively in 2024 \cite{stackoverflow2024}. Within the context of compiled queries this means
-the database itself cannot be treated as a research system. Changes directly to
-it requires heavy-testing, but also, these changes will not be peer-reviewed
-research. Instead, it is pull-requests online with more casual interaction.
+PostgreSQL is a battle-tested system and the most
+popular database, with 51.9\% of developers in a Stack Overflow survey
+reporting extensive use in 2024 \cite{stackoverflow2024}. In the context of compiled queries, this means
+PostgreSQL cannot be treated as a research prototype. Direct modifications require extensive testing, and
+such changes face casual code review via pull requests rather than formal peer review.
 
 Building extensions for PostgreSQL and making entire companies around these
 extensions is not a new endeavour. Three such examples are Citus~\cite{citus},

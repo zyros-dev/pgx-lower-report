@@ -557,44 +557,40 @@ These will be explained more specifically in the subsections.
 	\label{tab:plan-nodes}
 \end{table}
 
-Some common definitions of nodes will also serve to be useful. Nodes commonly
-have a \texttt{InitPlan} parameter, which is a function that should be called
-before the node is used and contains initialising variables such as the parameters,
-catalogue lookups, or other things. \texttt{targetlist} contains the output
-of the node, \texttt{qual} is the qualification of the node, which means
-what should be filtered as outputs. Join nodes will have a left and right tree,
-with a more intuitive name of inner/outer children. These signify the inner and
+Several common node definitions are helpful to understand. Nodes commonly
+have an \texttt{InitPlan} parameter, which is a function called
+before the node executes and initializes variables such as parameters and
+catalogue lookups. \texttt{targetlist} contains the output
+of the node, and \texttt{qual} specifies which tuples should pass through.
+Join nodes have left and right child trees,
+typically referred to as inner and outer children. These signify the inner and
 outer loops of the nested for-loop that is created.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Expression Translation - Variables, Constants, Parameters}\label{subsubsec:expr-vars-consts}
-The two relevant ways PostgreSQL identifies values is with variable nodes and
-parameter nodes. These are stored inside a schema/column manager class as
-well as the \texttt{QueryCtxT} within the code. Variables are typically
-defined within scans, while the parameters are intermediate products.
-A number of difficulties were encountered with these as there are a number
-of interacting variables used to identify them (\texttt{varno}, \texttt{varattno},
-and "special" values such as index joins). As a result, a generic function was
-built into the QueryCtxT object to handle this lookup logic, \texttt{resolve\_var}.
-These will be used constantly.
+PostgreSQL identifies values using variable nodes and parameter nodes. These are
+tracked in a schema/column manager class and the \texttt{QueryCtxT} object. Variables are typically
+defined within scans, while parameters are intermediate products.
+Identifying them presented challenges due to multiple interacting identifiers (\texttt{varno}, \texttt{varattno},
+and special values for index joins). To handle this complexity, a generic function was
+added to the QueryCtxT object: \texttt{resolve\_var}. This function is used extensively
+throughout the translation logic.
 
 Parameters are mostly defined within the InitPlan, and one key novel type is
 the cached scalar type.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Plan translation - Scans}\label{subsubsec:plan-scans}
-PostgreSQL has a variety of scans that read from tables, and
-handlers for sequential scan, subquery scans, index scans, index-only scans,
-bitmap heap scans, and CTE (common table expression) scans were implemented.
-However, aside from the subquery scan and CTE scan, they all map to sequential
-scan. This is a tradeoff to reduce complexity, and the most impacted
-by this is the index scan.
+PostgreSQL supports multiple scan types: sequential scans, subquery scans, index scans, index-only scans,
+bitmap heap scans, and CTE scans. However, all scan types except subquery and CTE scans
+map to sequential scans in this implementation. This trade-off reduces implementation complexity at the cost of
+query optimisation, particularly for index scans.
 
-Within the index scan it has specific annotations for variables with its \texttt{INDEX\_VAR}
-which requires special resolution mapping to for us to handle. Furthermore,
-we need to handle the qualifiers (scan filters) \texttt{indexqual}, \texttt{recheckqual}
-like a \texttt{qual}. In psql, these filter at different stages, but since we are
-skipping the index implementation they become generic filters instead.
+Index scans use special annotations for variables via \texttt{INDEX\_VAR},
+which requires custom variable resolution. Additionally,
+we handle the qualifiers (scan filters) \texttt{indexqual} and \texttt{recheckqual}
+as generic filters. In PostgreSQL, these qualify at different stages, but since we skip
+index implementation, both become generic filters here.
 
 CTE scan plans are defined within the InitPlan of nodes, but still route through
 the primary plan switch statement logic. Neither CTE plans nor subqueries
