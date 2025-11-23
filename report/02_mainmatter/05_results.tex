@@ -1,15 +1,15 @@
 \chapter{Results and Discussion}\label{ch:results}
 \section{Results}\label{sec:results}
 
-Results using the method from Subsection~\ref{subsec:benchmarking} were produced as follows.
-Box plots overlaid on graphs represent the 5th, 25th, 50th,
-75th, and 95th percentiles. Hollow circles mark outliers; when inconvenient to display
+Results using the method from Subsection~\ref{subsec:benchmarking} are
+presented as follows. Box plots overlaid on graphs represent the 5th, 25th, 50th,
+75th, and 95th percentiles. Hollow circles mark outliers, and when inconvenient to display
 (as in Figure~\ref{fig:bench-mem-diff-plots}), arrow annotations are used
-instead. Matplotlib and Seaborn generated all visualizations in Python.
+instead. Matplotlib and Seaborn were in Python used to create all visualisations.
 
 Another result worth mentioning is the integrated LingoDB code
 (including ./src/lingodb and ./include/lingodb) contains 13,875 lines of C++,
-while the pgx-lower section (./src/pgx-lower and ./include/pgx-lower contains
+while the pgx-lower section (./src/pgx-lower and ./include/pgx-lower) contains
 12,324 lines of C++. This was measured with tokei commands, a command line
 utility for counting lines of code. In comparison, the official PostgreSQL
 executor is roughly 82,875 lines of code, and LingoDB is roughly 30,000 lines
@@ -79,8 +79,8 @@ of code \cite{lingo-db-1,postgresql_source}.
 \section{Discussion}\label{sec:Discussion}
 To reiterate, the goal is to show that using the extension system is a viable
 approach to introduce compiled queries into battle-tested databases while
-maintaining their ACID properties. Previous studies have already found that
-this model has speed benefits.
+maintaining their ACID properties. Previous studies have already found compiled
+queries have speed benefits.
 
 In terms of latency, results are mixed.
 Figures~\ref{fig:bench-box-plots} and~\ref{fig:bench-diff-plots} show that without indexes at scale factor 0.01,
@@ -90,14 +90,19 @@ In contrast, pgx-lower shows consistent performance across these queries. Visibl
 Figures~\ref{fig:q20-psql-profile} and~\ref{fig:q20-pgx-profile}, the difference appears: PostgreSQL uses nested loop joins
 while pgx-lower uses hash joins.
 Appendices~\ref{appendix:q20-sql},~\ref{appendix:q20-postgres}, and~\ref{appendix:q20-pgxlower} show the query and both systems' plan trees. In pgx-lower's output,
-joins are annotated with ``hash'', indicating hash join usage. This comparison
+joins are annotated with ``hash'', indicating hash join usage. This means comparison
 is not entirely fair because pgx-lower uses a hash join while PostgreSQL uses
 a nested loop join (NestLoop\_T), which would benefit from indexing.
 
-Figure~\ref{fig:q20-pgx-profile} reveals minimal time spent in LLVM code generation. Of the 1.18\,second total query execution time,
-only 14.93\,milliseconds occurs in \texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine code conversion step. Total compilation
-time reaches 236.32\,milliseconds, with most spent in MLIR passes. These results suggest
-MLIR optimization is more expensive than LLVM code generation. Possibly the LLVM ORC JIT does minimal work for each query, spreading compilation across background execution.
+Figure~\ref{fig:q20-pgx-profile} reveals minimal time spent in LLVM code
+generation. Of the 1.18\,second total query execution time,
+only 14.93\,milliseconds occurs in \newline
+\texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine
+code conversion step. Total compilation
+time reaches 236.32\,milliseconds, with most spent in MLIR passes. These
+results suggest MLIR optimisation is more expensive than LLVM code generation.
+Possibly the LLVM ORC JIT does initial minimal work for each query, spreading
+compilation across background execution.
 
 RAM usage appears similar between pgx-lower and PostgreSQL (Figures~\ref{fig:bench-mem-plots} and~\ref{fig:bench-mem-diff-plots}).
 Such similarity demonstrates successful adaptation of LingoDB's in-memory operations to PostgreSQL's disk-oriented architecture. Maximum difference is just over 3\,MB, with a mean difference of 0.34\,MB across all queries.
@@ -108,16 +113,18 @@ branch miss rate of $0.16\%$, compared to PostgreSQL's $0.28\%$. However,
 smaller scale factors with smaller queries inverted this: PostgreSQL had $0.38\%$ and pgx-lower had $1.09\%$. Such results suggest
 the compiled JIT runtime has better branch prediction, but
 the compilation stage or pre-warm-up code has worse prediction.
-Number of branches explains part of the difference (Figure~\ref{fig:num-branch-plot}): PostgreSQL had 28,430,465
-median branches, while pgx-lower had 195,299,021.50 ($6.87\times$ more).
-Higher branch counts could indicate more optimization opportunities.
+Number of branches explains part of the difference (Figure~\ref{fig:num-branch-plot}):
+PostgreSQL had a median of 28,430,465, while pgx-lower had
+195,299,021.50 ($6.87\times$ more). Higher branch counts could indicate
+more optimisation opportunities.
 
 For the last level cache miss rate, pgx-lower appears to perform better than
 PostgreSQL at smaller scale factors and appears similar to PostgreSQL at larger
 ones, which can be seen in Figure~\ref{fig:llc-miss-plot}. PostgreSQL
 has a median $31.20\%$ miss rate at scale factor 0.01, while pgx-lower has a
 median of $6.19\%$. When increased to a scale factor of 1, PostgreSQL has a median
-of $33.16\%$, and pgx-lower has a median of $34.81\%$. A likely explanation: the LLVM compiler stage uses its cache much more effectively, but the
+of $33.16\%$, and pgx-lower has a median of $34.81\%$. A likely explanation is
+that the LLVM compiler stage uses its cache much more effectively, but the
 actual JIT runtime performs comparably. Expected with the current approach,
 improvements would emerge if the JIT stage dynamically changed
 the plan, similar to HyPer's approach.
@@ -129,7 +136,7 @@ show the outliers do become extreme. On query 8, PostgreSQL had an outlier
 of 5008\,milliseconds while the median was 12.42\,milliseconds. However, the
 coefficient of variation was only $0.4\%$ overall during the
 latency measurements in the scale factor 0.01. It's stable overall,
-but vital to do repeated tests to exclude these outliers from the system.
+but vital to do repeated tests to identify these outliers from the system.
 
 These variations will primarily be caused by PostgreSQL's optimiser containing
 genetic algorithms, as mentioned in Section~\ref{sec:postgresql-background}. It
@@ -143,46 +150,58 @@ optimising further. However, ensuring the final product remains useful requires 
 other base databases, compilers, languages, and compatible
 execution engines.
 
-Full extension implementation requires complete plan tree
+Full extension implementation would require complete plan tree
 node implementation and query analyser improvements.
-Only the minimum for TPC-H was implemented, requiring pg\_bench
-and isolationtester validation before user deployment.
+Only the minimum for TPC-H was implemented, but full implementation
+would require pg\_bench and isolationtester validation as well.
 Needed additions include indexes, WINDOW functions, the other
 22 missing plan nodes, and missing execution nodes.
 
-Core optimization work involves leveraging existing research and clearer PostgreSQL API usage. Key improvements include: pre-compiling
+Core optimisation work involves leveraging existing research and clearer PostgreSQL API usage.
+Key potential improvements include: pre-compiling
 PostgreSQL functions into LLVM, then inlining instead of
 crossing the LLVM-C++ boundary; adaptive compilation/query planning;
 and Umbra's LeanStore-style buffering. Most
 optimisations apply specifically to
 LLVM/MLIR systems; WebAssembly alternatives could skip
 many of these. Broader improvements include parallelism enhancement,
-JIT tuning, cross-platform support, subquery
-deduplication, and further optimisations.
+JIT tuning, cross-platform support, subquery deduplication, and more.
 
-Research impact remains vital in database systems, reflecting Michael Stonebraker's concern about field progress~\cite{top-ten-fears}. For
-successful projects, database costs are typically minor relative to overall profitability,
-making higher throughput less critical. Practically, latency gains more often come from application-level caching (such as Redis) than database optimization.
-Complex OLAP queries often run on large-scale systems that migrate away from PostgreSQL to more scalable
-databases such as ClickHouse or Apache Hive. Alternative systems may provide better development platforms for this architecture.
+Research impact remains vital in database systems, reflecting Michael
+Stonebraker's concern about the field's progress~\cite{top-ten-fears}. For
+successful projects in the world, database costs are typically minor relative
+to overall profitability, making higher throughput less critical. Practically,
+latency gains more often come from application-level caching (such as Redis)
+than database optimisation. Complex OLAP queries often run on large-scale
+systems that migrate away from PostgreSQL to more scalable
+databases such as ClickHouse or Apache Hive. Alternative systems may provide
+better development platforms for this architecture.
 
-PostgreSQL was selected for its large popularity; LingoDB was chosen because it matched PostgreSQL's interfaces while remaining open source.
-While PostgreSQL works reasonably for this approach and addresses real problems, better alternatives may exist. Most dedicated
-OLAP systems already employ JIT or vectorized approaches.
+PostgreSQL was selected for its large popularity; LingoDB was chosen because
+it matched PostgreSQL's interfaces while remaining open source.
+While PostgreSQL works reasonably for this approach and addresses real
+problems, better alternatives may exist. Most dedicated
+OLAP systems already employ JIT or vectorised approaches.
 
-Development with LingoDB provided helpful constraints and faster iteration due to its established nature. However, LingoDB's
-columnar, in-memory architecture required extensive modifications. Additionally, its redundant query optimisation engine was unnecessary since
-PostgreSQL already provides thorough optimization. A better approach would involve building the engine from scratch or selecting a more suitable base system.
-Umbra would be ideal based on its description, but closed-source status prevents use. Alternative approaches could integrate an established OLAP system's
-engine (such as ClickHouse), routing queries based on analyser rules instead of using PostgreSQL's executor.
+Development with LingoDB provided helpful constraints and faster development
+iteration due to its established nature. However, LingoDB's
+columnar, in-memory architecture required extensive modifications. Additionally,
+its query optimisation engine was unnecessary since
+PostgreSQL already provides thorough optimisation. A better approach would
+involve building the engine from scratch or selecting a more suitable base system.
+Umbra would be ideal based on its description, but its closed-source status
+prevents use. Alternative approaches could integrate an established OLAP system's
+engine (such as ClickHouse), and routing queries based on analyser rules
+instead of using PostgreSQL's executor.
 
 MLIR was useful to give a strong set of dialect systems, but the main reason
-LingoDB used it was to give database optimisations clear layers. Furthermore,
-the LLVM/MLIR ecosystem targets ahead of time compilation, or longer-running
-JIT systems. While WebAssembly is appealing here because it targets
-short-lived processes, we would not be able to inline functions in the future.
-Either way, switching to a different compiler, or away from C++ into C or
-Rust is appealing.
+LingoDB used MLIR was to give plan optimisations clear layers. Furthermore,
+the LLVM/MLIR ecosystem targets ahead of time compilation or longer-running
+JIT systems, and not short-lived queries. While WebAssembly is appealing here
+because it targets short-lived processes, we would not be able
+to inline functions in the future. Either way, switching to a different
+compiler, or away from C++ into C or Rust is appealing. With C, the
+LLVM API is more stable and in Rust the memory safety and correctness can be improved.
 
 Multiple promising research directions emerge from this work.
 Most appealing is integrating NoisePage or ClickHouse
