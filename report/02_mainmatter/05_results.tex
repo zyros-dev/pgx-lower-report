@@ -4,8 +4,7 @@
 Results using the method from Subsection~\ref{subsec:benchmarking} are
 presented as follows. Box plots overlaid on graphs represent the 5th, 25th, 50th,
 75th, and 95th percentiles. Hollow circles mark outliers, and when inconvenient to display
-(as in Figure~\ref{fig:bench-mem-diff-plots}), arrow annotations are used
-instead. Matplotlib and Seaborn were in Python used to create all visualisations.
+(as in Figure~\ref{fig:bench-mem-diff-plots}), arrows mark them instead. Matplotlib and Seaborn were used in Python to create all visualisations.
 
 Another result worth mentioning is the integrated LingoDB code
 (including ./src/lingodb and ./include/lingodb) contains 13,875 lines of C++,
@@ -111,8 +110,8 @@ Branch prediction potential appears in Figure~\ref{fig:branch-miss-plot}.
 At scale factor 1, pgx-lower achieved a median
 branch miss rate of $0.16\%$, compared to PostgreSQL's $0.28\%$. However,
 smaller scale factors with smaller queries inverted this: PostgreSQL had $0.38\%$ and pgx-lower had $1.09\%$. Such results suggest
-the compiled JIT runtime has better branch prediction, but
-the compilation stage or pre-warm-up code has worse prediction.
+the compiled JIT runtime has better branch prediction at larger scale factors, but
+the compilation stage or initialisation code has worse prediction at smaller scales.
 Number of branches explains part of the difference (Figure~\ref{fig:num-branch-plot}):
 PostgreSQL had a median of 28,430,465, while pgx-lower had
 195,299,021.50 ($6.87\times$ more). Higher branch counts could indicate

@@ -1,11 +1,11 @@
 \chapter*{Abstract}
 With the advancement of hardware research, many modern battle-tested databases
-underutilise their caches and disk read speeds due to them being designed
+underutilise their caches and disk read speeds due to being designed
 when I/O was the bottleneck. This thesis proposes pgx-lower, which demonstrates
 how just-in-time compilation from a research system can be retrofitted
 into an established database using its extension system. By integrating LingoDB's
-MLIR-based JIT compiler into PostgreSQL, a columnar in-memory compile was adapted
-into a disk-oriented architecture while maintaining ACID properties and MVCC
+MLIR-based JIT compiler into PostgreSQL, the work adapts columnar in-memory compilation
+to a disk-oriented architecture while maintaining ACID properties and MVCC
 support. The evaluations on TPC-H showed improved branch prediction and
 cache efficiency compared to the original executor. More importantly,
 pgx-lower demonstrates that a production database can adopt modern

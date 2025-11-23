@@ -46,7 +46,7 @@ is that \emph{instructions per CPU cycle} (IPC) can increase through \emph{singl
 	instruction, multiple data} (SIMD) operations \cite{everything-vector}. However,
 this can cause deep copy operations to be required, or more disk spillage
 than necessary \cite{sequntial-execution}. For instance, if a sort or a join allocates new space
-that is too much for the cache, the handling can become poor.
+that is too large for the cache, the handling can become poor.
 Section~\ref{sec:jit_background} and Chapter~\ref{ch:related-work} explore compilation approaches.
 
 Relational databases prioritise ACID requirements - Atomicity, Consistency,
@@ -76,10 +76,10 @@ Fixed-size pages (such as eight kilobytes) are read and loaded into
 a \emph{buffer pool} object which holds them in RAM. Memory placement in L1/L2/L3 and RAM caches depends on access
 patterns, and is managed by the operating system or environment
 \cite{database-concepts}. Buffer pools employ different caching strategies
-(last-recently-used, most-recently-used, etc.)
+(least-recently-used, most-recently-used, etc.)
 based on the situation \cite{effelsberg1984buffer}. Cache effectiveness can be
 measured by \emph{last level cache hit rate} (LLC), which represents
-how many instructions were resolved inside the CPU cache \cite{llc_intel}.
+how many instructions were served from the CPU cache \cite{llc_intel}.
 
 Databases are commonly split into \emph{Online Transaction Processing} (OLTP) and
 \emph{Online Analytical Processing} (OLAP). OLTP focuses on

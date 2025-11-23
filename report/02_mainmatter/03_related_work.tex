@@ -28,7 +28,7 @@ for expressions (EXP) \cite{clickhouse}. The Carnegie Mellon Database group
 created NoisePage, a columnar, in-memory system
 with full query expression compilation (QEP). They targeted
 ML-driven self optimisation in their research, but the project was archived
-in, February 21, 2023 \cite{noisepage}. DuckDB is marketed
+on February 21, 2023 \cite{noisepage}. DuckDB is marketed
 as the SQLite for analytical loads with in-memory disk spillage, or a
 more sophisticated Pandas DataFrame \cite{duckdb}. Their engine supports
 vectorised execution rather than JIT because JIT would add too
@@ -51,7 +51,7 @@ TimescaleDB~\cite{timescaledb}, and Apache AGE~\cite{apache_age}. Citus
 aims to add more horizontal scaling through sharding, TimescaleDB, now
 rebranded as TigerData, transforms the engine into a time series database,
 and Apache AGE turns it into a graph database. All have thousands
-of GitHub stars, with TimescaleDB especially boasting over 500 paying customers in
+of GitHub stars, with TimescaleDB especially reporting over 500 paying customers in
 2022 and claiming $20\times$ revenue growth by 2024 \cite{timescale_2024_update}
 \cite{timescaledb_series_c}. The extension model has proven robust and well-travelled.
 
@@ -91,9 +91,9 @@ were too low \cite{postgres-pr-1}. Despite this concern, PostgreSQL version 11
 released with JIT disabled by default.
 Limited adoption prompted them to enable JIT by default in later releases to increase
 exposure and testing opportunities \cite{psql-jit-discussion}.
-When released, the United Kingdom's critical service for a COVID-19
-dashboard automatically updated and spiked to a $70\%$ failure rate as
-some of their queries ran $2{,}229\times$ slower \cite{psql-jit-failure}. Such failures reinforced the view that JIT features should remain disabled by default,
+When released, the United Kingdom's critical service for COVID-19 dashboards
+automatically deployed this update and experienced a $70\%$ failure rate, as
+some queries ran $2{,}229\times$ slower \cite{psql-jit-failure}. Such failures reinforced the view that JIT features should remain disabled by default,
 leading to negative perceptions of JIT and compiled queries.
 
 Two implementations of QEP query compilation with PostgreSQL exist.
