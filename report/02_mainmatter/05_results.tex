@@ -1,9 +1,9 @@
 \chapter{Results and Discussion}\label{ch:results}
 \section{Results}\label{sec:results}
 
-These are produced with the method detailed in subsection~\ref{subsec:benchmarking}.
-Box plots were stacked on top of the graphs, which represent the 5th, 25th, 50th,
-75th, and 95th percentile. Any outliers were marked with a hollow circle, and
+The following results were produced with the method detailed in subsection~\ref{subsec:benchmarking}.
+Box plots were stacked on top of the graphs, representing the 5th, 25th, 50th,
+75th, and 95th percentiles. Any outliers were marked with a hollow circle, and
 if they were inconvenient to show (such as in figure~\ref{fig:bench-mem-diff-plots}),
 an arrow annotation is utilised. Matplotlib and Seaborn were used to make these
 in Python.
@@ -59,15 +59,13 @@ in Python.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.15]{figures/q20-index-on-sf0.16-psql.png}
-	\caption{PostgreSQL TPC-H query 20 indexes enabled at SF = 0.16. 15 minutes
-		runtime}
+	\caption{PostgreSQL TPC-H query 20 indexes enabled at SF = 0.16. Runtime: 15 minutes}
 	\label{fig:q20-psql-profile}
 \end{figure}
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.15]{figures/q20-pgx-profile.png}
-	\caption{pgx-lower TPC-H query 20 indexes enabled at SF = 0.16. 1.18 seconds
-		runtime}
+	\caption{pgx-lower TPC-H query 20 indexes enabled at SF = 0.16. Runtime: 1.18 seconds}
 	\label{fig:q20-pgx-profile}
 \end{figure}
 
@@ -157,7 +155,7 @@ generic, there are a number of directions future work can take. The system
 itself can be improved by fully implementing the plan nodes, and it
 could be optimised further. However, it's important to ensure the
 final product is useful, so other base databases, compilers, languages, and
-execution engines to integrate in can be considered.
+execution engines that could be integrated can be considered.
 
 To progress this system further and make it a full extension, the plan tree
 nodes need to be fully implemented, and the query analyser can be improved.
@@ -167,19 +165,19 @@ users. This includes implementing indexes, WINDOW functions, the other
 22 missing plan nodes, and the missing execution nodes.
 
 The other core work is optimising the system, both with existing research
-and clearer ways to use the PostgreSQL API. Namely, pre-compiling
+and clearer ways to use the PostgreSQL API. Namely: pre-compiling
 functions in PostgreSQL into LLVM, then inlining them instead of
-crossing the LLVM-C++ boundary, adaptive compilation/query planning,
+crossing the LLVM-C++ boundary; adaptive compilation/query planning;
 and Umbra's LeanStore-style buffering system. Most of these
-are only applicable inside a
-LLVM/MLIR system though, and if WebAssembly is used instead a lot of
-them can be skipped. More generically, parallelism can be improved,
+optimisations are only applicable inside an
+LLVM/MLIR system, though if WebAssembly is used instead, many of
+them can be skipped. More generally, parallelism can be improved,
 JIT compilation tuning, cross-platform support, subquery
-deduplication, and further tuning.
+deduplication, and further optimisations.
 
-In databasing, and research broadly, it is vital to keep in mind whether the
-research is useful and impactful, as per Michael Stonebraker's fear that
-the field is becoming polishing a round ball~\cite{top-ten-fears}. For
+In databasing and research broadly, it is vital to keep in mind whether the
+research is useful and impactful, as per Michael Stonebraker's concern that
+the field is merely polishing a round ball~\cite{top-ten-fears}. For
 successful projects, the dollar-cost of a live system database is typically
 much smaller than the profitability of the project itself, so paying for
 higher throughput is commonly not a concern, and better gains for latency

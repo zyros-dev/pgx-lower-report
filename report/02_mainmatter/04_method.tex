@@ -199,22 +199,21 @@ we will be compiling into a JIT runtime, and the bugs can happen inside there.
 This poses a challenge for how to debug problems such as segmentation faults and
 errors without any logging.
 
-% messy paragraph
 This was solved with a combination of the regression tests, unit testing, and
 a script to connect \texttt{gdb} to dump the stack. The regression tests were already
-explored, but the unit tests consist of testing anything unconnected to PostgreSQL.
-The issue is that this extension creates a \texttt{pgx\_lower.so} which is installed
-within PostgreSQL, then the PostgreSQL libraries are used from inside there.
-This means if we run without being inside of PostgreSQL, no psql libraries can
+explored, but the unit tests test components unconnected to PostgreSQL.
+The issue is that this extension creates a \texttt{pgx\_lower.so} which is loaded
+into PostgreSQL, and the PostgreSQL libraries are used from that context.
+This means if we run without being inside PostgreSQL, no psql libraries can
 be used. As a result, unit tests can only test MLIR functions. Most of the
 unit tests were highly situational, and are used when a proper interactive GDB
 connection was required within the IDE. Furthermore, unit tests allow the \texttt{stderr}
 to be visible, which assists greatly with MLIR/LLVM errors that go to \texttt{stderr}
 and nowhere else.
 
-For the stack-dumping, a script was written, \texttt{debug-query.sh} which proved to
+For the stack-dumping, a script was written, \texttt{debug-query.sh}, which proved to
 be the most useful approach for complex issues. It has the ability to create a
-psql connection, git the process ID of the client connection, then connect GDB,
+psql connection, get the process ID of the client connection, then connect GDB,
 run a desired query, and dump the stack trace. In this way, the majority of
 errors were tackled.
 
@@ -227,10 +226,9 @@ of these. Table~\ref{tab:lingodb-type-capabilities}
 shows which of the LingoDB types are used,
 and table~\ref{tab:type-mapping} shows the type mappings. The two primary
 workarounds that were implemented were for decimals and the various types of strings.
-For decimals, \texttt{i128} is enough precision for most of the TPC-H tests, and is what
-LingoDB was using. However, adjustments had to be made to ensure impossible
-to allocate values do not appear, so the precision was capped at \texttt{<32, 6>}
-That is, 32 digits in the integer part, 6 digits in the decimal places.
+For decimals, \texttt{i128} provides enough precision for most TPC-H tests, which is what
+LingoDB was using. However, adjustments had to be made to prevent values that cannot be allocated from appearing, so the precision was capped at \texttt{<32, 6>}.
+That is, 32 digits in the integer part and 6 digits in the decimal places.
 
 For the date types, a compromise was made that when it receives an interval
 type with a months column, it will turn this into days and introduce errors.
@@ -337,23 +335,23 @@ mostly LLVM 20 API compatibility updates.
 	\label{tab:dialect-summary}
 \end{table}
 
-This defines most of the supporting details, and the main two components of
-the implementation can be described: the runtime patterns and the plan tree
+This defines most of the supporting details. The main two components of
+the implementation are the runtime patterns and the plan tree
 translation.
 
 %===============================================================================
 \subsection{Query Analyser}\label{subsec:query-analyser}
-While the query analyser is fully written, in the final state it forces all
-queries through to pgx-lower for testing. This enables testing new things and
-where they fail. It functions by doing a depth-first-search through the plan
-tree and validating the nodes are supported by the engine at this point, however,
-in the future there can be work here for deciding whether a query is worth
-running based on its cost metrics as well.
+While the query analyser is fully written, in the final state it routes all
+queries through pgx-lower for testing. This enables testing new features and
+identifying where failures occur. It functions by doing a depth-first search through the plan
+tree and validating that the nodes are supported by the engine. In the
+future, this component could be enhanced to decide whether a query is worth
+running based on its cost metrics.
 
 %===============================================================================
 \subsection{Runtime patterns}\label{subsec:runtime-patterns}
-Runtime functions are used in LingoDB for difficult to implement methods in
-LLVM, such as a sort algorithm. \texttt{pgx-lower} implemented reading tuples from
+Runtime functions are used in LingoDB for methods that are difficult to implement in
+LLVM, such as sorting algorithms. \texttt{pgx-lower} implemented reading tuples from
 PostgreSQL, storing them as a result so that they can be streamed one by one,
 adjusted several runtime implementations from LingoDB, and changed the sort and
 hash table implementations to rely on the PostgreSQL API rather than standard
@@ -449,13 +447,12 @@ program, but in this context it can be relied upon.
 \subsection{Plan Tree Translation}\label{subsec:ast-patterns}
 The plan tree translation converts PostgreSQL's execution plan nodes into
 RelAlg MLIR operations. Figure~\ref{fig:ast-impl} shows where this fits
-into the broader design. Within the AST Parser component, we have an
-entry that reads the PostgreSQL tag on the node that reads which type of plan
-it is, then a recursive descent parser starts translating. Within
-each translation function, the pattern is typically that the children
-of the plan is translated (i.e. post-order traversal), then the definition
-of the node is established in our context, the translation into the MLIR
-relational algebra dialect is done, and a "translation result" is returned.
+into the broader design. Within the AST Parser component, we examine the
+PostgreSQL tag on the node to determine the plan node type,
+then a recursive descent parser starts translating. Within
+each translation function, the pattern is typically: the children
+of the plan are translated (post-order traversal), then the node
+is translated into the MLIR relational algebra dialect, and a "translation result" is returned.
 
 \begin{figure}[H]
 	\centering

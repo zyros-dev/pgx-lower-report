@@ -73,10 +73,10 @@ in the same way as pg\_duckdb, but pivoted into supporting search functionality
 instead, similar to Elasticsearch.
 
 There has been significant discussion about HyPer and JIT in regard to
-PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. The general response is doubt that
-someone will add support
-for full compiling full query expressions, and rearchitecting such a core
-component introduces large risk.
+PostgreSQL in 2017 \cite{postgres-pr-1,postgres-pr-2}. The general response expressed doubt that
+someone would add support
+for full query compilation, noting that rearchitecting such a core
+component introduces significant risk.
 
 However, in September 2017 Andres Freund started implementing JIT support for
 expressions \cite{psql-jit-release-plan}. The reasoning was that most of the CPU time is in the expression
@@ -99,9 +99,9 @@ release but with the JIT disabled by default. This didn't get much usage,
 and they decided that enabling it by default would give it exposure and testing \cite{psql-jit-discussion}.
 However, when released, the United Kingdom's critical service for a COVID-19
 dashboard automatically updated and spiked to a 70\% failure rate as
-some of their queries ran 2,229x slower \cite{psql-jit-failure}. This affected
-the general reception that JIT features should be disabled by default, and
-has lead to people having negative opinions about JIT and compiled queries.
+some of their queries ran 2,229x slower \cite{psql-jit-failure}. This incident reinforced
+the view that JIT features should be disabled by default, and
+has led to negative opinions about JIT and compiled queries.
 
 Two cases where QEP query compilation with PostgreSQL was implemented were found.
 The first is Vitesse DB, which made a series of public posts about getting
@@ -110,10 +110,10 @@ but their website is offline now and there is not much mention of them.
 The second was at a PgCon presentation and achieved a 5.5x speed-up on TPC-H query
 1, and has more documentation \cite{pgcon_jit_2017}. However, they did not publicize their implementation or show that it's easy for people to use.
 
-This implementation of full JIT in PostgreSQL was preceded with
-profiling work which showed that different TPC-H benchmarks have pressure on
+This implementation of full JIT in PostgreSQL was preceded by
+profiling work which showed that different TPC-H benchmarks place pressure on
 different nodes, as shown in figure~\ref{fig:pgcon-profiling}. This is important
-because they can make informed decisions of where to focus their efforts to.
+because they can make informed decisions about where to focus their efforts.
 Their core method is generating a function that represents a node in the
 plan tree, then inlining the function into the final LLVM IR \cite{pgcon_jit_2017}
 in a push-based model. Another

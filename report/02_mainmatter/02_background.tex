@@ -68,47 +68,43 @@ for PostgreSQL as it was found that the time spent in the CPU was
 substantial: between $34.87\%$ and $76.56\%$ with an average of
 $49.32\%$ across the tested queries.
 
-Arguably most of the recent databasing research has been inside the optimiser
+Most of the recent databasing research has focused on the optimiser,
 which is visible in figure~\ref{fig:database_structure}. This includes
 reordering join statements where the left and right sides are flipped,
 predicate push down where a conditional/filter on a node is moved
 onto a lower node, extracting common subexpressions to prevent recomputation,
 constant folding where constant operations are evaluated inside
 the optimiser rather than in runtime, and more \cite{inersjo2021}. However, despite
-these advances, query optimisers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}. Another essential pattern to understand is genetic algorithms
-are used inside of optimisers for things like join orders, which can
+these advances, query optimisers frequently produce suboptimal plans \cite{optimizer-bad-1,optimizer-bad-2}. Another essential pattern involves genetic algorithms
+being used in optimisers for determining things like join orders, which can
 cause the outputted plan to be non-deterministic \cite{utesch1997geqo}.
-A list of optimisations would be long enough for a thesis to be written to
-summarise them.
+A thesis could be written just to summarise the list of optimisations.
 
 Within traditional and volcano databases, the cache is managed through a set
 of buffer techniques while reading tuples. This works by the database
 reading a page, which usually has a fixed size and can be configured,
-such as eight kilobytes. This is loaded into a 
-buffer pool object which holds it inside
-of RAM. The operating system or environment manages where this memory goes
+such as eight kilobytes. This is loaded into a buffer pool object which holds it in RAM. The operating system or environment manages where this memory goes
 inside the context of the L1/L2/L3 and ram caches depending on the access
 patterns \cite{database-concepts}. This buffer pool can change caching
-strategies depending on the
-context, such as last-recently-used, most-recently-used, and more, which
+strategies depending on the situation, such as last-recently-used, most-recently-used, and more, which
 can be decided in the optimiser \cite{effelsberg1984buffer}. The effectiveness
 of this can be measured with last level cache hit rate measurements (LLC)
 which represents how many of the instructions were resolved inside the CPU
 cache \cite{llc_intel}.
 
 Databases are commonly split into Online Transaction Processing (OLTP) and
-Online Analytical Processing (OLAP). OLTP has a focus on
+Online Analytical Processing (OLAP). OLTP focuses on
 supporting atomicity, running multiple queries at once, and typically
-supports the work profile of an online service that does key-value lookups
-frequently. On the other hand, OLAP databases focus on analytical work profiles
-where an aggregation is requested, or some operation that spans a large
-chunk of the database \cite{ddia}. OLAP systems can be highly distributed,
-such as Apache Hive such that a large amount of compute can be used across
+handles the work profile of an online service that frequently performs key-value lookups.
+On the other hand, OLAP databases focus on analytical work profiles
+where aggregations are requested or operations span large
+chunks of the database \cite{ddia}. OLAP systems can be highly distributed,
+such as Apache Hive, which allows a large amount of compute to be used across
 the system \cite{apache_hive}. In the context of PostgreSQL, it is a
-hybrid architecture that has support for both these operations
+hybrid architecture that supports both OLTP and OLAP operations
 \cite{herrera2021hybrid}. There is currently debate about whether
-this hybrid architecture is useful any more because putting pressure
-on your database serving users commonly causes reliability issues
+this hybrid architecture is still useful, as putting pressure
+on a database serving users commonly causes reliability issues
 \cite{mooncake_htap}.
 
 %-------------------------------------------------------------------------------
@@ -116,7 +112,7 @@ on your database serving users commonly causes reliability issues
 %-------------------------------------------------------------------------------
 Just-in-time (JIT) compilers work with multiple layers of compilation such
 as raw interpretation of bytecode, unoptimized machine code, and optimized
-machine code. They are mostly used by interpreted languages to eliminate
+machine code. They are primarily used with interpreted languages to eliminate
 the ill-effects on performance \cite{long-masters-thesis}. Advanced compilers
 can run the primary program, then dedicate some background threads to
 improving the optimisation of the code, and swap it over to the optimized
