@@ -9,6 +9,11 @@
 \section{Results}\label{sec:results}
 
 These are produced with the method detailed in subsection~\ref{subsec:benchmarking}.
+Box plots were stacked on top of the graphs, which represent the 5th, 25th, 50th,
+75th, and 95th percentile. Any outliers were marked with a hollow circle, and
+if they were inconvenient to show (such as in figure~\ref{fig:bench-mem-diff-plots}),
+an arrow annotation is utilised. Matplotlib and Seaborn were used to make these
+in Python.
 
 \begin{figure}[H]
 	\centering
@@ -55,12 +60,71 @@ These are produced with the method detailed in subsection~\ref{subsec:benchmarki
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.32]{figures/mine_ipc_plots.pdf}
-	\caption{Instructions Per (cpu) Cycle plot}
+	\caption{Instructions per (CPU) cycle plot}
 	\label{fig:ipc-plot}
 \end{figure}
 \section{Discussion}\label{sec:Discussion}
-% write here the broad discussion; no subsection
+To reiterate, the goal is to show that using the extension system is a viable
+approach to introduce compiled queries into battle-tasted databases while
+maintaining their ACID properties. Previous studies have already found that
+this model has speed benefits.
+
+In terms of latency for queries, there are mixed results.
+In figure~\ref{fig:bench-box-plots} and figure~\ref{fig:bench-diff-plots}
+it is visible that if PostgreSQL has indexes disabled, at scale factor 0.01
+queries 7 and 20's latency is multiple magnitudes longer than the other queries,
+and this happens again at scale factor 0.16 even with the indexing enabled.
+In the differences plot, we can see that this clearly does not happen with
+pgx-lower, and the reason for this is... (need to show the plans and profiles)
+% TODO: Write in the method how we disabled indexes
+
+For the RAM usage, figure~\ref{fig:bench-mem-plots} and
+figure~\ref{fig:bench-mem-diff-plots} show that pgx-lower and PostgreSQL's
+peak memory usage is approximately aligned. This is ideal as it means the
+in-memory functionality of LingoDB was sufficiently moved to on-disk in
+pgx-lower. Figure~\ref{fig:bench-mem-diff-plots} in particular shows
+the difference is only a bit over 3 megabytes at most, and the tests showed
+there is a mean difference across all these queries of 0.34 megabytes.
+
+The branch prediction in figure~\ref{fig:branch-miss-plot} shows potential.
+At scale factor 1, pgx-lower's median
+branch miss rate was 0.16\%, compared to Postgres's 0.28\%. However,
+at a smaller scale factor with smaller queries this inverses such that
+PostgreSQL had a median of 0.38\% and pgx-lower had 1.09\%. This means that
+the compiled JIT runtime has a better branch prediction rate, but potentially
+the code within the compilation stage, or before warm-up, has a worse rate.
+The difference could be attested to the number of branches, visible in
+figure~\ref{fig:num-branch-plot}. PostgreSQL had a median of 28,430,465
+branches, while pgx-lower had 195,299,021.50; 6.87 times more than PostgreSQL.
+This increase in the number of branches could mean that there are more low
+hanging-fruit.
+
+For the last level cache miss rate, pgx-lower appears to perform better than
+PostgreSQL at smaller scale factors and appears similar to PostgreSQL at larger
+ones, which can be seen in figure~\ref{fig:llc-miss-plot}. PostgreSQL
+has a median 31.20\% miss rate at scale factor 0.01, while pgx-lower has a
+median of 6.19\%. When increased to a scale factor of 1, PostgreSQL has a median
+of 33.16\%, and pgx-lower has a median of 34.81\%. An explanation for this could
+be that the LLVM compiler stage uses its cache much more effectively, but the
+actual JIT is approximately the same. This is expected with the current approach,
+but this would improve if the JIT stage is permitted to dynamically change
+the plan, such as how HyPer does.
 
 \subsection{Test Validity}\label{subsec:test-validity}
+Increasing the number of iterations to make the outputs more reliable seems to
+be successful, and the variation is not too large. Some queries, such as in
+scale factor 0.01 with indexes disabled, in figure~\ref{fig:bench-box-plots},
+show the outliers do become extreme. On query 8, PostgreSQL had an outlier
+of 5008 milliseconds while the median was 12.42 milliseconds. However, the
+overall coefficient of variation was only 0.44\% overall during the
+latency measurements in the scale factor 0.01. It's stable overall,
+but vital to do repeated tests to exclude these outliers from the system.
+% TODO: Introduce the meaning of the coefficient of variation
+
+These variations will primarily be caused by PostgreSQL's optimiser containing
+genetic algorithms, as mentioned in section~\ref{sec:postgresql-background}. It
+can cause plans to change significantly and makes them non-deterministic. 
+While these tests were done on an isolated docker container in a Linux machine 
+running minimal processes, system interrupts can also affect the results.
 
 \subsection{Future work}\label{subsec:future-work}

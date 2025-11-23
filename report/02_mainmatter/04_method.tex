@@ -661,7 +661,7 @@ of data) to show the overhead cost of the JIT compiler, medium scale factor
 (0.16) to show how Postgres scales while still keeping all the queries enabled
 with indexes, and lastly scale factor 1 with the very time-consuming queries
 completely disabled. These disabled queries would take on the order of hours in
-PostgreSQL, so benchmarking them was too time consuming.
+PostgreSQL, so benchmarking them was too time-consuming.
 
 \begin{lstlisting}[caption={Benchmark configurations for TPC-H testing},label={lst:benchmark-config}]
 full:
@@ -722,4 +722,4 @@ the impact of PostgreSQL's architecture being on disk makes it significantly
 slower than any of the other databases.
 
 The magic trace profiling also functions through this script, which is
-what the \texttt{profile} tag there is for.
+what the \texttt{profile} tag there is for. 
