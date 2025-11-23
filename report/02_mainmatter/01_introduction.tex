@@ -1,17 +1,16 @@
 \chapter{Introduction}\label{sec:intro}
 Databases are a heavily used type of system that rely on correctness and speed.
 Nowadays, they are often the primary bottleneck in many systems - especially
-on web servers and other large data applications \cite{ddia}.
-
-With modern hardware advances, the optimal way to structure these databases has
+on web servers and other large data applications \cite{ddia}. With modern
+hardware advances, the optimal way to structure these databases has
 drastically changed, but most databases are using architectures defined by older
 hardware. Older databases assume the disk operations are the vast majority of
 runtime, but that has shifted to the CPU for heavy queries.
 
 Research projects typically create standalone databases. However, such approaches make distribution
 harder, requiring projects to implement all supporting infrastructure themselves.
-For serious projects, supporting infrastructure requires implementing ACID, MVCC, query plan optimisation, and more. By using an established database, we can
-address this entirely.
+For production projects, supporting infrastructure requires implementing ACID, MVCC, query plan optimisation, and more. By using an established database, we can
+address this.
 
 pgx-lower replaces PostgreSQL's execution engine with LingoDB's compiler
 to bridge the gap of modern compilers with established systems. PostgreSQL's

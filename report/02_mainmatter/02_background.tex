@@ -5,7 +5,7 @@
 %-------------------------------------------------------------------------------
 Most databases follow the structure shown in Figure~\ref{fig:database_structure}.
 Database systems parse \emph{Structured Query Language} (SQL) into \emph{relational algebra} (RA),
-optimize it, execute it, and materialize the results into a table \cite{database-concepts}.
+optimise it, execute it, and materialise the results into a table \cite{database-concepts}.
 
 \begin{figure}[H]
 	\centering
@@ -30,7 +30,8 @@ the tree where tuples are dragged upwards.
 	\cite{long-masters-thesis}
 \end{figure}
 
-Classical models suffer a fundamental issue: heavy under-utilisation of hardware \cite{branch-misprediction}. If only a single tuple is pulled, CPU
+Classical models suffer a fundamental issue: heavy under-utilisation of hardware
+\cite{branch-misprediction}. If only a single tuple is pulled at a time, the CPU
 caches are barely used. An i5-570, a popular CPU in 2010 had an 8\,MB L3 cache,
 but in 2024 an i5-14600K has a 24\,MB L3 cache \cite{passmark_i5760},
 \cite{techpowerup_i5_14600k}. For disks, in 2010 the Seagate Barracuda 7200.12
@@ -42,29 +43,25 @@ could mean the algorithms can fundamentally change.
 These observations led to the \emph{vectorized} and \emph{compiled execution models}. The vectorized model pulls multiple tuples
 up in a group rather than one at a time. A core advantage
 is that \emph{instructions per CPU cycle} (IPC) can increase through \emph{single
-instruction, multiple data} (SIMD) operations \cite{everything-vector}. However,
+	instruction, multiple data} (SIMD) operations \cite{everything-vector}. However,
 this can cause deep copy operations to be required, or more disk spillage
 than necessary \cite{sequntial-execution}. For instance, if a sort or a join allocates new space
 that is too much for the cache, the handling can become poor.
 Section~\ref{sec:jit_background} and Chapter~\ref{ch:related-work} explore compilation approaches.
 
 Relational databases prioritise ACID requirements - Atomicity, Consistency,
-Isolation and Durability \cite{database-concepts}. A critical requirement in database systems,
-ACID compliance is usually one of the main reasons people choose relational databases. Atomicity means transactions are a single unit
-of work, while consistency means it must be in a valid state before and after the
+Isolation and Durability \cite{database-concepts}. As a critical requirement in database systems,
+ACID compliance is usually one of the main reasons people choose relational
+databases \cite{ddia}. Atomicity is defined as transactions are a single unit
+of work, while consistency means the database must be in a valid state
+before and after the
 query. Isolation means concurrent transactions do not interact with each other,
-and durability means once something is committed it will stay committed.
+and durability is defined as once something is committed it will stay committed.
 \cite{database-concepts}
 
-On-disk databases often assume CPU operation costs are constant or negligible \cite{database-concepts}. Such assumptions stem from the era
-in which these systems were developed, when disks were much slower and caches were much smaller. Previous analysis disproved
-such assumptions for PostgreSQL, finding that CPU time constitutes
-substantial overhead: between $34.87\%$ and $76.56\%$ with an average of
-$49.32\%$ across tested queries.
-
 Most of the recent databasing research has focused on the optimiser,
-which is visible in Figure~\ref{fig:database_structure}. Common optimization techniques include
-reordering join statements where the left and right sides are flipped, and
+which is visible in Figure~\ref{fig:database_structure}. Common optimisation techniques include
+reordering join statements (flipping the left and right sides), and
 predicate push down, where a conditional/filter on a node is moved
 onto a lower node \cite{inersjo2021}. Additionally, extracting common subexpressions
 prevents recomputation, while constant folding evaluates constant operations inside
@@ -75,10 +72,13 @@ cause the outputted plan to be non-deterministic \cite{utesch1997geqo}.
 A thesis could be written just to summarise the list of optimisations.
 
 Within traditional and volcano databases, the cache is managed through buffer techniques.
-Fixed-size pages (typically eight kilobytes) are read and loaded into
+Fixed-size pages (such as eight kilobytes) are read and loaded into
 a \emph{buffer pool} object which holds them in RAM. Memory placement in L1/L2/L3 and RAM caches depends on access
-patterns, managed by the operating system or environment \cite{database-concepts}. Buffer pools employ different caching strategies (last-recently-used, most-recently-used, etc.)
-based on the situation, decisions often made by the optimiser \cite{effelsberg1984buffer}. Cache effectiveness is measured by \emph{last level cache hit rate} (LLC), which represents
+patterns, and is managed by the operating system or environment
+\cite{database-concepts}. Buffer pools employ different caching strategies
+(last-recently-used, most-recently-used, etc.)
+based on the situation \cite{effelsberg1984buffer}. Cache effectiveness can be
+measured by \emph{last level cache hit rate} (LLC), which represents
 how many instructions were resolved inside the CPU cache \cite{llc_intel}.
 
 Databases are commonly split into \emph{Online Transaction Processing} (OLTP) and
@@ -87,23 +87,33 @@ supporting atomicity, running multiple queries at once, and typically
 handles the work profile of an online service that frequently performs key-value lookups.
 On the other hand, OLAP databases focus on analytical work profiles
 where aggregations are requested or operations span large
-chunks of the database \cite{ddia}. OLAP systems can be highly distributed,
-such as Apache Hive, which allows compute to be distributed across
-the system \cite{apache_hive}. PostgreSQL implements
+chunks of the database \cite{ddia}. PostgreSQL implements
 a hybrid architecture supporting both OLTP and OLAP operations
 \cite{herrera2021hybrid}. Debate continues about whether
 such hybrid designs remain useful, as load pressure
 on user-serving databases commonly causes reliability issues
 \cite{mooncake_htap}.
 
+The layout of database tables within memory is either columnar or tuple/
+row-oriented \cite{ddia}. In a columnar database, a table is stored
+as a set of arrays or
+lists so that when iterated over, only specific columns need to be iterated.
+This can improve the compression ratio, and horizontal tables can ignore
+a large number of columns. On the other hand, row-based means that entire-table
+iteration requires less round-trips and could have better caching in contexts
+such as joins \cite{ddia}. It is common to see columnar databases in OLAP
+systems and row-oriented in OLTP \cite{ddia}.
+
 %-------------------------------------------------------------------------------
 \section{JIT Background}\label{sec:jit_background}
 %-------------------------------------------------------------------------------
 \emph{Just-in-time} (JIT) compilers work with multiple layers of compilation such
-as raw interpretation of bytecode, unoptimized machine code, and optimized
-machine code. They are primarily used with interpreted languages to eliminate
-the ill-effects on performance \cite{long-masters-thesis}. Advanced compilers can run the primary program while background threads improve code optimisation
-and swap in the optimized version when ready \cite{hyper-compiler-2}. Such multi-stage approaches
+as raw interpretation of bytecode, unoptimised machine code, and optimised
+machine code. They are primarily used in interpreted languages to improve
+performance \cite{long-masters-thesis}. Advanced JIT compilers can run the
+primary program while background threads improve code optimisation
+and swap in the optimised version when ready \cite{hyper-compiler-2}.
+Such multi-stage approaches
 provide faster initial compilation and faster development cycles.
 
 Due to branch-prediction optimisation, JIT compilers can be faster than
@@ -113,39 +123,48 @@ fixing poor predictions \cite{branch-misprediction}.
 Modern measurements still find $50\%$ of their query times are spent resolving
 hardware hazards, such as mispredictions, with improvements in this area
 making their queries $2.6\times$ faster \cite{dbms-branches}. Azul's JIT compiler
-measurements show that speculative optimisations can lead up to $50\%$ performance gains \cite{azul_jit_aot}.
+measurements also show that speculative optimisations in JIT can lead
+to $50\%$ performance gains \cite{azul_jit_aot}.
 
-Evaluating good branch prediction is difficult. A reasonable baseline is that a
+Defining good branch prediction is difficult. A reasonable baseline is that a
 $1\%$ misprediction rate is too high and should be optimised in low latency environments
-\cite{farrier2025branch}. Such baselines lack formality but rest on empirical knowledge
+\cite{farrier2025branch}. Such baselines lack formality and rest on empirical knowledge
 \cite{branch-prediction-values}. Depending on the CPU, a branch mispredict can cost between 10 and
-35 CPU cycles, with a safe range being 14-25 cycles. With 1 branch every 10 instructions
+35 CPU cycles, with a typical range being 14-25 cycles \cite{eyerman2006branch}.
+With 1 branch every 10 instructions
 and a $5\%$ misprediction rate, a 20\,cycle penalty per misprediction translates to approximately
 $10\%$ of runtime spent resolving mispredictions \cite{eyerman2006branch}.
 
 In the context of databases, compilers fall into two categories: those that compile only
 \emph{expressions} (typically called EXP), and those that compile the
 entire \emph{Query Execution Plan} (QEP) \cite{empirical-analysis}. Within PostgreSQL
-itself, they have EXP support using \texttt{llvm-jit}. Chapter~\ref{ch:related-work} examines a variety of research databases.
+itself, they have EXP support using \texttt{llvm-jit}, but QEP is not supported.
+Chapter~\ref{ch:related-work} examines a variety of research databases.
 
 \section{LLVM and MLIR}\label{sec:llvm-mlir}
-The LLVM Project is a compiler infrastructure that eliminates the need to
-re-implement common compiler optimisations, making it easier to build compilers~\cite{llvm-paper}. \emph{Multi-Level
-Intermediate Representation} (MLIR) is another, newer toolkit that is
-tightly coupled with the LLVM project~\cite{mlir-paper}. It provides a framework to define custom dialects and progressively lower them to machine code. Developers can define high-level dialects that others can target and build upon.
+The \emph{LLVM Project} is a compiler infrastructure that eliminates the need to
+re-implement common compiler optimisations, making it easier to build
+compilers~\cite{llvm-paper}. LLVM does not stand for anything in particular,
+and \emph{Multi-Level Intermediate Representation} (MLIR) is another, newer
+toolkit that is
+tightly coupled with the LLVM project~\cite{mlir-paper}. It provides a
+framework to define custom dialects and progressively \emph{lower} them to
+machine code. Developers can define high-level dialects that others can target
+and build upon.
 
 LLVM defines a language-independent \emph{intermediate representation}
 (IR) based on \emph{Static Single Assignment} (SSA) form, while MLIR extends
-this concept \cite{llvm-paper}. The architecture follows a three-phase design: a
-front-end parses source code
+this concept \cite{llvm-paper}. SSA is a common layout for IRs where each
+variable is assigned once and immutable; thus the name.
+The architecture follows a three-phase design: a front-end parses source code
 and generates LLVM IR, an optimiser applies a series of transformation
 passes to improve code quality, and a back-end generates machine code for
 the target architecture. MLIR extends this concept by introducing a
 flexible dialect system that
 enables progressive lowering through multiple levels of
 abstraction~\cite{mlir-paper}. This addresses software fragmentation
-in the compiler ecosystem, where projects were creating incompatible high
--level IRs in front of LLVM, and improves compilation for
+in the compiler ecosystem, where projects were creating incompatible high-level
+IRs in front of LLVM, and improves compilation for
 heterogeneous hardware by allowing target-specific optimisations
 at appropriate abstraction levels.
 
@@ -161,45 +180,44 @@ suitable for dynamic language implementations, REPLs
 (Read-Eval-Print Loops), and high-performance JIT compilers.
 
 \section{WebAssembly and others}\label{sec:webassembly}
-The V8 compiler used for WebAssembly has a unique architecture because
+The \emph{V8} compiler used for WebAssembly has a unique architecture because
 it targets short-lived programs. Majority of JIT applications
 are used for long-running services, but this is used for web pages which are
 opened and closed frequently. To mitigate this, they have a two-phase
-architecture where code is first compiled with Liftoff for a quick startup,
-then hot functions are recompiled with TurboFan \cite{wasm}. Liftoff aims
-to create machine code as fast as possible and skip optimisations.
+architecture where code is first compiled with \emph{Liftoff} for a quick
+startup, then hot functions are recompiled with \emph{TurboFan} \cite{wasm}.
+Liftoff aims to create machine code as fast as possible and skip optimisations.
 
 Other common JIT compilers are the \emph{Java Virtual Machine} (JVM), SpiderMonkey
 (Mozilla Firefox's JIT), JavaScriptCore/Nitro (Safari/Webkit), PyPy, various
 python JIT compilers, LuaJIT for Lua, HHVM for PHP, Rubinius for Ruby,
 RyuJIT for C\#, and more \cite{jit_attacks_survey}. The JVM has also been used for compiled
-query execution engines \cite{jamdb}. These all target different work profiles.
+query execution engines \cite{jamdb}.
 
 \section{PostgreSQL Background}\label{sec:postgresql-background}
 PostgreSQL relies on \emph{memory contexts}, which are an extension of \emph{arena
-allocators}. An arena allocator is a data structure that supports allocating
+	allocators}. An arena allocator is a data structure that supports allocating
 memory and freeing
 the entire data structure. This improves memory safety by consolidating
 allocations into a single location. A memory context can create child contexts,
 and when a context is freed it also frees all the children of this context,
-turning it into a tree of arena allocators. There is a set of statically defined
+making this a tree of arena allocators. There is a set of statically defined
 memory contexts: TopMemoryContext, TopTransactionContext, CurTransactionContext,
 TransactionContext, which are managed through PostgreSQL's \emph{Server Programming
-Interface} (SPI) \cite{postgresql_spi_memory}.
+	Interface} (SPI) \cite{postgresql_spi_memory}.
 
 PostgreSQL defines \emph{query trees}, \emph{plan trees}, \emph{plan nodes}, and \emph{expression nodes}.
 A query tree is the initial version of the parsed SQL, which is passed through
-the optimiser which is then called a plan tree. These stages are visible in
-Figure~\ref{fig:database_structure}. The nodes in these plan trees
-can broadly be identified as plan nodes or expression nodes.
+the optimiser, and the output of that is called a plan tree. The nodes in
+these plan trees can broadly be identified as plan nodes or expression nodes.
 Plan nodes include an implementation detail (aggregation, scanning a table,
 nest loop joins) and expression nodes consist of individual operations (binaryop, null test, case expressions) \cite{postgresql_querytree}.
 
 PostgreSQL provides the \texttt{EXPLAIN} command to inspect query execution
-plans, which is essential for understanding and optimizing query performance
+plans, which is essential for understanding and optimising query performance
 \cite{postgresql_explain}. This command displays the execution plan that the
 planner generates, including cost estimates and optional execution statistics,
-making it a critical tool for database optimisation and analysis.
+making it a useful tool for database optimisation and analysis.
 
 \section{Database Benchmarking}\label{sec:database-benchmarking}
 % cite pg_bench
@@ -221,4 +239,4 @@ as a percentage of the mean~\cite{stats-libretexts-cv}. It is calculated as
 $CV = \frac{s}{\bar{X}} \cdot 100$, where $s$ is the sample standard deviation
 and $\bar{X}$ is the sample mean. The coefficient of variation is particularly
 useful when comparing datasets with different units or scales, providing a unit-free
-measure for relative comparison of measurement precision.
+measure for variation.
