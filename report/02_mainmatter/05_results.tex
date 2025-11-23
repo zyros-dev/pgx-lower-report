@@ -66,13 +66,13 @@ of code \cite{lingo-db-1,postgresql_source}.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.15]{figures/q20-index-on-sf0.16-psql.png}
-	\caption{PostgreSQL TPC-H query 20 indexes enabled at SF = 0.16. Runtime: 15 minutes}
+	\caption{PostgreSQL TPC-H query 20 indexes enabled at SF = 0.16. Runtime: 15\,minutes}
 	\label{fig:q20-psql-profile}
 \end{figure}
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.15]{figures/q20-pgx-profile.png}
-	\caption{pgx-lower TPC-H query 20 indexes enabled at SF = 0.16. Runtime: 1.18 seconds}
+	\caption{pgx-lower TPC-H query 20 indexes enabled at SF = 0.16. Runtime: 1.18\,seconds}
 	\label{fig:q20-pgx-profile}
 \end{figure}
 
@@ -94,13 +94,13 @@ joins are annotated with ``hash'', indicating hash join usage. This comparison
 is not entirely fair because pgx-lower uses a hash join while PostgreSQL uses
 a nested loop join (NestLoop\_T), which would benefit from indexing.
 
-Figure~\ref{fig:q20-pgx-profile} reveals minimal time spent in LLVM code generation. Of the 1.18 second total query execution time,
-only 14.93 milliseconds occurs in \texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine code conversion step. Total compilation
-time reaches 236 milliseconds, with most spent in MLIR passes. These results suggest
+Figure~\ref{fig:q20-pgx-profile} reveals minimal time spent in LLVM code generation. Of the 1.18\,second total query execution time,
+only 14.93\,milliseconds occurs in \texttt{llvm::SelectionDAGISel::runOnMachineFunction}, the LLVM IR to machine code conversion step. Total compilation
+time reaches 236\,milliseconds, with most spent in MLIR passes. These results suggest
 MLIR optimization is more expensive than LLVM code generation. Possibly the LLVM ORC JIT does minimal work for each query, spreading compilation across background execution.
 
 RAM usage appears similar between pgx-lower and PostgreSQL (Figures~\ref{fig:bench-mem-plots} and~\ref{fig:bench-mem-diff-plots}).
-Such similarity demonstrates successful adaptation of LingoDB's in-memory operations to PostgreSQL's disk-oriented architecture. Maximum difference is just over 3 MB, with a mean difference of 0.34 MB across all queries.
+Such similarity demonstrates successful adaptation of LingoDB's in-memory operations to PostgreSQL's disk-oriented architecture. Maximum difference is just over 3\,MB, with a mean difference of 0.34\,MB across all queries.
 
 Branch prediction potential appears in Figure~\ref{fig:branch-miss-plot}.
 At scale factor 1, pgx-lower achieved a median
@@ -126,7 +126,7 @@ the plan, similar to HyPer's approach.
 Increasing the number of iterations to make the outputs more reliable succeeds, and the variation is not too large. Some queries, such as in
 scale factor 0.01 with indexes disabled, in Figure~\ref{fig:bench-box-plots},
 show the outliers do become extreme. On query 8, PostgreSQL had an outlier
-of 5008 milliseconds while the median was 12.42 milliseconds. However, the
+of 5008\,milliseconds while the median was 12.42\,milliseconds. However, the
 coefficient of variation was only $0.4\%$ overall during the
 latency measurements in the scale factor 0.01. It's stable overall,
 but vital to do repeated tests to exclude these outliers from the system.

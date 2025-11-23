@@ -554,7 +554,7 @@ before the node executes and initializes variables such as parameters and
 catalogue lookups. \texttt{targetlist} contains the output
 of the node, and \texttt{qual} specifies which tuples should pass through.
 Join nodes have left and right child trees,
-typically referred to as inner and outer children. These signify the inner and
+typically referred to as \emph{inner} and \emph{outer} children. These signify the inner and
 outer loops of the nested for-loop that is created.
 
 %-------------------------------------------------------------------------------
@@ -691,18 +691,18 @@ and moved on. This means it is possible to do more tuning work on this.
 %===============================================================================
 \subsection{Profiling Support}\label{subsec:profiling}
 Code infrastructure was written to support magic-trace for profiling and isolating issues.
-A dedicated machine was configured for this purpose: an Intel i5-6500T with 16 GB of RAM
+A dedicated machine was configured for this purpose: an Intel i5-6500T with 16\,GB of RAM
 and a Samsung MZVLB256HAHQ-000L7 NVMe disk.
 This was particularly useful for isolating obvious bottlenecks
 within the system and understanding the latency when compared to PostgreSQL.
 Figure~\ref{fig:psql-magic} represents the flame chart for query 3, and has a
-runtime of approximately 260 milliseconds. The functions that it calls are clear,
+runtime of approximately 260\,milliseconds. The functions that it calls are clear,
 and you can see how the query runs over time.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.2]{figures/psql-q03-magictrace.png}
-	\caption{PostgreSQL's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 (approximately 5 MB of data)}
+	\caption{PostgreSQL's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 (approximately 5\,MB of data)}
 	\label{fig:psql-magic}
 \end{figure}
 
@@ -712,7 +712,7 @@ time is spent inside the LLVM execution (those spikes in the last 2/3rds are
 table reads). After adjusting how tuples are read, ensuring joins go to the
 correct algorithm, introducing Postgres's tuple-slot reading API, and disabling
 logs, the chart looks like Figure~\ref{fig:pgx-magic-after}. These adjustments
-improved the latency from 4.5 seconds to approximately 400 milliseconds.
+improved the latency from 4.5\,seconds to approximately 400\,milliseconds.
 
 \begin{figure}[H]
 	\centering
@@ -734,7 +734,7 @@ Subsection~\ref{subsec:benchmarking} explains the specifics of running these in 
 A small website was prepared so that users can interact with the lowerings and
 the compiler without installing the system themselves at \url{https://pgx.zyros.dev/query}.
 Keep in mind that it relies on caching the results, it has a scale factor of 0.01
-(10 MB of data), and the pgx-lower system there is (as of writing),
+(10\,MB of data), and the pgx-lower system there is (as of writing),
 running a debug build which has significantly longer runtimes. The
 implementation for this is at \url{https://github.com/zyros-dev/pgx-lower-addons}.
 The implementation uses several technologies: Python for the backend server, SQLite for query caching,
@@ -757,7 +757,7 @@ The benchmark configurations used are displayed in Listing~\ref{lst:benchmark-co
 These configurations allow testing across different scale factors, with and without
 indexes, and with varying iteration counts to understand performance characteristics.
 With multiple iterations, graphs that contain distributions can be created.
-These were decided by bucketing queries into small scale factor (0.01, or 1 MB
+These were decided by bucketing queries into small scale factor (0.01, or 1\,MB
 of data) to show the overhead cost of the JIT compiler, medium scale factor
 (0.16) to show how Postgres scales while still keeping all the queries enabled
 with indexes, and lastly scale factor 1 with the very time-consuming queries

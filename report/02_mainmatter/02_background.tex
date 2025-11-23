@@ -4,7 +4,7 @@
 \section{Database Background}\label{sec:database_background}
 %-------------------------------------------------------------------------------
 Most databases follow the structure shown in Figure~\ref{fig:database_structure}.
-Database systems parse Structured Query Language (SQL) into relational algebra (RA),
+Database systems parse \emph{Structured Query Language} (SQL) into \emph{relational algebra} (RA),
 optimize it, execute it, and materialize the results into a table \cite{database-concepts}.
 
 \begin{figure}[H]
@@ -15,7 +15,7 @@ optimize it, execute it, and materialize the results into a table \cite{database
 	\cite{database-concepts}
 \end{figure}
 
-Non-compiler databases use a volcano operator model tree, such as
+Non-compiler databases use a \emph{volcano operator model tree}, such as
 Figure~\ref{fig:execution_tree} \cite{long-masters-thesis}. A \texttt{produce()} function at the root node
 calls its children's \texttt{produce()}, until it calls a leaf node,
 which calls \texttt{consume()} on itself, then that calls its parent's
@@ -31,18 +31,18 @@ the tree where tuples are dragged upwards.
 \end{figure}
 
 Classical models suffer a fundamental issue: heavy under-utilisation of hardware \cite{branch-misprediction}. If only a single tuple is pulled, CPU
-caches are barely used. An i5-570, a popular CPU in 2010 had an 8 MB L3 cache,
-but in 2024 an i5-14600K has a 24 MB L3 cache \cite{passmark_i5760},
+caches are barely used. An i5-570, a popular CPU in 2010 had an 8\,MB L3 cache,
+but in 2024 an i5-14600K has a 24\,MB L3 cache \cite{passmark_i5760},
 \cite{techpowerup_i5_14600k}. For disks, in 2010 the Seagate Barracuda 7200.12
-was popular, which had a sustained read of 138 MB/s, but in 2022 the Samsung
-V-NAND SSD 990 PRO released with a sustained read of 7450 MB/s
+was popular, which had a sustained read of 138\,MB/s, but in 2022 the Samsung
+V-NAND SSD 990 PRO released with a sustained read of 7450\,MB/s
 \cite{seagate_barracuda_7200_12,samsung_990_pro}. Such dramatic increases
 could mean the algorithms can fundamentally change.
 
-These observations led to the vectorized and compiled execution models. The vectorized model pulls multiple tuples
+These observations led to the \emph{vectorized} and \emph{compiled execution models}. The vectorized model pulls multiple tuples
 up in a group rather than one at a time. A core advantage
-is that instructions per CPU cycle (IPC) can increase through single
-instruction, multiple data (SIMD) operations \cite{everything-vector}. However,
+is that \emph{instructions per CPU cycle} (IPC) can increase through \emph{single
+instruction, multiple data} (SIMD) operations \cite{everything-vector}. However,
 this can cause deep copy operations to be required, or more disk spillage
 than necessary \cite{sequntial-execution}. For instance, if a sort or a join allocates new space
 that is too much for the cache, the handling can become poor.
@@ -76,13 +76,13 @@ A thesis could be written just to summarise the list of optimisations.
 
 Within traditional and volcano databases, the cache is managed through buffer techniques.
 Fixed-size pages (typically eight kilobytes) are read and loaded into
-a buffer pool object which holds them in RAM. Memory placement in L1/L2/L3 and RAM caches depends on access
+a \emph{buffer pool} object which holds them in RAM. Memory placement in L1/L2/L3 and RAM caches depends on access
 patterns, managed by the operating system or environment \cite{database-concepts}. Buffer pools employ different caching strategies (last-recently-used, most-recently-used, etc.)
-based on the situation, decisions often made by the optimiser \cite{effelsberg1984buffer}. Cache effectiveness is measured by last level cache hit rate (LLC), which represents
+based on the situation, decisions often made by the optimiser \cite{effelsberg1984buffer}. Cache effectiveness is measured by \emph{last level cache hit rate} (LLC), which represents
 how many instructions were resolved inside the CPU cache \cite{llc_intel}.
 
-Databases are commonly split into Online Transaction Processing (OLTP) and
-Online Analytical Processing (OLAP). OLTP focuses on
+Databases are commonly split into \emph{Online Transaction Processing} (OLTP) and
+\emph{Online Analytical Processing} (OLAP). OLTP focuses on
 supporting atomicity, running multiple queries at once, and typically
 handles the work profile of an online service that frequently performs key-value lookups.
 On the other hand, OLAP databases focus on analytical work profiles
@@ -99,7 +99,7 @@ on user-serving databases commonly causes reliability issues
 %-------------------------------------------------------------------------------
 \section{JIT Background}\label{sec:jit_background}
 %-------------------------------------------------------------------------------
-Just-in-time (JIT) compilers work with multiple layers of compilation such
+\emph{Just-in-time} (JIT) compilers work with multiple layers of compilation such
 as raw interpretation of bytecode, unoptimized machine code, and optimized
 machine code. They are primarily used with interpreted languages to eliminate
 the ill-effects on performance \cite{long-masters-thesis}. Advanced compilers can run the primary program while background threads improve code optimisation
@@ -120,22 +120,22 @@ $1\%$ misprediction rate is too high and should be optimised in low latency envi
 \cite{farrier2025branch}. Such baselines lack formality but rest on empirical knowledge
 \cite{branch-prediction-values}. Depending on the CPU, a branch mispredict can cost between 10 and
 35 CPU cycles, with a safe range being 14-25 cycles. With 1 branch every 10 instructions
-and a $5\%$ misprediction rate, a 20 cycle penalty per misprediction translates to approximately
+and a $5\%$ misprediction rate, a 20\,cycle penalty per misprediction translates to approximately
 $10\%$ of runtime spent resolving mispredictions \cite{eyerman2006branch}.
 
 In the context of databases, compilers fall into two categories: those that compile only
-expressions (typically called EXP), and those that compile the
-entire Query Execution Plan (QEP) \cite{empirical-analysis}. Within PostgreSQL
+\emph{expressions} (typically called EXP), and those that compile the
+entire \emph{Query Execution Plan} (QEP) \cite{empirical-analysis}. Within PostgreSQL
 itself, they have EXP support using \texttt{llvm-jit}. Chapter~\ref{ch:related-work} examines a variety of research databases.
 
 \section{LLVM and MLIR}\label{sec:llvm-mlir}
 The LLVM Project is a compiler infrastructure that eliminates the need to
-re-implement common compiler optimisations, making it easier to build compilers~\cite{llvm-paper}. Multi-Level
-Intermediate Representation (MLIR) is another, newer toolkit that is
+re-implement common compiler optimisations, making it easier to build compilers~\cite{llvm-paper}. \emph{Multi-Level
+Intermediate Representation} (MLIR) is another, newer toolkit that is
 tightly coupled with the LLVM project~\cite{mlir-paper}. It provides a framework to define custom dialects and progressively lower them to machine code. Developers can define high-level dialects that others can target and build upon.
 
-LLVM defines a language-independent intermediate representation
-(IR) based on Static Single Assignment (SSA) form, while MLIR extends
+LLVM defines a language-independent \emph{intermediate representation}
+(IR) based on \emph{Static Single Assignment} (SSA) form, while MLIR extends
 this concept \cite{llvm-paper}. The architecture follows a three-phase design: a
 front-end parses source code
 and generates LLVM IR, an optimiser applies a series of transformation
@@ -149,7 +149,7 @@ in the compiler ecosystem, where projects were creating incompatible high
 heterogeneous hardware by allowing target-specific optimisations
 at appropriate abstraction levels.
 
-LLVM's On-Request-Compilation (ORC) JIT is a system for
+LLVM's \emph{On-Request-Compilation} (ORC) JIT is a system for
 building JIT compilers with support for lazy compilation,
 concurrent compilation, and runtime optimisation~\cite{llvm-jit-orc}.
 ORC can compile code on-demand as it is needed, reducing startup
@@ -169,25 +169,25 @@ architecture where code is first compiled with Liftoff for a quick startup,
 then hot functions are recompiled with TurboFan \cite{wasm}. Liftoff aims
 to create machine code as fast as possible and skip optimisations.
 
-Other common JIT compilers are the Java Virtual Machine (JVM), SpiderMonkey
+Other common JIT compilers are the \emph{Java Virtual Machine} (JVM), SpiderMonkey
 (Mozilla Firefox's JIT), JavaScriptCore/Nitro (Safari/Webkit), PyPy, various
 python JIT compilers, LuaJIT for Lua, HHVM for PHP, Rubinius for Ruby,
 RyuJIT for C\#, and more \cite{jit_attacks_survey}. The JVM has also been used for compiled
 query execution engines \cite{jamdb}. These all target different work profiles.
 
 \section{PostgreSQL Background}\label{sec:postgresql-background}
-PostgreSQL relies on memory contexts, which are an extension of arena
-allocators. An arena allocator is a data structure that supports allocating
+PostgreSQL relies on \emph{memory contexts}, which are an extension of \emph{arena
+allocators}. An arena allocator is a data structure that supports allocating
 memory and freeing
 the entire data structure. This improves memory safety by consolidating
 allocations into a single location. A memory context can create child contexts,
 and when a context is freed it also frees all the children of this context,
 turning it into a tree of arena allocators. There is a set of statically defined
 memory contexts: TopMemoryContext, TopTransactionContext, CurTransactionContext,
-TransactionContext, which are managed through PostgreSQL's Server Programming
-Interface (SPI) \cite{postgresql_spi_memory}.
+TransactionContext, which are managed through PostgreSQL's \emph{Server Programming
+Interface} (SPI) \cite{postgresql_spi_memory}.
 
-PostgreSQL defines query trees, plan trees, plan nodes, and expression nodes.
+PostgreSQL defines \emph{query trees}, \emph{plan trees}, \emph{plan nodes}, and \emph{expression nodes}.
 A query tree is the initial version of the parsed SQL, which is passed through
 the optimiser which is then called a plan tree. These stages are visible in
 Figure~\ref{fig:database_structure}. The nodes in these plan trees
@@ -215,7 +215,7 @@ support benchmark. TPC-H is the most common in research,
 where the H informally means ``hybrid''. It has a mix of analytical and
 transactional elements inside it \cite{tpch_analyzed}.
 
-When evaluating benchmark results, the \textit{coefficient of variation} (CV) is used.
+When evaluating benchmark results, the \emph{coefficient of variation} (CV) is used.
 This is a standardized measure of dispersion that expresses the standard deviation
 as a percentage of the mean~\cite{stats-libretexts-cv}. It is calculated as
 $CV = \frac{s}{\bar{X}} \cdot 100$, where $s$ is the sample standard deviation

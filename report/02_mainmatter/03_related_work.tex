@@ -190,7 +190,7 @@ The 2018 paper also improved their query optimisation by adding a dynamic
 measurement for how long live queries are taking. The
 optimiser's cost model did not lead to accurate measurements for compilation
 timing. Instead, they introduced an execution stage for workers, then
-in a work-stealing stage they log how long the job took. With a combination
+in a \emph{work-stealing} stage they log how long the job took. With a combination
 of the measurements and the query plan, they calculate estimates for jobs
 and optimal levels to compile them to.
 
@@ -236,7 +236,7 @@ provides additional benefits.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.7]{figures/umbra-effec-queries.png}
-	\caption{Umbra benchmarks after adaptive query processing (AQP).}
+	\caption{Umbra benchmarks after \emph{adaptive query processing} (AQP).}
 	\label{fig:umbra-effec-queries}
 	\cite{umbra-effec-compil}
 \end{figure}
