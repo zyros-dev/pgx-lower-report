@@ -1,5 +1,4 @@
 % TODO 
-% 2. add a table of the MLIR dialect, and what we had to change 
 % 3. add a test suite table for the .sql files in the regression. 
 
 \chapter{Method}\label{ch:project}
@@ -380,8 +379,8 @@ relational algebra dialect is done, and a "translation result" is returned.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.7]{figures/ast-impl.drawio.pdf}
-	\caption{AST translation design and high-level steps}
+	\includegraphics[scale=0.6]{figures/ast-impl.drawio.pdf}
+	\caption{AST translation design and high-level steps in each function}
 	\label{fig:ast-impl}
 \end{figure}
 
@@ -617,9 +616,20 @@ optimisation passes were used so that it can compile end-to-end, and
 \texttt{llvm::CodeGenOptLevel::Default} was used as the optimisation level.
 These optimisation passes consist of SROA, InstCombinePass, PromotePass,
 LICM pass, reassociation pass, GVN pass, and simplify GVN pass.
-The general consensus appeared to be that \texttt{-O2} should be used on it
+
+These passes perform fundamental optimisations~\cite{llvm-passes}. SROA (Scalar
+Replacement of Aggregates) promotes stack-allocated structures into SSA registers.
+That is, an allocation on the stack is hoisted up into global space so that 
+the space is reused rather than reallocated every time.
+InstCombine simplifies instructions through algebraic transformations; PromotePass
+elevates memory operations to register operations; LICM (Loop Invariant Code Motion)
+moves loop-independent code outside of loops by hoisting to preheaders or sinking
+to exit blocks; the reassociation pass reorders expressions to enable further
+optimisations; and GVN (Global Value Numbering) eliminates redundant computations
+by identifying values that must be equal.
+
+The consensus appeared to be that \texttt{-O2} should be used on it
 and moved on. This means it is possible to do more tuning work on this.
-% TODO: Define these passes.
 
 %===============================================================================
 \subsection{Profiling Support}\label{subsec:profiling}
