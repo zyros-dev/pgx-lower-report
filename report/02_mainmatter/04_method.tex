@@ -6,8 +6,8 @@ then Section~\ref{sec:implementation} goes over the implementation.
 A database and compiler selection required several criteria: strong extension support, wide-spread usage, high performance,
 and a volcano execution model as a base. For the compiler,
 ideally it would use a similar interface to the target database
-when parsing SQL, demonstrate strong performance results, and be open source. 
-Such criteria eliminated HyPer, Umbra, and System R, 
+when parsing SQL, demonstrate strong performance results, and be open source.
+Such criteria eliminated HyPer, Umbra, and System R,
 leaving Mutable and LingoDB. LingoDB
 parses inputs with \texttt{pg\_query}, matching PostgreSQL well.
 
@@ -59,7 +59,7 @@ full TPC-H queries.
 
 	{\footnotesize
 		\begin{longtable}{p{4.5cm}p{9cm}}
-			\caption{Regression test suite files and their aims} \label{tab:regression-tests}               \\
+			\caption{Regression test suite files and their aims.} \label{tab:regression-tests}              \\
 			\toprule
 			\textbf{File Name}                    & \textbf{Aim}                                            \\
 			\midrule
@@ -250,7 +250,7 @@ However, since the TPC-H queries never use month intervals, this is acceptable.
 		\texttt{!db.nullable<T>}            & \texttt{\{T, i1\}}    & Yes                         \\
 		\bottomrule
 	\end{tabular}
-	\caption{LingoDB type system full capabilities}
+	\caption{LingoDB type system full capabilities.}
 	\label{tab:lingodb-type-capabilities}
 \end{table}
 
@@ -296,7 +296,7 @@ However, since the TPC-H queries never use month intervals, this is acceptable.
 		Any nullable column      & \texttt{!db.nullable<T>}               & \texttt{\{T, i1\}}    \\
 		\bottomrule
 	\end{tabular}
-	\caption{PostgreSQL type translation through DB dialect to LLVM}
+	\caption{PostgreSQL type translation through DB dialect to LLVM.}
 	\label{tab:type-mapping}
 \end{table}
 
@@ -325,7 +325,7 @@ and 21 types (identical count), with most changes addressing LLVM 20 API compati
 		Code Cleanup             & ~5 locations   & Removed comments, simplified logic                                    \\
 		\bottomrule
 	\end{tabular}
-	\caption{Summary of key differences between LingoDB and pgx-lower dialects}
+	\caption{Summary of key differences between LingoDB and pgx-lower dialects.}
 	\label{tab:dialect-summary}
 \end{table}
 
@@ -374,7 +374,7 @@ developer does not need to reimplement that section repeatedly.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{figures/runtime-functions.drawio.pdf}
-	\caption{System design with labels of component sources.}
+	\caption{Runtime function integration diagram.}
 	\label{fig:runtime-functions}
 \end{figure}
 
@@ -397,7 +397,7 @@ PostgreSQL's tuple pipeline.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{figures/pgsql-runtime.drawio.pdf}
-	\caption{PostgreSQLRuntime.h component design}
+	\caption{PostgreSQLRuntime.h component design.}
 	\label{fig:pgsql-runtime}
 \end{figure}
 
@@ -449,7 +449,7 @@ Then, the node is translated into the MLIR relational algebra dialect, and a tra
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.6]{figures/ast-impl.drawio.pdf}
-	\caption{AST translation design and high-level steps in each function}
+	\caption{AST translation design and high-level steps in each function.}
 	\label{fig:ast-impl}
 \end{figure}
 
@@ -513,7 +513,7 @@ The subsections explain these more specifically.
 		operators     & \texttt{T\_OpExpr}            & Binary/unary operators                             \\
 		\bottomrule
 	\end{tabular}
-	\caption{Expression node translations}
+	\caption{Expression node translations.}
 	\label{tab:expr-nodes}
 \end{table}
 
@@ -544,7 +544,7 @@ The subsections explain these more specifically.
 		utils         & \texttt{T\_Sort}            & Sort operation - SortOp with sort keys                \\
 		\bottomrule
 	\end{tabular}
-	\caption{Plan node translations}
+	\caption{Plan node translations.}
 	\label{tab:plan-nodes}
 \end{table}
 
@@ -702,7 +702,7 @@ and you can see how the query runs over time.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.2]{figures/psql-q03-magictrace.png}
-	\caption{PostgreSQL's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 (approximately 5\,MB of data)}
+	\caption{PostgreSQL's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 (approximately 5\,MB of data).}
 	\label{fig:psql-magic}
 \end{figure}
 
@@ -717,13 +717,13 @@ improved the latency from 4.5\,seconds to approximately 400\,milliseconds.
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.2]{figures/pgx-lower-before-q03.png}
-	\caption{pgx-lower's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 before optimisation}
+	\caption{pgx-lower's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 before optimisation.}
 	\label{fig:pgx-magic-before}
 \end{figure}
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.2]{figures/pgx-lower-after-q03.png}
-	\caption{pgx-lower's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 after optimisation}
+	\caption{pgx-lower's magic-trace flame chart for TPC-H query 3 at scale factor 0.05 after optimisation.}
 	\label{fig:pgx-magic-after}
 \end{figure}
 
