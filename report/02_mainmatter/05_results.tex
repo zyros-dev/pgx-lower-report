@@ -97,11 +97,11 @@ a NestLoop\_T, which would have been indexed with the indexing enabled.
 An interesting detail in figure~\ref{fig:q20-pgx-profile} is that
 the LLVM to bytecode compiler is very minimal. Out of the 1.18 second query,
 only 14.93 milliseconds is spent inside
-\texttt{llvm::SelectionDAGISel::runOnMachineFunction}, which is the step that 
+\texttt{llvm::SelectionDAGISel::runOnMachineFunction}, which is the step that
 converts the LLVM IR into executable code. However, the overall compiler is 236
-milliseconds, with much of it being inside the MLIR passes themselves. That 
-means this MLIR code appears to be much heavier than the LLVM optimisations. 
-One explanation for this is that the LLVM ORC JIT compiler does a minimal amount 
+milliseconds, with much of it being inside the MLIR passes themselves. That
+means this MLIR code appears to be much heavier than the LLVM optimisations.
+One explanation for this is that the LLVM ORC JIT compiler does a minimal amount
 of work, and it happens in the background during execution.
 
 For the RAM usage, figure~\ref{fig:bench-mem-plots} and
