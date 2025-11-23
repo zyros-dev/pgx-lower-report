@@ -129,6 +129,14 @@ actual JIT runtime performs comparably. Expected with the current approach,
 improvements would emerge if the JIT stage dynamically changed
 the plan, similar to HyPer's approach.
 
+In the instructions per CPU cycle plot in Figure~\ref{fig:ipc-plot} it is
+visible that for a large
+scale factor (1), PostgreSQL and pgx-lower are more aligned, but on a
+smaller scale factor pgx-lower has a worse IPC. Still, they are in the same
+magnitude which means neither are using SIMD operations heavily. In
+the future, it should be possible to support more SIMD operations in pgx-lower
+and improve this because the tuples are read in batches.
+
 \subsection{Test Validity}\label{subsec:test-validity}
 Increasing the number of iterations to make the outputs more reliable succeeds, and the variation is not too large. Some queries, such as in
 scale factor 0.01 with indexes disabled, in Figure~\ref{fig:bench-box-plots},
