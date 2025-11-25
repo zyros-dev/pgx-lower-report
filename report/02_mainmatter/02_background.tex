@@ -188,6 +188,13 @@ architecture where code is first compiled with \emph{Liftoff} for a quick
 startup, then hot functions are recompiled with \emph{TurboFan} \cite{wasm}.
 Liftoff aims to create machine code as fast as possible and skip optimisations.
 
+LLVM provides a WebAssembly backend that enables compilation of C and C++ code 
+to WebAssembly. The compilation process uses \texttt{clang} to make LLVM IR, which is then 
+processed by the WebAssembly backend to produce WebAssembly object files.
+This means C/C++ functions from existing codebases (such as PostgreSQL) can be 
+pre-compiled to LLVM IR, inlined into WebAssembly, and then lowered 
+to WebAssembly bytecode \cite{emscripten_llvm_wasm}.
+
 Other common JIT compilers are the \emph{Java Virtual Machine} (JVM), SpiderMonkey
 (Mozilla Firefox's JIT), JavaScriptCore/Nitro (Safari/Webkit), PyPy, various
 python JIT compilers, LuaJIT for Lua, HHVM for PHP, Rubinius for Ruby,

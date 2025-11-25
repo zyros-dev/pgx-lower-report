@@ -204,11 +204,15 @@ instead of using PostgreSQL's executor.
 MLIR was useful to give a strong set of dialect systems, but the main reason
 LingoDB used MLIR was to give plan optimisations clear layers. Furthermore,
 the LLVM/MLIR ecosystem targets ahead of time compilation or longer-running
-JIT systems, and not short-lived queries. While WebAssembly is appealing here
-because it targets short-lived processes, we would not be able
-to inline functions in the future. Either way, switching to a different
-compiler, or away from C++ into C or Rust is appealing. With C, the
-LLVM API is more stable and in Rust the memory safety and correctness can be improved.
+JIT systems, and not short-lived queries. WebAssembly is appealing here
+because it targets short-lived processes, and as stated in
+Section~\ref{sec:webassembly} it is possible to compile C/C++ into WebAssembly.
+Meaning, C/C++ functions from
+PostgreSQL can be pre-compiled and inlined into a WebAssembly
+compiler \cite{emscripten_llvm_wasm}. Switching to a different compiler or
+away from C++ into C or Rust
+is appealing. With C, the LLVM API is more stable and in Rust the memory
+safety and correctness can be improved.
 
 Multiple promising research directions emerge from this work.
 Most appealing is integrating NoisePage or ClickHouse
