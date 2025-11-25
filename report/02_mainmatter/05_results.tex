@@ -14,6 +14,10 @@ utility for counting lines of code. In comparison, the official PostgreSQL
 executor is roughly 82,875 lines of code, and LingoDB is roughly 30,000 lines
 of code \cite{lingo-db-1,postgresql_source}.
 
+The calculated hashes from all benchmarks matched between PostgreSQL and pgx-lower,
+confirming that the repeated tests produced consistent results. Smaller datasets
+were additionally compared directly to prevent hash collision errors.
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.32]{figures/mine_box_plots.pdf}
@@ -136,6 +140,11 @@ magnitude which means neither are using SIMD operations heavily. In
 the future, it should be possible to support more SIMD operations in pgx-lower
 and improve this because the tuples are read in batches.
 
+LingoDB code was modified and pgx-lower introduced 13,875 lines of C++, totalling
+approximately 16,000 lines directly changed. This represents substantially less
+effort than creating LingoDB from scratch or implementing full ACID support
+from scratch as required for a production database.
+
 \subsection{Test Validity}\label{subsec:test-validity}
 Increasing the number of iterations to make the outputs more reliable succeeds, and the variation is not too large. Some queries, such as in
 scale factor 0.01 with indexes disabled, in Figure~\ref{fig:bench-box-plots},
@@ -150,6 +159,17 @@ genetic algorithms, as mentioned in Section~\ref{sec:postgresql-background}. It
 can cause plans to change significantly and makes them non-deterministic.
 While these tests were done on an isolated docker container in a Linux machine
 running minimal processes, system interrupts can also affect the results.
+
+The system produces correct results for all TPC-H queries when compared to PostgreSQL,
+demonstrating that the extension system provides a viable method to safely integrate
+research compilers into production databases. This approach can be installed through
+the extension system to enhance existing databases without modifying PostgreSQL's source.
+While performance is generally slower, results fall within the same order of magnitude;
+previous research has shown JIT compilers have significant performance potential.
+The minimal variation across runs enables fair comparison with the baseline. With only
+16,000 lines of code changed, this demonstrates that the approach does not require
+excessive complexity. Overall, this means the aim of the thesis 
+has been achieved.
 
 \subsection{Future work}\label{subsec:future-work}
 Replacing PostgreSQL's execution engine with a JIT-focused approach offers multiple research directions. Improvements can be made by fully implementing the plan nodes and
@@ -219,6 +239,6 @@ Most appealing is integrating NoisePage, ClickHouse or Mutable
 into PostgreSQL as a drop-in engine replacement.
 Such an approach provides a more complete ecosystem; primary work will focus on
 adapters to adjust queries. Furthermore, pg\_duckdb has already done
-this, but it is a vectorised engine. Alternatively, to target research 
-compilers this can be done with Mutable or a WebAssembly-based compiler for 
-PostgreSQL queries can be written from scratch using these techniques.
+this, but it is a vectorised engine. Alternatively, research compilers like Mutable
+can be integrated, or a WebAssembly-based compiler for PostgreSQL can be built
+from scratch using these techniques.
