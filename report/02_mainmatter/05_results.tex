@@ -215,8 +215,10 @@ is appealing. With C, the LLVM API is more stable and in Rust the memory
 safety and correctness can be improved.
 
 Multiple promising research directions emerge from this work.
-Most appealing is integrating NoisePage or ClickHouse
+Most appealing is integrating NoisePage, ClickHouse or Mutable
 into PostgreSQL as a drop-in engine replacement.
 Such an approach provides a more complete ecosystem; primary work will focus on
 adapters to adjust queries. Furthermore, pg\_duckdb has already done
-this, but it is a vectorised engine.
+this, but it is a vectorised engine. Alternatively, to target research 
+compilers this can be done with Mutable or a WebAssembly-based compiler for 
+PostgreSQL queries can be written from scratch using these techniques.
