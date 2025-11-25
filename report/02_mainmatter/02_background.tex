@@ -59,7 +59,7 @@ query. Isolation means concurrent transactions do not interact with each other,
 and durability is defined as once something is committed it will stay committed.
 \cite{database-concepts}
 
-Most of the recent databasing research has focused on the optimiser,
+Most of the recent database research has focused on the optimiser,
 which is visible in Figure~\ref{fig:database_structure}. Common optimisation techniques include
 reordering join statements (flipping the left and right sides), and
 predicate push down, where a conditional/filter on a node is moved
@@ -181,7 +181,7 @@ suitable for dynamic language implementations, REPLs
 
 \section{WebAssembly and others}\label{sec:webassembly}
 The \emph{V8} compiler used for WebAssembly has a unique architecture because
-it targets short-lived programs. Majority of JIT applications
+it targets short-lived programs. The majority of JIT applications
 are used for long-running services, but this is used for web pages which are
 opened and closed frequently. To mitigate this, they have a two-phase
 architecture where code is first compiled with \emph{Liftoff} for a quick
