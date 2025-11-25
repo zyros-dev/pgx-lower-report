@@ -177,7 +177,7 @@ command, but a two-layer logging infrastructure was required for pgx-lower.
 The first layer is the level, (\texttt{DEBUG}, \texttt{IR}, \texttt{TRACE}, \texttt{WARNING\_LEVEL},
 \texttt{ERROR\_LEVEL}, and more), and the second represents which layer of the design
 the log is inside of (\texttt{AST\_TRANSLATE}, \texttt{RELALG\_LOWER}, \texttt{DB\_LOWER}, and more).
-This means when the AST translation was is ran, all the logs in only that
+This means when the AST translation is run, all the logs in only that
 section of the codebase could be enabled. The core benefit of this is that
 the logs are lengthy so it becomes easier to navigate.
 
