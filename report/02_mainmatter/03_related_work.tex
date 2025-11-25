@@ -103,8 +103,8 @@ assistance and became generally available in 2015 \cite{vitesse2015}.
 While the project remains active with a maintained website \cite{vitesse2024}, their TPC-H
 benchmarks utilise all available CPU cores (32-core systems with two 16-core CPUs)
 compared to vanilla PostgreSQL's single-core execution, making direct
-performance comparisons difficult to assess. 
-This is reasonable though because in an OLAP context, the system can use 
+performance comparisons difficult to assess.
+This is reasonable though because in an OLAP context, the system can use
 all the cores, while in an OLTP one it would be handling multiple concurrent requests.
 Additionally, it remains unclear whether Vitesse DB functions
 through an extension system allowing existing databases to easily adopt it.
@@ -304,7 +304,7 @@ performance within the implementation effort is a significant outcome.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.6]{figures/mutable-benchmarks.png}
+	\includegraphics[scale=0.8]{figures/mutable-benchmarks.png}
 	\caption{Benchmarks produced by Mutable.}
 	\label{fig:mutable-bench}
 	\cite{mutable-2}
@@ -331,7 +331,7 @@ into three levels: relational algebra, a mixed dialect layer, and finally LLVM c
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.5]{figures/lingo-db-arch.png}
+	\includegraphics[scale=0.75]{figures/lingo-db-arch.png}
 	\caption{LingoDB architecture~\cite{lingo-db-1}.}
 	\label{fig:lingo-db-arch}
 	\cite{lingo-db-1}
