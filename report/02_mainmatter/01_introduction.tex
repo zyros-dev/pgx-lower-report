@@ -12,7 +12,7 @@ harder, requiring projects to implement all supporting infrastructure themselves
 For production projects, supporting infrastructure requires implementing ACID, MVCC, query plan optimisation, and more. By using an established database, we can
 address this.
 
-\emph{pgx-lower} (PostgreSQL extension, lowering) replaces PostgreSQL's execution engine with LingoDB's compiler
+\emph{pgx-lower} (PostgreSQL extension, lowering as in MLIR lowering) replaces PostgreSQL's execution engine with LingoDB's compiler
 to bridge the gap of modern compilers with established systems. The name refers to a PostgreSQL extension that performs MLIR lowering. PostgreSQL's
 extension system is utilised to override the executor, and shows
 features that can be used within PostgreSQL to assist with this research.
