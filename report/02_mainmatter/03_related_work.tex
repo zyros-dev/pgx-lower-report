@@ -96,9 +96,18 @@ automatically deployed this update and experienced a $70\%$ failure rate, as
 some queries ran $2{,}229\times$ slower \cite{psql-jit-failure}. Such failures reinforced the view that JIT features should remain disabled by default,
 leading to negative perceptions of JIT and compiled queries.
 
-Two implementations of QEP query compilation with PostgreSQL exist.
-Vitesse DB, the first implementation, made public posts seeking testing assistance. They became generally available in 2015,
-but their website is offline now and there is not much mention of them \cite{vitesse_db}.
+Two implementations of QEP query compilation with PostgreSQL exist, but neither
+are open source, nor do they have evidence of heavy usage.
+Vitesse DB, the first implementation, made public posts seeking testing
+assistance and became generally available in 2015 \cite{vitesse2015}.
+While the project remains active with a maintained website \cite{vitesse2024}, their TPC-H
+benchmarks utilise all available CPU cores (32-core systems with two 16-core CPUs)
+compared to vanilla PostgreSQL's single-core execution, making direct
+performance comparisons difficult to assess. 
+This is reasonable though because in an OLAP context, the system can use 
+all the cores, while in an OLTP one it would be handling multiple concurrent requests.
+Additionally, it remains unclear whether Vitesse DB functions
+through an extension system allowing existing databases to easily adopt it.
 PgCon presented a second implementation, achieving $5.5\times$ speedup on TPC-H query 1
 with more extensive documentation \cite{pgcon_jit_2017}. However, they did not publicise their implementation or show that it is easy for people to use.
 
